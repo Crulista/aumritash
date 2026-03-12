@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aumritash Maitra - Product & Growth</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #111111;
+            --surface-hover: #1a1a1a;
+            --border: #222222;
+            --border-light: #2a2a2a;
+            --text: #e8e8e8;
+            --text-dim: #888888;
+            --text-muted: #555555;
+            --accent: #c8ff00;
+            --accent-dim: rgba(200, 255, 0, 0.08);
+            --accent-glow: rgba(200, 255, 0, 0.15);
+            --serif: 'Instrument Serif', Georgia, serif;
+            --sans: 'DM Sans', -apple-system, sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        ::selection {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-light) transparent;
+        }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* ── Noise overlay ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ── Navigation ── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.25rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(10, 10, 10, 0.8);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo {
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--text); }
+        .nav-links a:hover::after { width: 100%; }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8rem 2.5rem 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            gap: 4rem;
+        }
+
+        .hero-content {
+            flex: 1;
+        }
+
+        .hero-photo {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--border-light);
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards;
+            animation-delay: 1s;
+            flex-shrink: 0;
+            filter: grayscale(20%);
+            transition: all 0.4s ease;
+        }
+
+        .hero-photo:hover {
+            border-color: var(--accent);
+            filter: grayscale(0%);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        .hero-label {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards;
+            animation-delay: 0.2s;
+        }
+
+        .hero h1 {
+            font-family: var(--serif);
+            font-size: clamp(3rem, 7vw, 6rem);
+            font-weight: 400;
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards;
+            animation-delay: 0.4s;
+        }
+
+        .hero h1 em {
+            font-style: italic;
+            color: var(--accent);
+        }
+
+        .hero-desc {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards;
+            animation-delay: 0.6s;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards;
+            animation-delay: 0.8s;
+        }
+
+        .btn {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 1rem 2rem;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg);
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 30px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border-light);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .hero-gradient {
+            position: absolute;
+            top: 10%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            filter: blur(80px);
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        /* ── Section base ── */
+        section {
+            padding: 6rem 2.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .section-label::before {
+            content: '';
+            width: 2rem;
+            height: 1px;
+            background: var(--accent);
+        }
+
+        .section-title {
+            font-family: var(--serif);
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 400;
+            line-height: 1.15;
+            margin-bottom: 3rem;
+            letter-spacing: -0.01em;
+        }
+
+        /* ── Metrics strip ── */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            margin-bottom: 6rem;
+        }
+
+        .metric {
+            background: var(--surface);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .metric:hover {
+            background: var(--surface-hover);
+        }
+
+        .metric-value {
+            font-family: var(--serif);
+            font-size: 2.8rem;
+            font-weight: 400;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 0.75rem;
+        }
+
+        .metric-label {
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        /* ── Experience cards ── */
+        .exp-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .exp-card {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            padding: 2.5rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .exp-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0;
+            background: var(--accent);
+            transition: height 0.4s ease;
+        }
+
+        .exp-card:hover::before {
+            height: 100%;
+        }
+
+        .exp-card:hover {
+            border-color: var(--border-light);
+            background: var(--surface-hover);
+        }
+
+        .exp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .exp-role {
+            font-family: var(--serif);
+            font-size: 1.6rem;
+            font-weight: 400;
+            line-height: 1.2;
+        }
+
+        .exp-company {
+            color: var(--accent);
+        }
+
+        .exp-date {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .exp-location {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+        }
+
+        .exp-bullets {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .exp-bullets li {
+            padding-left: 1.25rem;
+            position: relative;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .exp-bullets li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+
+        .exp-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .tag {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 0.35rem 0.75rem;
+            border: 1px solid var(--border-light);
+            color: var(--text-dim);
+            transition: all 0.3s;
+        }
+
+        .tag:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        /* ── Skills ── */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+        }
+
+        .skill-group {
+            background: var(--surface);
+            padding: 2.5rem;
+            transition: background 0.3s;
+        }
+
+        .skill-group:hover {
+            background: var(--surface-hover);
+        }
+
+        .skill-group-title {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.25rem;
+        }
+
+        .skill-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .skill-item {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .skill-item::before {
+            content: '·';
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        /* ── About / What I do ── */
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .about-text {
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            line-height: 1.9;
+        }
+
+        .about-text p + p {
+            margin-top: 1.5rem;
+        }
+
+        .about-highlight {
+            font-family: var(--serif);
+            font-size: 1.8rem;
+            font-weight: 400;
+            line-height: 1.4;
+            color: var(--text);
+            padding-left: 2rem;
+            border-left: 2px solid var(--accent);
+        }
+
+        /* ── Education ── */
+        .edu-card {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            padding: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .edu-degree {
+            font-family: var(--serif);
+            font-size: 1.4rem;
+        }
+
+        .edu-school {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            margin-top: 0.25rem;
+        }
+
+        .edu-year {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        /* ── Contact ── */
+        .contact-section {
+            text-align: center;
+            padding: 8rem 2.5rem;
+        }
+
+        .contact-section .section-label {
+            justify-content: center;
+        }
+
+        .contact-section .section-label::before {
+            display: none;
+        }
+
+        .contact-title {
+            font-family: var(--serif);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 400;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-title em {
+            font-style: italic;
+            color: var(--accent);
+        }
+
+        .contact-desc {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .contact-link {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .contact-link:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        /* ── Footer ── */
+        footer {
+            padding: 2rem 2.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2.5rem;
+        }
+
+        .divider hr {
+            border: none;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            nav { padding: 1rem 1.5rem; }
+            .nav-links { gap: 1rem; }
+            .hero { padding: 7rem 1.5rem 3rem; flex-direction: column-reverse; text-align: center; gap: 2rem; }
+            .hero-photo { width: 180px; height: 180px; }
+            .hero-cta { justify-content: center; }
+            section { padding: 4rem 1.5rem; }
+            .about-content { grid-template-columns: 1fr; gap: 2rem; }
+            .exp-header { flex-direction: column; }
+            .contact-section { padding: 5rem 1.5rem; }
+            .metrics { grid-template-columns: repeat(2, 1fr); }
+            .skills-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .nav-links a { font-size: 0.65rem; }
+            .nav-links { gap: 0.75rem; }
+            .metrics { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-logo">Aumritash</div>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#experience">Work</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero">
+        <div class="hero-gradient"></div>
+        <div class="hero-content">
+            <p class="hero-label">Product · Growth · Partnerships</p>
+            <h1>I build things<br>and make them <em>grow.</em></h1>
+            <p class="hero-desc">
+                Product and growth operator with hands-on experience building, scaling, and monetizing gaming products. Currently co-founding a gaming company and managing product & partnerships for a competitive esports platform.
+            </p>
+            <div class="hero-cta">
+                <a href="#contact" class="btn btn-primary">Get in touch</a>
+                <a href="#experience" class="btn btn-outline">See my work</a>
+            </div>
+        </div>
+        <img src="photo.png" alt="Aumritash Maitra" class="hero-photo">
+    </header>
+
+    <!-- About -->
+    <div class="divider"><hr></div>
+    <section id="about">
+        <div class="section-label">About</div>
+        <div class="section-title">What I do</div>
+        <div class="about-content fade-in">
+            <div class="about-text">
+                <p>I'm a product and growth operator based in Bengaluru, India. I work at the intersection of product strategy, go-to-market, and partnerships - taking ideas from zero to execution and finding the right levers to drive adoption and revenue.</p>
+                <p>Right now I'm wearing two hats: Co-Founder & COO at CaptainSide, where I built a gaming services company from scratch, and Partnerships & Product Manager at Leagues.gg, where I drive user acquisition and product strategy for a competitive gaming platform out of Copenhagen.</p>
+                <p>My background is in gaming and esports, but the skills are transferable - product thinking, monetization, cross-functional execution, and growth. I've worked across time zones with engineering, design, marketing, and external partners to ship things that people actually use.</p>
+            </div>
+            <div class="about-highlight">
+                "I'm strongest at the intersection of product, growth, and partnerships - taking something from idea to execution."
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience -->
+    <div class="divider"><hr></div>
+    <section id="experience">
+        <div class="section-label">Experience</div>
+        <div class="section-title">Where I've worked</div>
+        <div class="exp-grid">
+
+            <div class="exp-card fade-in">
+                <div class="exp-header">
+                    <div>
+                        <div class="exp-role">Co-Founder & COO <span class="exp-company">@ CaptainSide</span></div>
+                    </div>
+                    <div class="exp-date">Jun 2024 - Present</div>
+                </div>
+                <div class="exp-location">Bengaluru, India</div>
+                <ul class="exp-bullets">
+                    <li>Co-founded a gaming-focused company delivering marketing, engagement, and distribution solutions for game studios.</li>
+                    <li>Scaled business to $20K+ in revenue in 10 months, managing operations, partnerships, and end-to-end client delivery.</li>
+                    <li>Defined productized service offerings, pricing models, and go-to-market strategy from scratch.</li>
+                    <li>Collaborated with game developers and publishers to design targeted campaigns, creator programs, and community initiatives.</li>
+                    <li>Coordinated with major ecosystem partners, including blockchain gaming platforms, to strategize for long-term market growth in South Asia.</li>
+                </ul>
+                <div class="exp-tags">
+                    <span class="tag">GTM Strategy</span>
+                    <span class="tag">Operations</span>
+                    <span class="tag">Monetization</span>
+                    <span class="tag">Partnerships</span>
+                    <span class="tag">Product Marketing</span>
+                </div>
+            </div>
+
+            <div class="exp-card fade-in">
+                <div class="exp-header">
+                    <div>
+                        <div class="exp-role">Partnerships & Product Manager <span class="exp-company">@ Leagues.gg</span></div>
+                    </div>
+                    <div class="exp-date">Apr 2024 - Present</div>
+                </div>
+                <div class="exp-location">Copenhagen, Denmark · Remote</div>
+                <ul class="exp-bullets">
+                    <li>Drove acquisition of 200K users for a core product through partnerships, campaigns, and platform-led initiatives.</li>
+                    <li>Coordinated product and partnership efforts for a large-scale esports tournament, achieving ~300K concurrent viewers.</li>
+                    <li>Directed product strategy and prioritized features for competitive gaming platform, enhancing user engagement and retention.</li>
+                    <li>Contributed to platform development and scaling, collaborating with design and engineering teams to launch and improve features.</li>
+                    <li>Led SEO optimization efforts, resulting in 60K+ organic visitors in a single month.</li>
+                </ul>
+                <div class="exp-tags">
+                    <span class="tag">Product Management</span>
+                    <span class="tag">User Acquisition</span>
+                    <span class="tag">SEO</span>
+                    <span class="tag">Esports</span>
+                    <span class="tag">Cross-functional</span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Skills -->
+    <div class="divider"><hr></div>
+    <section id="skills">
+        <div class="section-label">Skills</div>
+        <div class="section-title">What I bring</div>
+        <div class="skills-grid fade-in">
+            <div class="skill-group">
+                <div class="skill-group-title">Product & Strategy</div>
+                <div class="skill-list">
+                    <div class="skill-item">Product Management</div>
+                    <div class="skill-item">Product Strategy & Roadmapping</div>
+                    <div class="skill-item">Go-to-Market Execution</div>
+                    <div class="skill-item">Pricing & Monetization</div>
+                    <div class="skill-item">User Research & Insights</div>
+                </div>
+            </div>
+            <div class="skill-group">
+                <div class="skill-group-title">Growth & Marketing</div>
+                <div class="skill-list">
+                    <div class="skill-item">User Acquisition</div>
+                    <div class="skill-item">SEO Strategy</div>
+                    <div class="skill-item">Funnel Optimization</div>
+                    <div class="skill-item">Community Building</div>
+                    <div class="skill-item">Content & Creator Programs</div>
+                </div>
+            </div>
+            <div class="skill-group">
+                <div class="skill-group-title">Operations & Leadership</div>
+                <div class="skill-list">
+                    <div class="skill-item">Cross-functional Leadership</div>
+                    <div class="skill-item">Stakeholder Management</div>
+                    <div class="skill-item">Business Development</div>
+                    <div class="skill-item">Client Relationship Management</div>
+                    <div class="skill-item">Remote Team Coordination</div>
+                </div>
+            </div>
+            <div class="skill-group">
+                <div class="skill-group-title">Domain Expertise</div>
+                <div class="skill-list">
+                    <div class="skill-item">Gaming & Esports</div>
+                    <div class="skill-item">Live Operations</div>
+                    <div class="skill-item">SaaS / B2B</div>
+                    <div class="skill-item">Web3 & Blockchain Gaming</div>
+                    <div class="skill-item">Creator Economy</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Education -->
+    <div class="divider"><hr></div>
+    <section>
+        <div class="section-label">Education</div>
+        <div class="section-title">Background</div>
+        <div class="edu-card fade-in">
+            <div>
+                <div class="edu-degree">B.Tech, Computer Science & Engineering</div>
+                <div class="edu-school">University of Engineering and Management, Kolkata</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <div class="divider"><hr></div>
+    <section id="contact" class="contact-section">
+        <div class="section-label">Contact</div>
+        <div class="contact-title fade-in">Let's build<br>something <em>together.</em></div>
+        <div class="contact-links fade-in">
+            <a href="mailto:aumritashmaitra@gmail.com" class="contact-link">aumritashmaitra@gmail.com</a>
+            <a href="tel:+916291123574" class="contact-link">+91 62911 23574</a>
+            <a href="https://linkedin.com/in/aumritash" class="contact-link" target="_blank">LinkedIn</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Aumritash Maitra · Built with intent.</p>
+    </footer>
+
+    <!-- Scroll animations -->
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // Smooth nav background on scroll
+        const nav = document.querySelector('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                nav.style.borderBottomColor = 'var(--border-light)';
+            } else {
+                nav.style.borderBottomColor = 'var(--border)';
+            }
+        });
+    </script>
+
+</body>
+</html>
