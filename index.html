@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-/* ── Hello! Why are you inspecting this? Sus! ── */
 <html lang="en">
+    /* ── Hello! Why are you inspecting this? Sus! ── */
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,7 +55,7 @@
             inset: 0;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
             pointer-events: none;
-            z-index: 0;
+            z-index: 9999;
         }
 
         /* ── Navigation ── */
@@ -153,9 +153,7 @@
             border-color: var(--accent);
             filter: grayscale(0%);
             box-shadow: 0 0 40px var(--accent-glow);
-            transform: scale(1.05);
         }
-
 
         .hero-label {
             font-family: var(--mono);
@@ -242,35 +240,17 @@
             color: var(--accent);
         }
 
-.hero-gradient {
-    position: absolute;
-    top: 0;
-    right: -20%;
-    width: 700px;
-    height: 700px;
-    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-    filter: blur(120px);
-    pointer-events: none;
-    opacity: 0.6;
-    animation: gradientMove 10s ease-in-out infinite alternate;
-}
-
-@keyframes gradientMove {
-
-    0% {
-        transform: translate(0px, 0px);
-    }
-
-    50% {
-        transform: translate(-120px, 80px);
-    }
-
-    100% {
-        transform: translate(80px, -60px);
-    }
-
-}
-
+        .hero-gradient {
+            position: absolute;
+            top: 10%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            filter: blur(80px);
+            pointer-events: none;
+            opacity: 0.4;
+        }
 
         /* ── Section base ── */
         section {
@@ -512,77 +492,6 @@
             font-weight: 700;
         }
 
-
-/* Main cursor ring */
-.cursor {
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--accent);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-    transition: transform 0.15s ease, width 0.2s, height 0.2s;
-}
-
-/* Cursor dot */
-.cursor-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-}
-
-    #cursor{
-    width:14px;
-    height:14px;
-    background: var(--accent);
-    border-radius:50%;
-    position:fixed;
-    pointer-events:none;
-    transform:translate(-50%,-50%);
-    z-index:10000;
-}
-/* Hover state */
-.cursor.hover {
-    transform: translate(-50%, -50%) scale(1.6);
-}
-        /* ── Custom Cursor ── */
-.cursor {
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--accent);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-    transition: transform 0.15s ease, width 0.2s, height 0.2s;
-    z-index: 9999;
-    mix-blend-mode: difference;
-}
-
-.cursor-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-}
-
-a:hover ~ .cursor,
-.btn:hover ~ .cursor {
-    transform: scale(1.6);
-}
-
-        
         /* ── About / What I do ── */
         .about-content {
             display: grid;
@@ -765,69 +674,6 @@ a:hover ~ .cursor,
             .metrics { grid-template-columns: 1fr; }
             .hero h1 { font-size: 2.4rem; }
         }
-
-        /* ── Timeline ── */
-
-.timeline {
-    position: relative;
-    margin-top: 3rem;
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 20px;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    background: var(--border-light);
-}
-
-.timeline-item {
-    position: relative;
-    padding-left: 60px;
-    margin-bottom: 3rem;
-}
-
-.timeline-dot {
-    position: absolute;
-    left: 12px;
-    top: 8px;
-    width: 16px;
-    height: 16px;
-    background: var(--bg);
-    border: 2px solid var(--accent);
-    border-radius: 50%;
-    transition: transform 0.3s ease;
-}
-
-.timeline-item:hover .timeline-dot {
-    transform: scale(1.4);
-}
-
-.timeline-content {
-    border: 1px solid var(--border);
-    background: var(--surface);
-    padding: 2rem;
-    transition: all 0.3s;
-}
-
-.timeline-content:hover {
-    border-color: var(--accent);
-    background: var(--surface-hover);
-}
-
-.timeline-item {
-    opacity: 0;
-    transform: translateY(40px);
-    transition: all 0.7s ease;
-}
-
-.timeline-item.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-
     </style>
 </head>
 <body>
@@ -848,7 +694,7 @@ a:hover ~ .cursor,
         <div class="hero-gradient"></div>
         <div class="hero-content">
             <p class="hero-label">Product · Growth · Partnerships</p>
-            <h1>I build stuff<br>and make them <em>grow.</em></h1>
+            <h1>I build things<br>and make them <em>grow.</em></h1>
             <p class="hero-desc">
                 Product and growth operator with hands-on experience building, scaling, and monetizing gaming products. Currently co-founding a gaming company and managing product & partnerships for a competitive esports platform.
             </p>
@@ -1005,7 +851,7 @@ a:hover ~ .cursor,
         <div class="contact-links fade-in">
             <a href="mailto:aumritashmaitra@gmail.com" class="contact-link">aumritashmaitra@gmail.com</a>
             <a href="tel:+916291123574" class="contact-link">+91 62911 23574</a>
-            <a href="https://www.linkedin.com/in/aumritashmaitra/" class="contact-link" target="_blank">LinkedIn</a>
+            <a href="https://linkedin.com/in/aumritash" class="contact-link" target="_blank">LinkedIn</a>
         </div>
     </section>
 
@@ -1035,50 +881,8 @@ a:hover ~ .cursor,
                 nav.style.borderBottomColor = 'var(--border)';
             }
         });
-
-       const cursor = document.querySelector(".cursor");
-const dot = document.querySelector(".cursor-dot");
-
-document.addEventListener("mousemove", e => {
-
-    cursor.style.left = e.clientX + "px";
-    cursor.style.top = e.clientY + "px";
-
-    dot.style.left = e.clientX + "px";
-    dot.style.top = e.clientY + "px";
-
-});
-
-/* hover detection */
-
-const hoverTargets = document.querySelectorAll("a, button, .btn");
-
-hoverTargets.forEach(el => {
-
-    el.addEventListener("mouseenter", () => {
-        cursor.classList.add("hover");
-    });
-
-    el.addEventListener("mouseleave", () => {
-        cursor.classList.remove("hover");
-    });
-
-document.addEventListener("DOMContentLoaded", () => {
-
-const cursor = document.getElementById("cursor");
-
-document.addEventListener("mousemove", e => {
-
-    cursor.style.left = e.clientX + "px";
-    cursor.style.top = e.clientY + "px";
-
-});
-
-
-
     </script>
-<div class="cursor"></div>
-<div class="cursor-dot"></div>
-    
+
 </body>
+</html>
 </html>
