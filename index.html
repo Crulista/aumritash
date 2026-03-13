@@ -506,8 +506,42 @@
             color: var(--text-muted);
             font-weight: 700;
         }
-        /* ── Custom Cursor ── */
 
+        /* Hide default cursor */
+body {
+    cursor: none;
+}
+
+/* Main cursor ring */
+.cursor {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    transition: transform 0.15s ease, width 0.2s, height 0.2s;
+}
+
+/* Cursor dot */
+.cursor-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+}
+
+/* Hover state */
+.cursor.hover {
+    transform: translate(-50%, -50%) scale(1.6);
+}
+        /* ── Custom Cursor ── */
 .cursor {
     width: 40px;
     height: 40px;
@@ -772,6 +806,17 @@ a:hover ~ .cursor,
     background: var(--surface-hover);
 }
 
+.timeline-item {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.7s ease;
+}
+
+.timeline-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
     </style>
 </head>
 <body>
@@ -980,20 +1025,38 @@ a:hover ~ .cursor,
             }
         });
 
-        const cursor = document.querySelector(".cursor");
+       const cursor = document.querySelector(".cursor");
 const dot = document.querySelector(".cursor-dot");
 
-window.addEventListener("mousemove", e => {
+document.addEventListener("mousemove", e => {
+
     cursor.style.left = e.clientX + "px";
     cursor.style.top = e.clientY + "px";
 
     dot.style.left = e.clientX + "px";
     dot.style.top = e.clientY + "px";
+
+});
+
+/* hover detection */
+
+const hoverTargets = document.querySelectorAll("a, button, .btn");
+
+hoverTargets.forEach(el => {
+
+    el.addEventListener("mouseenter", () => {
+        cursor.classList.add("hover");
+    });
+
+    el.addEventListener("mouseleave", () => {
+        cursor.classList.remove("hover");
+    });
+
 });
 
     </script>
 <div class="cursor"></div>
 <div class="cursor-dot"></div>
-
+    
 </body>
 </html>
