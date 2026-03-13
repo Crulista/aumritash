@@ -153,7 +153,9 @@
             border-color: var(--accent);
             filter: grayscale(0%);
             box-shadow: 0 0 40px var(--accent-glow);
+            transform: scale(1.05);
         }
+
 
         .hero-label {
             font-family: var(--mono);
@@ -247,9 +249,22 @@
             width: 600px;
             height: 600px;
             background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-            filter: blur(80px);
+            filter: blur(100px);
             pointer-events: none;
-            opacity: 0.4;
+            opacity: 0.5;
+            animation: gradientMove 12s ease-in-out infinite alternate;
+        }
+        
+        @keyframes gradientMove {
+            0% {
+                transform: translate(0px, 0px);
+            }
+            50% {
+                transform: translate(-60px, 40px);
+            }
+            100% {
+                transform: translate(30px, -50px);
+            }
         }
 
         /* ── Section base ── */
@@ -491,7 +506,38 @@
             color: var(--text-muted);
             font-weight: 700;
         }
+        /* ── Custom Cursor ── */
 
+.cursor {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease, width 0.2s, height 0.2s;
+    z-index: 9999;
+    mix-blend-mode: difference;
+}
+
+.cursor-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+}
+
+a:hover ~ .cursor,
+.btn:hover ~ .cursor {
+    transform: scale(1.6);
+}
+
+        
         /* ── About / What I do ── */
         .about-content {
             display: grid;
@@ -674,6 +720,58 @@
             .metrics { grid-template-columns: 1fr; }
             .hero h1 { font-size: 2.4rem; }
         }
+
+        /* ── Timeline ── */
+
+.timeline {
+    position: relative;
+    margin-top: 3rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border-light);
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 60px;
+    margin-bottom: 3rem;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    width: 16px;
+    height: 16px;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.timeline-item:hover .timeline-dot {
+    transform: scale(1.4);
+}
+
+.timeline-content {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 2rem;
+    transition: all 0.3s;
+}
+
+.timeline-content:hover {
+    border-color: var(--accent);
+    background: var(--surface-hover);
+}
+
     </style>
 </head>
 <body>
@@ -881,7 +979,21 @@
                 nav.style.borderBottomColor = 'var(--border)';
             }
         });
+
+        const cursor = document.querySelector(".cursor");
+const dot = document.querySelector(".cursor-dot");
+
+window.addEventListener("mousemove", e => {
+    cursor.style.left = e.clientX + "px";
+    cursor.style.top = e.clientY + "px";
+
+    dot.style.left = e.clientX + "px";
+    dot.style.top = e.clientY + "px";
+});
+
     </script>
+<div class="cursor"></div>
+<div class="cursor-dot"></div>
 
 </body>
 </html>
