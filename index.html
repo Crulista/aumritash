@@ -674,6 +674,51 @@
             .metrics { grid-template-columns: 1fr; }
             .hero h1 { font-size: 2.4rem; }
         }
+
+        /* ── Projects Section (isolated) ── */
+.project-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.project-card {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 2.5rem;
+    transition: all 0.4s ease;
+}
+
+.project-card:hover {
+    border-color: var(--border-light);
+    background: var(--surface-hover);
+}
+
+/* ── Project Links ── */
+.project-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.project-btn {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-light);
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.project-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+}
     </style>
 </head>
 <body>
