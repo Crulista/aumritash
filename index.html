@@ -117,6 +117,50 @@
         .nav-links a:hover { color: var(--text); }
         .nav-links a:hover::after { width: 100%; }
 
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-wip {
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-decoration: none;
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .nav-wip::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: wipPulse 1.6s ease-in-out infinite;
+        }
+
+        .nav-wip:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .nav-wip:hover::before { background: var(--bg); }
+
+        @keyframes wipPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.25; }
+        }
+
         /* ── Hero ── */
         .hero {
             min-height: 100vh;
@@ -657,6 +701,7 @@
         @media (max-width: 768px) {
             nav { padding: 1rem 1.5rem; }
             .nav-links { gap: 1rem; }
+            .nav-right { gap: 1rem; }
             .hero { padding: 7rem 1.5rem 3rem; flex-direction: column-reverse; text-align: center; gap: 2rem; }
             .hero-photo { width: 180px; height: 180px; }
             .hero-cta { justify-content: center; }
@@ -666,6 +711,13 @@
             .contact-section { padding: 5rem 1.5rem; }
             .metrics { grid-template-columns: repeat(2, 1fr); }
             .skills-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            nav { flex-wrap: wrap; row-gap: 0.75rem; }
+            .nav-right { display: contents; }
+            .nav-wip { order: 2; }
+            .nav-links { order: 3; width: 100%; justify-content: space-between; }
         }
 
         @media (max-width: 480px) {
@@ -726,13 +778,16 @@
     <!-- Navigation -->
     <nav>
         <div class="nav-logo">Aumritash</div>
-        <ul class="nav-links">
-            <li><a href="#about">About</a></li>
-            <li><a href="#experience">Work</a></li>
-            <li><a href="#projects">Projects</a></li>
-            <li><a href="#skills">Skills</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
+        <div class="nav-right">
+            <ul class="nav-links">
+                <li><a href="#about">About</a></li>
+                <li><a href="#experience">Work</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <a href="/new/" class="nav-wip" title="Preview the new site we're building">W.I.P</a>
+        </div>
     </nav>
 
     <!-- Hero -->

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Aumritash Maitra - New site (W.I.P)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --border: #222222;
+            --text: #e8e8e8;
+            --text-dim: #888888;
+            --accent: #c8ff00;
+            --serif: 'Instrument Serif', Georgia, serif;
+            --sans: 'DM Sans', -apple-system, sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem 1.5rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        main {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .label {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-family: var(--serif);
+            font-size: clamp(2.5rem, 7vw, 4.5rem);
+            font-weight: 400;
+            line-height: 1.05;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 em { color: var(--accent); }
+
+        p {
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 2.5rem;
+        }
+
+        a {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.9rem 1.6rem;
+            border: 1px solid var(--border);
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        a:hover { border-color: var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body>
+    <main>
+        <p class="label">Work in progress</p>
+        <h1>Something new is <em>being built.</em></h1>
+        <p>This is where the new aumritash.com is taking shape. Check back soon.</p>
+        <a href="/">← Back to the current site</a>
+    </main>
+</body>
+</html>
