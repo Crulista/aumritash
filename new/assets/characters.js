@@ -7,24 +7,27 @@ const BASE = new URL('./models/', import.meta.url).href;
 
 // Each origin is assembled from outfit parts: the first entry supplies the skeleton,
 // later entries borrow pieces (by name) from other outfits. `tint` multiplies the colours.
+// Each also moves its own way: a stance (pose), a signature move when picked (show), how it walks
+// (walk, with walkIdle when it stops and a speed factor) and how it lights the flame (kindle).
 const ORIGINS = [
-    { name: 'Wanderer', pose: 'Sword_Idle',
+    { name: 'Wanderer', pose: 'Sword_Idle', show: 'Sword_Attack', walk: 'Walk_Loop', walkIdle: 'Idle_Loop', speed: 1, kindle: 'Fixing_Kneeling',
       lore: 'A hooded traveller who walks every road twice. Always moving, always learning the lay of the land.',
       parts: s => [{ file: `${s}_ranger` }] },
-    { name: 'Hunter', pose: 'Sword_Idle',
+    { name: 'Hunter', pose: 'Crouch_Idle_Loop', show: 'Roll', walk: 'Crouch_Fwd_Loop', walkIdle: 'Crouch_Idle_Loop', speed: 0.75, kindle: 'Interact',
       lore: 'Reads the tracks others miss. Patient, precise, and always the first to see where the herd is heading.',
       parts: s => [{ file: `${s}_ranger`, drop: /Head_Hood/, tint: '#a8784a' }] },
-    { name: 'Pilgrim', pose: 'Spell_Simple_Idle_Loop',
+    { name: 'Pilgrim', pose: 'Idle_Torch_Loop', show: 'Interact', walk: 'Walk_Formal_Loop', walkIdle: 'Idle_Torch_Loop', speed: 0.9, kindle: 'Fixing_Kneeling',
       lore: 'Walks for the story, not the destination. Carries a hundred worlds in a battered pack.',
       parts: s => [{ file: `${s}_peasant`, drop: /Feet/, tint: '#8c8782' }, { file: `${s}_ranger`, keep: /Head_Hood|Pauldron|Feet/, tint: '#6f6b67' }] },
-    { name: 'Wretch', pose: 'Spell_Simple_Idle_Loop',
+    { name: 'Wretch', pose: 'Spell_Simple_Idle_Loop', show: 'Spell_Simple_Shoot', walk: 'Walk_Loop', walkIdle: 'Idle_Loop', speed: 1, kindle: 'Spell_Simple_Shoot',
       lore: 'Starts with nothing but stubbornness. Builds the rest from scratch, one stolen hour at a time.',
       parts: s => [{ file: `${s}_peasant` }] }
 ];
 
 export const CLASSES = ORIGINS.flatMap(o => ['m', 'f'].map(sex => {
     const s = sex === 'm' ? 'male' : 'female';
-    return { id: `${o.name.toLowerCase()}_${sex}`, name: o.name, sex, pose: o.pose, lore: o.lore, parts: o.parts(s), body: `base_${s}` };
+    const { name, pose, show, walk, walkIdle, speed, kindle, lore } = o;
+    return { id: `${name.toLowerCase()}_${sex}`, name, sex, pose, show, walk, walkIdle, speed, kindle, lore, parts: o.parts(s), body: `base_${s}` };
 }));
 
 const loader = new GLTFLoader();
