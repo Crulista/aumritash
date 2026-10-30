@@ -41,6 +41,20 @@
 
         body.hit #screen { animation: hit 0.18s steps(3) 1; }
 
+        /* Cut to black when heading into the chapters */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 60;
+            transition: opacity 0.5s steps(4);
+        }
+
+        body.leaving::before { opacity: 1; }
+
         @keyframes hit {
             0% { transform: translate(0, 0); }
             33% { transform: translate(-6px, 3px); }
@@ -316,7 +330,7 @@
     </a>
 
     <!-- Bottom right: Know more -->
-    <a class="corner br" data-state="more" href="/#about" aria-label="Know more about Aumritash">
+    <a class="corner br" data-state="more" href="more/" aria-label="Know more about Aumritash">
         <span class="btn">Know more...</span>
         <span class="sub">// ABOUT ME</span>
     </a>
@@ -396,7 +410,7 @@
             if (name === state) return;
             state = name;
             stateSince = performance.now();
-            body.className = 'state-' + name + (FLOODS[name] ? ' flooded' : '');
+            body.className = 'state-' + name + (FLOODS[name] ? ' flooded' : '') + (body.classList.contains('leaving') ? ' leaving' : '');
             document.querySelectorAll('.corner').forEach(c => c.classList.toggle('active', c === corner));
             if (FLOODS[name]) {
                 const r = corner.getBoundingClientRect();
@@ -431,7 +445,15 @@
                     e.preventDefault();
                     setState(corner.dataset.state, corner);
                 }
-                if (corner.getAttribute('href') === '#') { e.preventDefault(); glitch(300); hit(); }
+                if (corner.getAttribute('href') === '#') { e.preventDefault(); glitch(300); hit(); return; }
+                // Know more: glitch, cut to black, then go to the chapter select
+                if (corner.dataset.state === 'more' && !e.defaultPrevented && !reduce) {
+                    e.preventDefault();
+                    glitch(700);
+                    hit();
+                    body.classList.add('leaving');
+                    setTimeout(() => { location.href = corner.href; }, 650);
+                }
             });
         });
         if (touch) document.addEventListener('click', e => { if (!e.target.closest('.corner')) setState('idle', null); });

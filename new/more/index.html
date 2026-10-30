@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Know more - Aumritash Maitra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/chapter.css">
+    <style>
+        body { overflow-x: hidden; }
+
+        .select {
+            min-height: calc(100vh - 5rem);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 2rem 4rem;
+            animation: fadein 0.6s ease;
+        }
+
+        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+        .watcher { width: 120px; height: 40px; margin-bottom: 1.5rem; }
+
+        .select h1 {
+            font-family: var(--pixel);
+            font-weight: 400;
+            font-size: clamp(2.6rem, 6vw, 4rem);
+            line-height: 1;
+            letter-spacing: 0.08em;
+            margin-bottom: 2rem;
+            text-shadow: 3px 0 rgba(255, 0, 0, 0.55), -2px 0 rgba(0, 255, 255, 0.2);
+        }
+
+        .menu { list-style: none; display: flex; flex-direction: column; gap: 0.9rem; }
+
+        .menu a {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            text-decoration: none;
+            font-family: var(--pixel);
+            font-size: 1.9rem;
+            line-height: 1;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border: 2px solid var(--text);
+            background: rgba(0, 0, 0, 0.55);
+            padding: 0.65rem 1.2rem 0.5rem;
+            outline: none;
+        }
+
+        .menu a .num { color: var(--red); font-size: 1.3rem; }
+        .menu a .desc { display: none; }
+
+        .menu a:hover, .menu a:focus-visible, .menu a.current {
+            background: var(--text);
+            color: #000;
+        }
+
+        .menu a:hover .num, .menu a:focus-visible .num, .menu a.current .num { color: #b00012; }
+
+        .menu a:active { background: var(--red); border-color: var(--red); }
+
+        .hint {
+            font-family: var(--pixel);
+            font-size: 1.1rem;
+            letter-spacing: 0.15em;
+            color: var(--muted);
+            margin-top: 1.5rem;
+        }
+
+        .preview { min-height: 320px; }
+
+        .preview .kicker { margin-bottom: 0.5rem; }
+
+        .preview h2 {
+            font-family: var(--pixel);
+            font-weight: 400;
+            font-size: 3.2rem;
+            line-height: 1;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .preview p { color: var(--dim); font-size: 1.05rem; margin-bottom: 1.25rem; }
+
+        .preview ul { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+
+        .preview li {
+            font-family: var(--pixel);
+            font-size: 1.25rem;
+            letter-spacing: 0.08em;
+            color: var(--text);
+        }
+
+        .preview li::before { content: '> '; color: var(--red); }
+
+        @media (max-width: 760px) {
+            .select { grid-template-columns: 1fr; gap: 0; padding: 1rem 1rem 3rem; min-height: 0; }
+            .preview { display: none; }
+            .menu a { flex-wrap: wrap; font-size: 1.6rem; }
+            .menu a .desc {
+                display: block;
+                width: 100%;
+                font-family: var(--sans);
+                font-size: 0.9rem;
+                letter-spacing: 0;
+                text-transform: none;
+                color: var(--dim);
+                margin-top: 0.4rem;
+            }
+            .menu a:hover .desc, .menu a.current .desc { color: #333; }
+            .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top">
+        <a href="../" class="btn small">&lt; Back</a>
+        <span class="name">AUMRITASH MAITRA</span>
+    </header>
+
+    <main class="select">
+        <div>
+            <svg class="watcher" viewBox="0 0 120 40" aria-hidden="true">
+                <ellipse cx="32" cy="20" rx="22" ry="11" fill="#d9cfb8"/>
+                <ellipse cx="88" cy="20" rx="22" ry="11" fill="#d9cfb8"/>
+                <circle class="pupil" cx="32" cy="20" r="7" fill="#5c0009"/>
+                <circle class="pupil" cx="88" cy="20" r="7" fill="#5c0009"/>
+                <rect x="8" y="4" width="48" height="9" fill="#050505"/>
+                <rect x="64" y="4" width="48" height="9" fill="#050505"/>
+            </svg>
+            <h1>KNOW MORE</h1>
+            <ul class="menu" id="menu">
+                <li><a href="../work/" class="current" data-i="0"><span class="num">01</span>The Work<span class="desc">Career, case studies and results.</span></a></li>
+                <li><a href="../games/" data-i="1"><span class="num">02</span>The Games<span class="desc">What I play, and what nearly broke me.</span></a></li>
+                <li><a href="../stories/" data-i="2"><span class="num">03</span>The Stories<span class="desc">The fiction that shaped me.</span></a></li>
+            </ul>
+            <p class="hint">↑ ↓ TO CHOOSE · ENTER TO START</p>
+        </div>
+
+        <div class="preview panel" aria-live="polite">
+            <p class="kicker" id="pKicker">CHAPTER 01</p>
+            <h2 id="pTitle">THE WORK</h2>
+            <p id="pText"></p>
+            <ul id="pList"></ul>
+        </div>
+    </main>
+
+    <script>
+        const CHAPTERS = [
+            {
+                title: 'THE WORK',
+                text: 'Product, growth and partnerships, mostly in gaming. What I built, what I grew, and the numbers behind it.',
+                list: ['CaptainSide · Co-founder & COO', 'Leagues.gg · Partnerships & Product', 'Player Journey Tool · built with AI']
+            },
+            {
+                title: 'THE GAMES',
+                text: 'The games I play, the ones I keep coming back to, and the bosses that took far too many tries.',
+                list: ['Currently playing', 'All-time favourites', 'Bosses that broke me']
+            },
+            {
+                title: 'THE STORIES',
+                text: 'Books, shows, films and anime. The fiction I love and the worlds I keep thinking about.',
+                list: ['Books', 'Shows & anime', 'Films']
+            }
+        ];
+
+        const items = [...document.querySelectorAll('#menu a')];
+        let current = 0;
+
+        function select(i) {
+            current = (i + items.length) % items.length;
+            items.forEach((a, n) => a.classList.toggle('current', n === current));
+            const c = CHAPTERS[current];
+            document.getElementById('pKicker').textContent = 'CHAPTER 0' + (current + 1);
+            document.getElementById('pTitle').textContent = c.title;
+            document.getElementById('pText').textContent = c.text;
+            document.getElementById('pList').innerHTML = c.list.map(t => '<li></li>').join('');
+            document.querySelectorAll('#pList li').forEach((li, n) => { li.textContent = c.list[n]; });
+        }
+
+        items.forEach((a, i) => {
+            a.addEventListener('mouseenter', () => select(i));
+            a.addEventListener('focus', () => select(i));
+        });
+
+        // Arrow keys move through the menu like a game's chapter select
+        addEventListener('keydown', e => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                select(current + (e.key === 'ArrowDown' ? 1 : -1));
+                items[current].focus();
+            } else if (e.key === 'Enter' && document.activeElement === document.body) {
+                location.href = items[current].href;
+            }
+        });
+
+        select(0);
+
+        // The eyes from the title screen keep watching
+        const pupils = document.querySelectorAll('.watcher .pupil');
+        const svg = document.querySelector('.watcher');
+        addEventListener('pointermove', e => {
+            const r = svg.getBoundingClientRect();
+            const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+            const len = Math.hypot(dx, dy) || 1, pull = Math.min(1, len / 300);
+            pupils.forEach(p => p.setAttribute('transform', `translate(${(dx / len * 11 * pull).toFixed(1)} ${(dy / len * 3 * pull).toFixed(1)})`));
+        });
+    </script>
+</body>
+</html>
