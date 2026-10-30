@@ -257,6 +257,54 @@ section { padding: 2.5rem 0; }
 
 .links { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
 
+/* ── Timeline (the Leagues.gg run) ── */
+.run {
+    list-style: none;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-left: 1.75rem;
+}
+
+.run::before {
+    content: '';
+    position: absolute;
+    left: 0.45rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--red), var(--line-2) 85%, transparent);
+}
+
+.run > li { position: relative; }
+
+.run > li::marker { content: none; }
+
+.run > li > .run-date::before {
+    content: '';
+    position: absolute;
+    left: -1.65rem;
+    top: 1.95rem;
+    width: 10px;
+    height: 10px;
+    background: var(--bg);
+    border: 2px solid var(--red);
+    transform: rotate(45deg);
+}
+
+.run-date {
+    font-family: var(--pixel);
+    font-size: 1.15rem;
+    letter-spacing: 0.2em;
+    color: var(--red);
+}
+
+.run h3 { font-size: 1.2rem; font-weight: 600; margin: 0.15rem 0 0.4rem; }
+.run p:not(.run-date) { color: var(--dim); }
+.run strong { color: var(--text); font-weight: 600; }
+.run-src { color: var(--muted); font-size: 0.8rem; margin-top: 1rem; }
+
 /* ── Card grids (games, stories) ── */
 .grid {
     display: grid;

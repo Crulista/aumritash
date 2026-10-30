@@ -6,8 +6,181 @@
     <meta name="robots" content="noindex">
     <title>The Work - Aumritash Maitra</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/chapter.css">
+    <style>
+        /* ── Story layout: a title card, then numbered acts ── */
+        .story { padding: 3rem 0 1rem; }
+
+        .story-card {
+            position: relative;
+            border: 1px solid var(--line-2);
+            overflow: hidden;
+            min-height: 340px;
+            display: flex;
+            align-items: flex-end;
+            background: #0a0808;
+        }
+
+        .story-card img.bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: saturate(0.85) brightness(0.55);
+        }
+
+        .story-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(5, 5, 5, 0.95) 10%, rgba(5, 5, 5, 0.2) 70%);
+        }
+
+        .story-card .inner { position: relative; z-index: 1; padding: 2rem; }
+        .story-card .kicker { margin-bottom: 0.3rem; }
+
+        .story-card h2 {
+            font-family: var(--pixel);
+            font-weight: 400;
+            font-size: clamp(2.6rem, 7vw, 4.6rem);
+            line-height: 0.95;
+            letter-spacing: 0.04em;
+            text-shadow: 3px 0 rgba(255, 0, 0, 0.5);
+        }
+
+        .story-card .sub { color: var(--text); font-size: 1.1rem; margin-top: 0.6rem; max-width: 640px; }
+        .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+
+        .logo-card { background: #000; min-height: 260px; align-items: center; justify-content: center; }
+        .logo-card img.logo { position: relative; z-index: 1; width: min(560px, 80%); }
+        .logo-card::after { display: none; }
+
+        .act {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 1.5rem;
+            padding: 2.25rem 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .act:last-child { border-bottom: none; }
+
+        .act-num {
+            font-family: var(--pixel);
+            font-size: 1.15rem;
+            letter-spacing: 0.2em;
+            color: var(--red);
+            line-height: 1.2;
+        }
+
+        .act-num span { display: block; color: var(--muted); font-size: 1rem; letter-spacing: 0.12em; margin-top: 0.3rem; }
+
+        .act h3 { font-size: 1.6rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; margin-bottom: 0.7rem; }
+        .act p { color: var(--dim); font-size: 1.05rem; max-width: 720px; }
+        .act p + p { margin-top: 0.8rem; }
+        .act strong { color: var(--text); font-weight: 600; }
+        .act em { color: var(--text); }
+
+        .act figure { margin-top: 1.25rem; }
+        .act figure img { width: 100%; display: block; border: 1px solid var(--line-2); }
+        .act figcaption { color: var(--muted); font-size: 0.8rem; margin-top: 0.4rem; }
+
+        /* Big numbers */
+        .bignums {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1px;
+            background: var(--line);
+            border: 1px solid var(--line);
+            margin-top: 1.25rem;
+        }
+
+        .bignum { background: var(--panel); padding: 1.1rem 0.9rem; }
+        .bignum b { display: block; font-family: var(--pixel); font-weight: 400; font-size: 2.4rem; line-height: 1; color: var(--red); }
+        .bignum small { display: block; color: var(--dim); font-size: 0.8rem; margin-top: 0.3rem; }
+
+        /* Click-to-play video (no YouTube code loads until you press play) */
+        .yt {
+            position: relative;
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border: 1px solid var(--line-2);
+            background: #000 center / cover no-repeat;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 1.25rem;
+        }
+
+        .yt::before { content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.35); transition: background 0.2s; }
+        .yt:hover::before { background: rgba(0, 0, 0, 0.15); }
+
+        .yt .play {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-family: var(--pixel);
+            font-size: 1.5rem;
+            letter-spacing: 0.15em;
+            color: #000;
+            background: var(--text);
+            padding: 0.4rem 1.1rem 0.3rem;
+        }
+
+        .yt .vt {
+            position: absolute;
+            left: 0.8rem;
+            right: 0.8rem;
+            bottom: 0.7rem;
+            text-align: left;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-shadow: 0 2px 6px #000;
+        }
+
+        .yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        .vids { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        /* The ending */
+        .finale {
+            margin: 2rem 0 1rem;
+            padding: 2.5rem 2rem;
+            border: 1px solid var(--line-2);
+            background: radial-gradient(ellipse at 50% 120%, rgba(255, 60, 30, 0.12), transparent 60%), var(--panel);
+            text-align: center;
+        }
+
+        .finale .kicker { margin-bottom: 0.6rem; }
+
+        .finale h3 {
+            font-family: var(--pixel);
+            font-weight: 400;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            line-height: 1;
+            letter-spacing: 0.06em;
+            margin-bottom: 1rem;
+        }
+
+        .finale p { color: var(--dim); font-size: 1.05rem; max-width: 620px; margin: 0 auto; }
+        .finale p + p { margin-top: 0.7rem; }
+
+        .src { color: var(--muted); font-size: 0.8rem; margin-top: 1rem; }
+        .src a { color: var(--dim); }
+
+        @media (max-width: 760px) {
+            .act { grid-template-columns: 1fr; gap: 0.5rem; padding: 1.75rem 0; }
+            .act h3 { font-size: 1.35rem; }
+            .bignums { grid-template-columns: repeat(2, 1fr); }
+            .bignum:first-child { grid-column: 1 / -1; }
+            .vids { grid-template-columns: 1fr; }
+            .story-card .inner { padding: 1.25rem; }
+            .finale { padding: 2rem 1.25rem; }
+        }
+    </style>
 </head>
 <body>
     <header class="top">
@@ -19,51 +192,173 @@
         <div class="chapter-head">
             <p class="kicker">CHAPTER 01</p>
             <h1>THE WORK</h1>
-            <p class="lede">Product and growth operator based in Bengaluru. I take things from idea to execution and find the levers that drive adoption and revenue, mostly in gaming and esports.</p>
+            <p class="lede">Product and growth operator from Bengaluru. Two stories so far: a Danish esports company I stayed with until the very last day, and an Indian gaming company that started as a Discord server.</p>
         </div>
 
         <section aria-label="Highlights">
             <div class="stats">
+                <div class="stat"><div class="stat-value">250K+</div><div class="stat-label">peak live viewers at an event we built</div></div>
                 <div class="stat"><div class="stat-value">200K</div><div class="stat-label">users acquired for a core product</div></div>
-                <div class="stat"><div class="stat-value">300K</div><div class="stat-label">concurrent viewers at a tournament</div></div>
                 <div class="stat"><div class="stat-value">$20K+</div><div class="stat-label">revenue in 10 months, from zero</div></div>
                 <div class="stat"><div class="stat-value">60K+</div><div class="stat-label">organic visitors in one month</div></div>
             </div>
         </section>
 
-        <section>
-            <h2 class="section-title">Missions</h2>
-            <div class="missions">
-                <article class="mission panel">
-                    <div class="mission-top">
-                        <h3>Co-Founder &amp; COO <span>@ CaptainSide</span></h3>
-                        <span class="mission-meta">JUN 2024 — NOW</span>
-                    </div>
-                    <p class="mission-where">Bengaluru, India · A gaming company delivering marketing, engagement and distribution for game studios</p>
-                    <ul class="objectives">
-                        <li><strong>Scaled to $20K+ revenue in 10 months</strong>, running operations, partnerships and end-to-end client delivery.</li>
-                        <li>Defined productized service offerings, pricing models and go-to-market strategy from scratch.</li>
-                        <li>Designed targeted campaigns, creator programs and community initiatives with game developers and publishers.</li>
-                        <li>Worked with major ecosystem partners, including blockchain gaming platforms, on long-term growth in South Asia.</li>
-                    </ul>
-                    <div class="tags"><span class="tag">GTM</span><span class="tag">Operations</span><span class="tag">Monetization</span><span class="tag">Partnerships</span></div>
-                </article>
-
-                <article class="mission panel">
-                    <div class="mission-top">
-                        <h3>Partnerships &amp; Product Manager <span>@ Leagues.gg</span></h3>
-                        <span class="mission-meta">APR 2024 — NOW</span>
-                    </div>
-                    <p class="mission-where">Copenhagen, Denmark · Remote · A competitive gaming platform</p>
-                    <ul class="objectives">
-                        <li><strong>Drove 200K users</strong> for a core product through partnerships, campaigns and platform-led initiatives.</li>
-                        <li>Coordinated product and partnerships for a large esports tournament that hit <strong>~300K concurrent viewers</strong>.</li>
-                        <li>Directed product strategy and prioritized features to improve engagement and retention.</li>
-                        <li>Led SEO work that brought <strong>60K+ organic visitors in a single month</strong>.</li>
-                    </ul>
-                    <div class="tags"><span class="tag">Product</span><span class="tag">User acquisition</span><span class="tag">SEO</span><span class="tag">Esports</span></div>
-                </article>
+        <!-- ═══════════ STORY I: LEAGUES ═══════════ -->
+        <section class="story" id="leagues">
+            <div class="story-card">
+                <img class="bg" src="../assets/work/leagues-disrupt-key.jpg" alt="NLC 2025 key art: 'We don't make stories'">
+                <div class="inner">
+                    <p class="kicker">STORY I · 2024 — 2026</p>
+                    <h2>TILL THE LIGHTS WENT OUT</h2>
+                    <p class="sub">Leagues ApS, Copenhagen. A small Danish team running a gaming platform, a media house and the UK &amp; Nordics League of Legends championship. I was there from the first week to the very last day.</p>
+                    <div class="chips"><span class="tag">Partnerships</span><span class="tag">Product</span><span class="tag">Brands</span><span class="tag">Growth</span><span class="tag">SEO</span><span class="tag">Events</span></div>
+                </div>
             </div>
+
+            <article class="act">
+                <p class="act-num">ACT I<span>APR 2024</span></p>
+                <div>
+                    <h3>Into the North</h3>
+                    <p>I joined Leagues remotely as Partnerships &amp; Product Manager, which in a team this size meant wearing <strong>every hat</strong>. Leagues ran three things at once: <strong>Leagues.gg</strong>, an all-in-one platform for League of Legends, VALORANT and osu! players (tournaments, team finder and live stats); <strong>Leagues Media</strong>, its production and marketing arm; and the <strong>NLC</strong>, the Northern League of Legends Championship for the UK, Ireland and the Nordics.</p>
+                    <figure><img src="../assets/work/leagues-media.jpg" alt="Leagues Media logo" loading="lazy" style="max-width: 420px;"></figure>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT II<span>2024 — 2026</span></p>
+                <div>
+                    <h3>Brands at the table</h3>
+                    <p>Esports runs on partners, so a lot of my time went into the brands behind the league and the events. That meant sitting across from household names, including <strong>KitKat</strong>, Riot's long-running sponsor across the European leagues, and working directly with them.</p>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT III<span>MAY — JUN 2025</span></p>
+                <div>
+                    <h3>We didn't just run finals. We threw a festival.</h3>
+                    <p><strong>Leagues Disrupt</strong> took over K.B. Hallen in Copenhagen for two days: the NLC finals, live music, streamers co-streaming from the venue, an expo floor, giveaways and community meetups. A brand-new kind of esports event for Northern Europe, and it broke the league's records.</p>
+                    <div class="bignums">
+                        <div class="bignum"><b>250K+</b><small>peak concurrent viewers on Twitch</small></div>
+                        <div class="bignum"><b>3,000</b><small>fans in a packed K.B. Hallen</small></div>
+                        <div class="bignum"><b>550K</b><small>hours watched</small></div>
+                        <div class="bignum"><b>100M+</b><small>partner logo impressions</small></div>
+                        <div class="bignum"><b>4M</b><small>VOD views</small></div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT IV<span>JUL 2025</span></p>
+                <div>
+                    <h3>Opening the gates</h3>
+                    <p>With Riot Games, we ran the <strong>Northern Nexus Showdown</strong>, an open qualifier <em>"run in partnership with Leagues.gg and the NLC."</em> Any team in Northern Europe could sign up on Leagues.gg, fight through a Swiss stage and playoffs in one weekend, and the winner flew to the LEC Finals in Madrid as VIPs.</p>
+                    <figure><img src="../assets/work/northern-nexus.jpg" alt="Northern Nexus Showdown key art" loading="lazy"><figcaption>Northern Nexus Showdown · NLC × Riot Games</figcaption></figure>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT V<span>AUG 2025</span></p>
+                <div>
+                    <h3>Stockholm, louder</h3>
+                    <p>Three months later we did it again, bigger: <strong>Leagues Disrupt Stockholm</strong> at Hovet Arena, with room for <strong>5,000</strong>, the summer finals, an after-party, and the NLC's first-ever K-pop performance, from <strong>PRIMROSE</strong>. It even had its own anthem.</p>
+                    <div class="vids">
+                        <button class="yt" data-id="r29BT8BWRjA" style="background-image: url('../assets/work/yt-r29BT8BWRjA.jpg')"><span class="play">▶ PLAY</span><span class="vt">Leagues Disrupt Stockholm 2025 · Official Aftermovie</span></button>
+                        <button class="yt" data-id="-nasat270To" style="background-image: url('../assets/work/yt--nasat270To.jpg')"><span class="play">▶ PLAY</span><span class="vt">"SHUT UP, DISRUPT!" · Official Anthem</span></button>
+                    </div>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT VI<span>2025</span></p>
+                <div>
+                    <h3>More than one league</h3>
+                    <p>The NLC was the headline, but it was never the whole job. Leagues also ran <strong>Danmark Ligaen</strong>, Denmark's national VALORANT league, together with Esport Danmark, plus community competitions on Leagues.gg and the official EMEA League of Legends and VALORANT Discord communities. On the platform side, I helped drive <strong>200K users</strong> to a core product through partnerships, campaigns and platform-led initiatives.</p>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT VII<span>LATE 2025</span></p>
+                <div>
+                    <h3>Writing our way up</h3>
+                    <p>We built the content engine from scratch: blogs, guides and <strong>Leagues News</strong>, daily League of Legends esports coverage living on Leagues.gg. Search took notice, with <strong>60K+ organic visitors in a single month</strong>.</p>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT VIII<span>MAR 2026</span></p>
+                <div>
+                    <h3>The last split</h3>
+                    <p>After the 2026 Winter Split, Leagues told Riot it was <em>"no longer in a position to operate the league."</em> The Spring Split was postponed, and Riot went looking for a new organizer.</p>
+                </div>
+            </article>
+
+            <div class="finale">
+                <p class="kicker">APR 2026 · THE END</p>
+                <h3>THE LAST ONE STANDING</h3>
+                <p>When Leagues ApS shut down and the team was let go, I was the final employee: there until the very end.</p>
+                <p>Two festivals, a national league, a Riot partnership, the brands and a content engine, all from a team small enough to fit in one room. I'd do it all again.</p>
+            </div>
+            <p class="src">Sources: <a href="https://esportsadvocate.net/2026/04/leagues-aps-shut-down/" target="_blank" rel="noopener">The Esports Advocate</a> · <a href="https://www.leagueoflegends.com/en-gb/news/community/northern-nexus-showdown/" target="_blank" rel="noopener">Riot Games</a> · <a href="https://esports-news.co.uk/2025/08/20/tickets-on-sale-primrose-leagues-disrupt-league-of-legends-k-pop/" target="_blank" rel="noopener">Esports News UK</a> · <a href="https://kbhallen.dk/en/past-events/leagues-disrupt_2025-05-31/" target="_blank" rel="noopener">K.B. Hallen</a> · Leagues Media · Images © Leagues ApS / NLC</p>
+        </section>
+
+        <!-- ═══════════ STORY II: CAPTAINSIDE ═══════════ -->
+        <section class="story" id="captainside">
+            <div class="story-card logo-card">
+                <img class="logo" src="../assets/work/captainside-logo.jpg" alt="CaptainSide logo">
+            </div>
+            <div class="chapter-head" style="padding: 1.5rem 0 0;">
+                <p class="kicker">STORY II · 2020 — NOW</p>
+                <h2 style="font-family: var(--pixel); font-weight: 400; font-size: clamp(2.4rem, 7vw, 4.2rem); line-height: 0.95;">FROM A DISCORD SERVER TO A STARTUP</h2>
+                <p class="lede" style="margin-top: 0.6rem;">CaptainSide, Bengaluru. Co-Founder &amp; COO. Six years, three lives, one idea: help the right players find the right games.</p>
+                <div class="chips"><span class="tag">Co-founder</span><span class="tag">Operations</span><span class="tag">GTM</span><span class="tag">Community</span><span class="tag">Web3</span><span class="tag">Product</span></div>
+            </div>
+
+            <article class="act">
+                <p class="act-num">ACT I<span>2020</span></p>
+                <div>
+                    <h3>Two Iron players with a very big plan</h3>
+                    <p>It started with me and Sumit: two <strong>Iron-ranked</strong> VALORANT players, a brand-new Discord server in May 2020, and a completely unreasonable plan to win VCT.</p>
+                    <p>We didn't win VCT. But we both climbed all the way to <strong>Immortal</strong>, and somewhere along the way the server turned into something bigger than the two of us: an Indian esports community hosting tournaments and creating <em>"a meeting point between the web3, NFT space and gaming."</em> It grew past <strong>3,600 members</strong>. I hung up the mouse after Immortal. The community kept going.</p>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT II<span>2021 — 2023</span></p>
+                <div>
+                    <h3>A team, a tournament and a launchpad</h3>
+                    <p>The community became a <strong>Web3 game launchpad</strong>, then an esports organization with its own roster. In September 2023 we revealed the <strong>CAPTAIN SIDE VALORANT</strong> team (<em>"This won't just be a Team, it'll be a Dynasty"</em>), and it went <strong>7–1</strong> in its VALORANT Premier run that month.</p>
+                    <p>We ran our own events too: the <strong>Captain Side Valorant Showdown</strong>, then Season 2 with <strong>100 teams</strong> registered and a <strong>₹50,000</strong> prize pool, plus Weekly Wars, community days and game nights with real prizes on the line.</p>
+                    <div class="vids">
+                        <button class="yt" data-id="6Q4fdewEE5Q" style="background-image: url('../assets/work/yt-6Q4fdewEE5Q.jpg')"><span class="play">▶ PLAY</span><span class="vt">Presenting CAPTAIN SIDE Valorant · Roster Reveal</span></button>
+                        <button class="yt" data-id="gm2XoYZLBG0" style="background-image: url('../assets/work/yt-gm2XoYZLBG0.jpg')"><span class="play">▶ PLAY</span><span class="vt">Captain Side Presents: Game Night with Big Prizes on the Line!</span></button>
+                    </div>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT III<span>2023 — 2025</span></p>
+                <div>
+                    <h3>Going pro</h3>
+                    <p>CaptainSide became a company, incorporated as <strong>CaptainSide Esports Private Limited</strong> in 2024, offering tournament hosting, game marketing, community engagement and Web3 services to game studios.</p>
+                    <p>As Co-Founder &amp; COO, I defined our productized service offerings, pricing and go-to-market from scratch, ran operations, partnerships and client delivery end to end, and built campaigns, creator programs and community initiatives with developers and publishers, including blockchain gaming platforms growing in South Asia. We scaled to <strong>$20K+ in revenue in 10 months</strong>.</p>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT IV<span>2025 — NOW</span></p>
+                <div>
+                    <h3>Tinder, but for games</h3>
+                    <p>Every studio we worked with had the same problem: getting found. So we built the answer ourselves. <strong>captainside.com</strong> helps you <em>"find your next game in 30 seconds"</em> by swiping short gameplay clips from real players. No trailers, no PR, just real footage.</p>
+                    <p>Around it: a YouTube channel with reviews and coverage, including <strong>India's room at Summer Game Fest</strong> and a collaboration with the official Borderlands account, plus the <strong>r/CaptainSide</strong> community and an Instagram that's posted 340+ times.</p>
+                    <div class="vids">
+                        <button class="yt" data-id="vMAJMTsXJ78" style="background-image: url('../assets/work/yt-vMAJMTsXJ78.jpg')"><span class="play">▶ PLAY</span><span class="vt">We Built Tinder For Games</span></button>
+                        <button class="yt" data-id="G-1ZzaeVAZ0" style="background-image: url('../assets/work/yt-G-1ZzaeVAZ0.jpg')"><span class="play">▶ PLAY</span><span class="vt">India Had Its Own Room at Summer Game Fest · IGS 2026</span></button>
+                    </div>
+                    <div class="links"><a href="https://www.captainside.com/" target="_blank" rel="noopener" class="btn small">Try CaptainSide ↗</a><a href="https://www.youtube.com/@captainside2064" target="_blank" rel="noopener" class="btn small">YouTube ↗</a><a href="https://www.reddit.com/r/CaptainSide/" target="_blank" rel="noopener" class="btn small">r/CaptainSide ↗</a></div>
+                </div>
+            </article>
+            <p class="src">Sources: <a href="https://tracker.gg/valorant/premier/teams/f8f6beb2-7dba-42d8-a144-8744c7951a02" target="_blank" rel="noopener">VALORANT Premier via Tracker.gg</a> · <a href="https://playtics.net/organizer/captain-side-esports/" target="_blank" rel="noopener">Playtics</a> · <a href="https://www.youtube.com/@captainside2064" target="_blank" rel="noopener">CaptainSide on YouTube</a></p>
         </section>
 
         <section>
@@ -97,7 +392,7 @@
                 </div>
                 <div class="panel">
                     <p class="label">Operations &amp; domain</p>
-                    <p style="color: var(--dim); margin-top: 0.5rem;">Cross-functional leadership · Stakeholder &amp; client management · Business development · Gaming &amp; esports · Live ops · Web3 gaming · Creator economy</p>
+                    <p style="color: var(--dim); margin-top: 0.5rem;">Cross-functional leadership · Stakeholder &amp; client management · Business development · Brand partnerships · Gaming &amp; esports · Live events · Web3 gaming · Creator economy</p>
                 </div>
                 <div class="panel">
                     <p class="label">Education</p>
@@ -121,5 +416,18 @@
     </main>
 
     <footer>© 2026 AUMRITASH MAITRA</footer>
+
+    <script>
+        // Videos only load YouTube once you press play
+        document.querySelectorAll('.yt').forEach(b => b.addEventListener('click', () => {
+            const f = document.createElement('iframe');
+            f.src = 'https://www.youtube-nocookie.com/embed/' + b.dataset.id + '?autoplay=1&rel=0';
+            f.title = b.querySelector('.vt').textContent;
+            f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+            f.allowFullscreen = true;
+            b.replaceChildren(f);
+            b.style.cursor = 'default';
+        }, { once: true }));
+    </script>
 </body>
 </html>
