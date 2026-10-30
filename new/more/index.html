@@ -8,63 +8,72 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/chapter.css">
+    <script type="importmap">
+        { "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        } }
+    </script>
     <style>
         html, body { height: 100%; overflow: hidden; }
         body::before { display: none; }
-        body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+        body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; background: #000; }
 
-        #scene {
+        /* The 3D view renders at PS1-ish resolution and is blown up with hard pixels */
+        #view {
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
+            width: 100% !important;
+            height: 100% !important;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
         }
+
+        [hidden] { display: none !important; }
 
         .top { position: fixed; top: 0; left: 0; right: 0; z-index: 10; }
 
         .caption {
             position: fixed;
-            top: 14%;
+            top: 13%;
             left: 0;
             right: 0;
             text-align: center;
             font-family: var(--pixel);
             font-size: clamp(1.4rem, 3.5vw, 2.2rem);
             letter-spacing: 0.2em;
-            color: rgba(232, 226, 218, 0.75);
+            color: rgba(232, 226, 218, 0.8);
+            text-shadow: 0 2px 0 #000;
             z-index: 5;
             pointer-events: none;
             transition: opacity 0.6s;
             padding: 0 1rem;
         }
 
-        .prompt {
+        .hint {
             position: fixed;
-            top: 24%;
+            bottom: 7%;
             left: 0;
             right: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.6rem;
-            z-index: 6;
-            font-family: var(--pixel);
-            letter-spacing: 0.2em;
-        }
-
-        .walk-hint {
-            font-size: 1.3rem;
-            color: var(--dim);
-            animation: breathe 2.4s ease-in-out infinite;
-            pointer-events: none;
             text-align: center;
+            font-family: var(--pixel);
+            font-size: 1.3rem;
+            letter-spacing: 0.2em;
+            color: var(--dim);
+            text-shadow: 0 2px 0 #000;
+            z-index: 5;
+            pointer-events: none;
+            animation: breathe 2.4s ease-in-out infinite;
         }
 
         @keyframes breathe { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 
         .kindle {
+            position: fixed;
+            bottom: 7%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 6;
             font-size: 1.8rem;
             padding: 0.5rem 1.6rem 0.4rem;
             border-color: #ffcf8a;
@@ -74,16 +83,94 @@
 
         .kindle:hover, .kindle:focus-visible { background: #ffcf8a; color: #1a0a00; }
 
-        .key-hint { font-size: 1.05rem; color: var(--muted); }
+        /* ── Choose your origin ── */
+        .origin {
+            position: fixed;
+            inset: 0;
+            z-index: 7;
+            pointer-events: none;
+        }
 
-        [hidden] { display: none !important; }
+        .origin > * { pointer-events: auto; }
+
+        .origin-title {
+            position: absolute;
+            top: 9%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: var(--pixel);
+            font-size: clamp(2rem, 5vw, 3.4rem);
+            letter-spacing: 0.22em;
+            color: #ffd9a0;
+            text-shadow: 0 0 18px rgba(255, 150, 60, 0.45), 0 2px 0 #000;
+            pointer-events: none;
+        }
+
+        .origin-panel {
+            position: absolute;
+            left: 50%;
+            bottom: 5%;
+            transform: translateX(-50%);
+            width: min(560px, 92vw);
+            text-align: center;
+            background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.75) 25%);
+            padding: 1.5rem 1rem 1rem;
+        }
+
+        .class-row { display: flex; align-items: center; justify-content: center; gap: 1rem; }
+
+        .arrow {
+            font-family: var(--pixel);
+            font-size: 2.2rem;
+            line-height: 1;
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            padding: 0 0.6rem;
+        }
+
+        .arrow:hover, .arrow:focus-visible { color: #ffcf8a; outline: none; }
+
+        .class-name {
+            font-family: var(--pixel);
+            font-size: clamp(2.4rem, 6vw, 3.4rem);
+            line-height: 1;
+            letter-spacing: 0.12em;
+            min-width: 8ch;
+        }
+
+        .sex-row { display: flex; justify-content: center; gap: 0.6rem; margin: 0.8rem 0; }
+
+        .sex-row .btn { min-width: 5.5rem; justify-content: center; }
+        .sex-row .btn[aria-pressed="true"] { background: var(--text); color: #000; }
+
+        .lore { color: var(--dim); font-size: 0.98rem; font-style: italic; min-height: 3.2em; margin: 0.4rem auto 1rem; max-width: 460px; }
+
+        .begin { font-size: 1.7rem; padding: 0.5rem 2rem 0.4rem; border-color: #ffcf8a; color: #ffe2b8; }
+        .begin:hover, .begin:focus-visible { background: #ffcf8a; color: #1a0a00; }
+
+        .loading {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--pixel);
+            font-size: 1.6rem;
+            letter-spacing: 0.3em;
+            color: var(--dim);
+            z-index: 15;
+            background: #000;
+        }
 
         /* "Flame kindled" banner */
         .banner {
             position: fixed;
             left: 0;
             right: 0;
-            top: 42%;
+            top: 40%;
             transform: translateY(-50%);
             z-index: 8;
             text-align: center;
@@ -98,7 +185,7 @@
             pointer-events: none;
         }
 
-        .banner.show { animation: banner 2.6s ease forwards; }
+        .banner.show { animation: banner 2.8s ease forwards; }
 
         @keyframes banner {
             0% { opacity: 0; letter-spacing: 0.4em; }
@@ -107,56 +194,55 @@
             100% { opacity: 0; }
         }
 
-        /* Rest menu */
-        .rest {
+        /* Path labels floating over the courtyard exits */
+        .paths-title {
             position: fixed;
-            right: 6%;
-            top: 50%;
-            transform: translateY(-50%);
-            width: min(380px, 86vw);
-            z-index: 7;
+            bottom: 4.2rem;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: var(--pixel);
+            font-size: 1.3rem;
+            letter-spacing: 0.3em;
+            color: #ffcf8a;
+            text-shadow: 0 2px 0 #000;
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        .path {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 6;
+            transform: translate(-50%, -100%);
+            text-decoration: none;
+            text-align: center;
+            border: 2px solid var(--text);
+            background: rgba(0, 0, 0, 0.65);
+            padding: 0.45rem 0.9rem 0.35rem;
+            outline: none;
+            white-space: nowrap;
             animation: fadein 0.8s ease;
         }
 
         @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 
-        .rest-title {
-            font-family: var(--pixel);
-            font-size: 1.2rem;
-            letter-spacing: 0.3em;
-            color: #ffcf8a;
-            margin-bottom: 0.9rem;
-        }
+        .path .t { display: block; font-family: var(--pixel); font-size: 1.7rem; line-height: 1; letter-spacing: 0.1em; text-transform: uppercase; }
+        .path .d { display: block; font-size: 0.8rem; color: var(--dim); margin-top: 0.2rem; }
+        .path::after { content: ''; position: absolute; left: 50%; top: 100%; width: 2px; height: 14px; background: var(--text); transform: translateX(-50%); }
 
-        .rest ul { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+        .path:hover, .path:focus-visible, .path.current { background: var(--text); color: #000; }
+        .path:hover .d, .path:focus-visible .d, .path.current .d { color: #3a3330; }
 
-        .rest a {
-            display: block;
-            text-decoration: none;
-            border: 2px solid var(--text);
-            background: rgba(0, 0, 0, 0.6);
-            padding: 0.6rem 1rem 0.5rem;
-            outline: none;
-        }
+        .change { position: fixed; right: 1.5rem; bottom: 1.2rem; z-index: 10; }
 
-        .rest a .t {
-            font-family: var(--pixel);
-            font-size: 1.8rem;
-            line-height: 1;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        .rest a .d { font-size: 0.88rem; color: var(--dim); margin-top: 0.25rem; display: block; }
-
-        .rest a:hover, .rest a:focus-visible, .rest a.current { background: var(--text); color: #000; }
-        .rest a:hover .d, .rest a:focus-visible .d, .rest a.current .d { color: #3a3330; }
-
-        .rest-foot {
-            margin-top: 1rem;
-            font-family: var(--pixel);
-            font-size: 1rem;
-            letter-spacing: 0.15em;
+        .credit {
+            position: fixed;
+            left: 1rem;
+            bottom: 0.6rem;
+            z-index: 4;
+            font-size: 0.7rem;
             color: var(--muted);
         }
 
@@ -165,589 +251,762 @@
             inset: 0;
             background: #000;
             z-index: 20;
-            opacity: 1;
+            opacity: 0;
             pointer-events: none;
             transition: opacity 0.6s steps(5);
         }
 
-        .fade.out { opacity: 0; }
+        .fade.on { opacity: 1; }
 
         @media (max-width: 760px) {
-            .rest { right: auto; left: 50%; top: 4.5rem; transform: translateX(-50%); }
-            .rest a .t { font-size: 1.45rem; }
-            .rest a .d { display: none; }
-            .rest-foot { display: none; }
+            .path .t { font-size: 1.3rem; }
+            .path .d { display: none; }
             .caption { top: 11%; }
-            .prompt { top: 21%; }
-            .walk-hint { font-size: 1.1rem; }
+            .hint { font-size: 1.05rem; }
+            .origin-title { top: 12%; }
+            .change { right: 1rem; bottom: 1rem; }
+            .credit { display: none; }
         }
     </style>
 </head>
 <body>
-    <canvas id="scene" aria-hidden="true"></canvas>
+    <canvas id="view" aria-hidden="true"></canvas>
+
+    <div class="loading" id="loading">LOADING…</div>
 
     <header class="top">
         <a href="../" class="btn small">&lt; Title</a>
-        <button class="btn small skip" id="skip">Skip &gt;</button>
+        <button class="btn small" id="skip" hidden>Skip &gt;</button>
     </header>
 
-    <p class="caption" id="caption">A flame flickers in the distance</p>
+    <!-- Choose your origin -->
+    <section class="origin" id="origin" hidden aria-label="Choose your origin">
+        <h1 class="origin-title">CHOOSE YOUR ORIGIN</h1>
+        <div class="origin-panel">
+            <div class="class-row">
+                <button class="arrow" id="prev" aria-label="Previous origin">&lt;</button>
+                <span class="class-name" id="className">WANDERER</span>
+                <button class="arrow" id="next" aria-label="Next origin">&gt;</button>
+            </div>
+            <div class="sex-row">
+                <button class="btn small" id="sexM" aria-pressed="true">Male</button>
+                <button class="btn small" id="sexF" aria-pressed="false">Female</button>
+            </div>
+            <p class="lore" id="lore"></p>
+            <button class="btn begin" id="begin">Begin</button>
+        </div>
+    </section>
 
-    <div class="prompt">
-        <p class="walk-hint" id="walkHint">HOLD TO WALK</p>
-        <button class="btn kindle" id="kindle" hidden>Kindle the flame</button>
-        <p class="key-hint" id="keyHint" hidden>[E] TO KINDLE</p>
-    </div>
+    <p class="caption" id="caption" hidden></p>
+    <p class="hint" id="hint" hidden></p>
+    <button class="btn kindle" id="kindle" hidden>Kindle the flame</button>
 
     <div class="banner" id="banner" aria-live="polite">FLAME KINDLED</div>
 
-    <nav class="rest" id="rest" hidden aria-label="Chapters">
-        <p class="rest-title">REST · TRAVEL TO</p>
-        <ul>
-            <li><a href="../work/" class="current"><span class="t">The Work</span><span class="d">Career, case studies and results</span></a></li>
-            <li><a href="../games/"><span class="t">The Games</span><span class="d">What I play, and what nearly broke me</span></a></li>
-            <li><a href="../stories/"><span class="t">The Stories</span><span class="d">The fiction that shaped me</span></a></li>
-        </ul>
-        <p class="rest-foot">↑ ↓ TO CHOOSE · ENTER TO TRAVEL</p>
-    </nav>
+    <p class="paths-title" id="pathsTitle" hidden>CHOOSE A PATH</p>
+    <a class="path" id="pathWork" href="../work/" hidden><span class="t">The Work</span><span class="d">Career, case studies and results</span></a>
+    <a class="path" id="pathGames" href="../games/" hidden><span class="t">The Games</span><span class="d">What I play, and what nearly broke me</span></a>
+    <a class="path" id="pathStories" href="../stories/" hidden><span class="t">The Stories</span><span class="d">The fiction that shaped me</span></a>
 
-    <div class="fade" id="fade"></div>
+    <button class="btn small change" id="change" hidden>Change origin</button>
+    <p class="credit">Characters &amp; animations: Quaternius (CC0)</p>
 
-    <script>
-    (() => {
-        const canvas = document.getElementById('scene');
-        const ctx = canvas.getContext('2d');
-        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const touch = matchMedia('(hover: none)').matches;
-        const $ = id => document.getElementById(id);
-        const caption = $('caption'), walkHint = $('walkHint'), kindleBtn = $('kindle'), keyHint = $('keyHint');
-        const banner = $('banner'), rest = $('rest'), fade = $('fade'), skip = $('skip');
-        const STORE = 'aumritash-kindled';
+    <div class="fade on" id="fade"></div>
 
-        walkHint.textContent = touch ? 'HOLD THE SCREEN TO WALK' : 'HOLD CLICK · W · ↑ · OR SCROLL TO WALK';
+    <script type="module">
+    import * as THREE from 'three';
+    import { CLASSES, loadCharacter } from '../assets/characters.js';
 
-        // ── Low-res canvas + a simple perspective camera ──
-        let P, cw, ch, u, cx, horizon, G;
-        function resize() {
-            P = Math.max(2, Math.round(Math.min(innerWidth, innerHeight) / 170));
-            cw = Math.ceil(innerWidth / P);
-            ch = Math.ceil(innerHeight / P);
-            canvas.width = cw;
-            canvas.height = ch;
-            u = Math.min(cw, ch) / 100;
-            cx = innerWidth > 760 ? cw * 0.4 : cw / 2;   // leave room for the menu on desktop
-            horizon = ch * 0.5;
-            G = (ch * 0.8 - horizon) * 1.25;             // ground depth, so z = 1.25 (the fire on arrival) lands beside the knight
+    const $ = id => document.getElementById(id);
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const touch = matchMedia('(hover: none)').matches;
+    const STORE_ORIGIN = 'aumritash-origin', STORE_KINDLED = 'aumritash-kindled';
+    const store = {
+        get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+        set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+        del: k => { try { localStorage.removeItem(k); } catch (e) {} }
+    };
+
+    // ── Renderer at PS1-ish resolution ──
+    const canvas = $('view');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'low-power' });
+    renderer.setPixelRatio(1);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 120);
+    function resize() {
+        const scale = Math.max(2, innerHeight / 300);
+        renderer.setSize(Math.ceil(innerWidth / scale), Math.ceil(innerHeight / scale), false);
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+    }
+    resize();
+    addEventListener('resize', resize);
+
+    // ── Small procedural textures (no image files) ──
+    function noiseTexture(base, spread, size = 64, blocks = false) {
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const g = c.getContext('2d');
+        const img = g.createImageData(size, size);
+        for (let i = 0; i < size * size; i++) {
+            const n = (Math.random() - 0.5) * spread;
+            img.data[i * 4] = base[0] + n; img.data[i * 4 + 1] = base[1] + n * 0.9; img.data[i * 4 + 2] = base[2] + n * 0.8; img.data[i * 4 + 3] = 255;
         }
-        resize();
-        addEventListener('resize', resize);
-
-        // World space: X is sideways (in u), z is depth. The fire sits ahead on the path.
-        const PATH = 18, FIRE_X = 7, NEAR = 1.25;
-        const project = (X, z) => ({ x: cx + X * u * NEAR / z, y: horizon + G / z, s: NEAR / z });
-
-        // ── State ──
-        let p = 0, walkPhase = 0, kindling = -1, lit = false, resting = false;
-        let kindled = false;
-        try { kindled = localStorage.getItem(STORE) === '1'; } catch (e) {}
-
-        // Ruins either side of the path: broken pillars, dead trees, rocks
-        function rand(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
-        const R = rand(11);
-        function makeProp(z) {
-            const side = R() < 0.5 ? -1 : 1;
-            const kind = R() < 0.45 ? 'pillar' : R() < 0.6 ? 'tree' : 'rock';
-            return { X: side * (22 + R() * 45), z, kind, h: kind === 'pillar' ? 18 + R() * 30 : kind === 'tree' ? 28 + R() * 25 : 4 + R() * 5, w: kind === 'pillar' ? 4 + R() * 3 : 6 + R() * 6, seed: Math.floor(R() * 1e6) };
-        }
-        const props = Array.from({ length: 26 }, (_, i) => makeProp(1.4 + i * (21 / 26) + R() * 0.6));
-        const stones = Array.from({ length: 90 }, () => ({ X: (R() - 0.5) * 120, z: 1 + R() * 21 }));
-        const ash = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), s: Math.random() }));
-        const embers = [], lurkers = [];
-        let nextLurker = performance.now() + 1500;
-
-        // ── Input ──
-        const held = new Set();
-        const isUI = t => t.closest && t.closest('button, a, nav');
-        addEventListener('pointerdown', e => { if (!isUI(e.target)) held.add('pointer'); });
-        addEventListener('pointerup', () => held.delete('pointer'));
-        addEventListener('pointercancel', () => held.delete('pointer'));
-        addEventListener('blur', () => held.clear());
-        addEventListener('contextmenu', e => { if (!isUI(e.target)) e.preventDefault(); });
-        addEventListener('keydown', e => {
-            if (['w', 'W', 'ArrowUp', ' '].includes(e.key) && kindling < 0) { held.add(e.key); e.preventDefault(); }
-            if ((e.key === 'e' || e.key === 'E' || e.key === 'Enter') && p >= 1 && kindling < 0) { e.preventDefault(); kindle(); }
-        });
-        addEventListener('keyup', e => held.delete(e.key));
-        let wheelBoost = 0;
-        addEventListener('wheel', e => { if (kindling < 0 && e.deltaY > 0) wheelBoost += Math.min(e.deltaY, 120) * 0.0008; }, { passive: true });
-
-        skip.addEventListener('click', () => { advance(1 - p); });
-        kindleBtn.addEventListener('click', kindle);
-
-        // Walking forward moves the whole world towards you
-        function advance(dp) {
-            dp = Math.max(0, Math.min(dp, 1 - p));
-            if (!dp) return;
-            p += dp;
-            const dz = dp * PATH;
-            for (const o of props) { o.z -= dz; if (o.z < 0.55) Object.assign(o, makeProp(o.z + 21)); }
-            for (const s of stones) { s.z -= dz; if (s.z < 0.6) { s.z += 21; s.X = (R() - 0.5) * 120; } }
-        }
-
-        let clock = performance.now();
-        function kindle() {
-            if (kindling >= 0) return;
-            kindling = clock;
-            try { localStorage.setItem(STORE, '1'); } catch (e) {}
-            kindleBtn.hidden = true;
-            keyHint.hidden = true;
-            skip.hidden = true;
-            caption.style.opacity = 0;
-            // The knight kneels first; the fire catches a beat later, like at a real bonfire
-            setTimeout(() => { lit = true; banner.classList.add('show'); }, reduce ? 0 : 900);
-            setTimeout(() => { resting = true; showRest(); }, reduce ? 300 : 3200);
-        }
-
-        // ── Rest menu ──
-        const items = [...rest.querySelectorAll('a')];
-        let current = 0;
-        function select(i) {
-            current = (i + items.length) % items.length;
-            items.forEach((a, n) => a.classList.toggle('current', n === current));
-        }
-        items.forEach((a, i) => {
-            a.addEventListener('mouseenter', () => select(i));
-            a.addEventListener('focus', () => select(i));
-            a.addEventListener('click', e => { e.preventDefault(); travel(a.href); });
-        });
-        let menuKeys = false;
-        function showRest() {
-            rest.hidden = false;
-            if (menuKeys) return;
-            menuKeys = true;
-            addEventListener('keydown', e => {
-                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    select(current + (e.key === 'ArrowDown' ? 1 : -1));
-                    items[current].focus();
-                } else if (e.key === 'Enter' && document.activeElement === document.body) {
-                    travel(items[current].href);
-                }
-            });
-        }
-        function travel(href) {
-            fade.classList.remove('out');
-            setTimeout(() => { location.href = href; }, 550);
-        }
-
-        // Returning visitors find the knight already resting by a lit fire
-        if (kindled) {
-            advance(1);
-            kindling = -1e9;
-            lit = true;
-            resting = true;
-            caption.style.opacity = 0;
-            walkHint.hidden = true;
-            skip.hidden = true;
-            showRest();
-        }
-
-        requestAnimationFrame(() => fade.classList.add('out'));
-
-        // ── Noise ──
-        const noise = document.createElement('canvas');
-        noise.width = noise.height = 96;
-        const nctx = noise.getContext('2d');
-        const nimg = nctx.createImageData(96, 96);
-        function refreshNoise() {
-            const d = nimg.data;
-            for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
-            nctx.putImageData(nimg, 0, 0);
-        }
-
-        // ── Props ──
-        function drawProp(o, fire, glow) {
-            const q = project(o.X, o.z);
-            if (q.x < -60 || q.x > cw + 60) return;
-            const sc = q.s * u;
-            // Far props fade into the hazy horizon colour
-            const fog = Math.min(0.85, o.z / 24);
-            const near = 1 - fog;
-            const shade = `rgb(${Math.round(7 + 30 * fog)}, ${Math.round(5 + 14 * fog)}, ${Math.round(4 + 10 * fog)})`;
-            const lr = R2(o.seed);
-            ctx.save();
-            if (o.kind === 'pillar') {
-                const w = o.w * sc, h = o.h * sc;
-                ctx.fillStyle = shade;
-                ctx.fillRect(q.x - w / 2, q.y - h, w, h);
-                // Broken, jagged top
-                ctx.fillRect(q.x - w / 2, q.y - h - 2 * sc, w * 0.35, 2 * sc);
-                ctx.fillRect(q.x + w * 0.1, q.y - h - 4 * sc * lr(), w * 0.25, 4 * sc * lr());
-                // Base and capital
-                ctx.fillRect(q.x - w * 0.7, q.y - 1.5 * sc, w * 1.4, 1.5 * sc);
-                if (glow > 0 && Math.abs(q.x - fire.x) < 90 * u) {
-                    const side = fire.x > q.x ? 1 : -1;
-                    ctx.fillStyle = `rgba(200, 95, 35, ${0.35 * glow * near})`;
-                    ctx.fillRect(side > 0 ? q.x + w / 2 - Math.max(1, sc) : q.x - w / 2, q.y - h, Math.max(1, sc), h);
-                }
-            } else if (o.kind === 'tree') {
-                ctx.strokeStyle = shade;
-                ctx.lineCap = 'round';
-                ctx.lineWidth = Math.max(1, 1.6 * sc);
-                const h = o.h * sc;
-                ctx.beginPath();
-                ctx.moveTo(q.x, q.y);
-                ctx.lineTo(q.x + (lr() - 0.5) * 4 * sc, q.y - h);
-                ctx.stroke();
-                ctx.lineWidth = Math.max(1, 0.8 * sc);
-                for (let b = 0; b < 4; b++) {
-                    const by = q.y - h * (0.45 + b * 0.14);
-                    const dir = b % 2 ? 1 : -1;
-                    ctx.beginPath();
-                    ctx.moveTo(q.x, by);
-                    ctx.lineTo(q.x + dir * (5 + lr() * 8) * sc, by - (3 + lr() * 6) * sc);
-                    ctx.stroke();
-                }
-            } else {
-                ctx.fillStyle = shade;
-                ctx.beginPath();
-                ctx.ellipse(q.x, q.y - o.h * sc * 0.4, o.w * sc, o.h * sc * 0.6, 0, Math.PI, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        function R2(seed) { let s = seed || 1; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
-
-        // ── The flame and its cairn ──
-        function tongue(x, y, w, h, sway, color) {
-            ctx.beginPath();
-            ctx.moveTo(x - w, y);
-            ctx.quadraticCurveTo(x - w * 1.15, y - h * 0.55, x + sway, y - h);
-            ctx.quadraticCurveTo(x + w * 1.15, y - h * 0.55, x + w, y);
-            ctx.closePath();
-            ctx.fillStyle = color;
-            ctx.fill();
-        }
-
-        function drawFire(fx, fy, su, t, flare) {
-            for (const [dx, ph] of [[-0.55, 1.7], [0.6, 3.1]]) {
-                const h = 15 * su * flare * (1 + 0.15 * Math.sin(t * 11 + ph));
-                tongue(fx + dx * 8 * su, fy, 4 * su, h, Math.sin(t * 6 + ph) * 2 * su, '#d63c10');
-            }
-            [['#a8260c', 26, 9], ['#ff6a14', 20, 7], ['#ffb347', 14, 5], ['#fff0c2', 8, 2.6]].forEach(([color, h, w], i) => {
-                const hh = h * su * flare * (1 + 0.09 * Math.sin(t * 13 + i * 1.3) + 0.05 * Math.sin(t * 29 + i));
-                const sway = (Math.sin(t * 5 + i) + Math.sin(t * 9.3 + i * 2) * 0.5) * 1.6 * su;
-                tongue(fx, fy, w * su, hh, sway, color);
-            });
-        }
-
-        function drawCairn(fx, fy, su, glow) {
-            const stonesC = [[-9, 1, 6, 3.2], [9, 1, 6, 3.4], [-4, 2.5, 6.5, 3.5], [4.5, 2.6, 6, 3.3], [0, 0.2, 5.5, 3]];
-            for (const [dx, dy, rx, ry] of stonesC) {
-                ctx.beginPath();
-                ctx.ellipse(fx + dx * su, fy + dy * su, rx * su, ry * su, 0, 0, Math.PI * 2);
-                ctx.fillStyle = '#17110f';
-                ctx.fill();
-                if (glow > 0) {
-                    ctx.beginPath();
-                    ctx.ellipse(fx + dx * su, fy + (dy - ry * 0.45) * su, rx * 0.8 * su, ry * 0.4 * su, 0, Math.PI, Math.PI * 2);
-                    ctx.fillStyle = `rgba(150, 70, 30, ${0.7 * glow})`;
-                    ctx.fill();
-                }
-            }
-            ctx.beginPath();
-            ctx.moveTo(fx - 7 * su, fy - 4 * su);
-            ctx.lineTo(fx + 7 * su, fy - 4 * su);
-            ctx.lineTo(fx + 4.5 * su, fy + 0.5 * su);
-            ctx.lineTo(fx - 4.5 * su, fy + 0.5 * su);
-            ctx.closePath();
-            ctx.fillStyle = '#0e0b0a';
-            ctx.fill();
-            ctx.strokeStyle = glow > 0 ? `rgba(200, 110, 50, ${0.6 * glow})` : '#2a2220';
-            ctx.lineWidth = Math.max(1, 0.5 * su);
-            ctx.stroke();
-        }
-
-        // ── The knight, seen from behind ──
-        const C = {
-            armor: '#3a3430', armorDark: '#25211e', helm: '#4b443d', cape: '#3d1d15', capeDark: '#2a130d',
-            shield: '#4a3a29', rim: '#6d5a40', blade: '#a3a8ad', hilt: '#5a4630', boot: '#1c1816'
-        };
-
-        function drawKnight(x, y, k, pose, phase, t, light) {
-            const r = (x0, y0, x1, y1, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x + x0 * k), Math.round(y + y0 * k), Math.max(1, Math.round((x1 - x0) * k)), Math.max(1, Math.round((y1 - y0) * k))); };
-            const poly = (pts, c) => { ctx.beginPath(); pts.forEach(([px, py], i) => (i ? ctx.lineTo : ctx.moveTo).call(ctx, x + px * k, y + py * k)); ctx.closePath(); ctx.fillStyle = c; ctx.fill(); };
-            const line = (x0, y0, x1, y1, w, c) => { ctx.strokeStyle = c; ctx.lineWidth = Math.max(1, w * k); ctx.beginPath(); ctx.moveTo(x + x0 * k, y + y0 * k); ctx.lineTo(x + x1 * k, y + y1 * k); ctx.stroke(); };
-
-            // Shadow on the ground
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.beginPath(); ctx.ellipse(x, y, 7 * k, 1.6 * k, 0, 0, Math.PI * 2); ctx.fill();
-
-            if (pose === 'walk' || pose === 'idle') {
-                const s = Math.sin(phase);
-                const bob = pose === 'walk' ? -Math.abs(s) * 0.6 : Math.sin(t * 2) * 0.15;
-                const liftL = pose === 'walk' ? Math.max(0, s) * 1.8 : 0;
-                const liftR = pose === 'walk' ? Math.max(0, -s) * 1.8 : 0;
-                const swing = pose === 'walk' ? s : 0;
-                // Legs
-                r(-3, -10 + bob, -0.6, -1 - liftL, C.armorDark);
-                r(-3.3, -1.6 - liftL, -0.3, 0 - liftL, C.boot);
-                r(0.6, -10 + bob, 3, -1 - liftR, C.armorDark);
-                r(0.3, -1.6 - liftR, 3.3, 0 - liftR, C.boot);
-                // Shield arm
-                r(-7.8, -17 + bob + swing * 0.5, -4.6, -8.5 + bob + swing * 0.5, C.shield);
-                r(-7.8, -17 + bob + swing * 0.5, -7.1, -8.5 + bob + swing * 0.5, C.rim);
-                // Cape over the back
-                const sw = swing * 0.7;
-                poly([[-4.7, -19.5 + bob], [4.7, -19.5 + bob], [5.6 + sw, -6 + bob], [4 + sw, -5 + bob], [2.5 + sw, -6.4 + bob], [0.8 + sw, -5.2 + bob], [-1 + sw, -6.5 + bob], [-2.8 + sw, -5.1 + bob], [-4.4 + sw, -6.3 + bob], [-5.6 + sw, -5.4 + bob]], C.cape);
-                poly([[0, -19 + bob], [1.5, -19 + bob], [2 + sw, -6 + bob], [0.6 + sw, -5.5 + bob]], C.capeDark);
-                // Pauldrons and helmet
-                r(-5.4, -20.5 + bob, -3, -17.6 + bob, C.armor);
-                r(3, -20.5 + bob, 5.4, -17.6 + bob, C.armor);
-                r(-2.5, -25 + bob, 2.5, -19.8 + bob, C.helm);
-                r(-0.4, -26 + bob, 0.4, -25 + bob, C.helm);
-                // Sword arm
-                r(4.6, -18 + bob, 6, -12 + bob - swing * 0.6, C.armor);
-                r(4.9, -12.8 + bob - swing * 0.6, 6.6, -11.9 + bob - swing * 0.6, C.hilt);
-                line(5.8, -12 + bob - swing * 0.6, 7.4 + swing * 0.9, -2.5 + bob, 0.75, C.blade);
-            } else if (pose === 'kneel') {
-                // One knee down, reaching towards the fire
-                r(-3, -5, -0.6, 0, C.armorDark);
-                r(-3.4, -1.2, -0.2, 0, C.boot);
-                r(0.6, -6.5, 3.2, -3.5, C.armorDark);
-                r(1.6, -3.6, 3.4, 0, C.boot);
-                r(-7.4, -12, -4.4, -4.5, C.shield);
-                r(-7.4, -12, -6.8, -4.5, C.rim);
-                poly([[-4.6, -15], [4.6, -15], [5.4, -1.6], [2, -1], [-1.5, -1.8], [-5.4, -1.2]], C.cape);
-                r(-5.2, -16, -3, -13.4, C.armor);
-                r(3, -16, 5.2, -13.4, C.armor);
-                r(-2.4, -20.5, 2.4, -15.4, C.helm);
-                line(4.5, -14.5, 9.5, -17.5, 1.4, C.armor);
-                line(-9, -0.2, 1, -0.6, 0.7, C.blade);
-            } else {
-                // Sitting by the fire, sword planted beside him
-                line(7.5, -15, 7.5, 0, 0.75, C.blade);
-                r(6.3, -13.2, 8.7, -12.4, C.hilt);
-                r(-3.6, -6, -1.4, -2.6, C.armorDark);
-                r(1.4, -6, 3.6, -2.6, C.armorDark);
-                poly([[-4.5, -13], [4.5, -13], [7, 0], [-7, 0]], C.cape);
-                poly([[0, -12.5], [1.4, -12.5], [2.4, 0], [0.4, 0]], C.capeDark);
-                r(-5.2, -14, -3, -11.4, C.armor);
-                r(3, -14, 5.2, -11.4, C.armor);
-                r(-2.4, -18.2 + Math.sin(t * 1.2) * 0.12, 2.4, -13.2, C.helm);
-                r(-7.8, -7, -4.8, 0, C.shield);
-                r(-7.8, -7, -7.2, 0, C.rim);
-            }
-
-            // Firelight catching his right side
-            if (light > 0) {
-                const top = pose === 'walk' || pose === 'idle' ? -25 : pose === 'kneel' ? -20.5 : -18;
-                ctx.fillStyle = `rgba(230, 120, 45, ${0.45 * light})`;
-                ctx.fillRect(Math.round(x + 3.6 * k), Math.round(y + top * k), Math.max(1, Math.round(1.2 * k)), Math.round(-top * k * 0.85));
-                ctx.fillRect(Math.round(x + 1.5 * k), Math.round(y + top * k), Math.max(1, Math.round(1 * k)), Math.max(1, Math.round(1 * k)));
+        g.putImageData(img, 0, 0);
+        if (blocks) {
+            g.strokeStyle = 'rgba(0,0,0,0.45)';
+            g.lineWidth = 1;
+            for (let y = 0; y < size; y += 16) {
+                g.beginPath(); g.moveTo(0, y + 0.5); g.lineTo(size, y + 0.5); g.stroke();
+                const off = (y / 16) % 2 ? 0 : 16;
+                for (let x = off; x < size; x += 32) { g.beginPath(); g.moveTo(x + 0.5, y); g.lineTo(x + 0.5, y + 16); g.stroke(); }
             }
         }
+        const t = new THREE.CanvasTexture(c);
+        t.magFilter = THREE.NearestFilter;
+        t.minFilter = THREE.NearestMipmapNearestFilter;
+        t.wrapS = t.wrapT = THREE.RepeatWrapping;
+        t.colorSpace = THREE.SRGBColorSpace;
+        return t;
+    }
+    function glowTexture() {
+        const c = document.createElement('canvas');
+        c.width = c.height = 32;
+        const g = c.getContext('2d');
+        const grd = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+        grd.addColorStop(0, 'rgba(255,255,255,1)');
+        grd.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+        grd.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = grd;
+        g.fillRect(0, 0, 32, 32);
+        return new THREE.CanvasTexture(c);
+    }
+    const GLOW = glowTexture();
 
-        // ── Main loop ──
-        let last = performance.now(), frameNo = 0;
+    const stoneTex = noiseTexture([92, 84, 76], 40, 64, true);
+    const roughTex = noiseTexture([70, 62, 56], 50, 64);
+    const groundTex = noiseTexture([42, 34, 30], 30, 64);
+    const mat = (tex, repeat = 1, color = '#ffffff') => {
+        const t = tex.clone(); t.needsUpdate = true; t.repeat.set(repeat, repeat);
+        return new THREE.MeshLambertMaterial({ map: t, color });
+    };
+    const STONE = mat(stoneTex, 1), ROUGH = mat(roughTex, 1), DARK = new THREE.MeshLambertMaterial({ color: '#0d0a09' });
 
-        function frame(now) {
-            clock = now;
-            const dt = Math.max(0, Math.min(0.25, (now - last) / 1000));
-            last = now;
-            frameNo++;
-            const t = now / 1000;
+    // ═════════════ The world: a ruined shrine courtyard ═════════════
+    const world = new THREE.Scene();
+    world.background = new THREE.Color('#07060a');
+    world.fog = new THREE.FogExp2('#15111a', 0.045);
 
-            // Walk
-            const wasArrived = p >= 1;
-            const walking = kindling < 0 && p < 1 && (held.size > 0 || wheelBoost > 0.0005);
-            if (walking) {
-                const step = (held.size > 0 ? dt * 0.14 : 0) + Math.min(wheelBoost, 0.04);
-                advance(step);
-                walkPhase += (held.size > 0 ? dt * 9 : 0) + Math.min(wheelBoost, 0.04) * 60;
+    const ambient = new THREE.HemisphereLight('#6a7a9a', '#1f1612', 1.1);
+    world.add(ambient);
+    const moon = new THREE.DirectionalLight('#9aaed4', 0.95);
+    moon.position.set(-12, 20, -8);
+    world.add(moon);
+    // A faint cool light that travels with the character so they always read against the dark
+    const heroLight = new THREE.PointLight('#a8bce0', 2.2, 7, 1.6);
+    world.add(heroLight);
+
+    // The distant ember: a glow that cuts through the fog so you know where to walk
+    const beacon = new THREE.Sprite(new THREE.SpriteMaterial({ map: null, color: '#ff7a30', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    beacon.position.set(0, 0.7, 0);
+    world.add(beacon);
+
+    const fireLight = new THREE.PointLight('#ff8a3a', 0.6, 6, 1.5);
+    fireLight.position.set(0, 0.9, 0);
+    world.add(fireLight);
+
+    // Ground and paved areas
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), mat(groundTex, 40));
+    ground.rotation.x = -Math.PI / 2;
+    world.add(ground);
+    const courtyard = new THREE.Mesh(new THREE.CircleGeometry(9.5, 24), mat(stoneTex, 6, '#9a8f86'));
+    courtyard.rotation.x = -Math.PI / 2;
+    courtyard.position.y = 0.01;
+    world.add(courtyard);
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 32), mat(stoneTex, 1, '#8a8078'));
+    road.material.map.repeat.set(1.5, 15);
+    road.rotation.x = -Math.PI / 2;
+    road.position.set(0, 0.012, 24);
+    world.add(road);
+
+    const rand = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+
+    function pillar(x, z, h, broken = true) {
+        const g = new THREE.Group();
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, h, 8), STONE);
+        shaft.position.y = h / 2;
+        g.add(shaft);
+        const base = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.35, 1.2), ROUGH);
+        base.position.y = 0.17;
+        g.add(base);
+        if (broken) {
+            const chunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.42, 0.5, 6), STONE);
+            chunk.position.set(0.12, h + 0.2, 0);
+            chunk.rotation.z = 0.35;
+            g.add(chunk);
+        } else {
+            const cap = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.3, 1.1), ROUGH);
+            cap.position.y = h + 0.15;
+            g.add(cap);
+        }
+        g.position.set(x, 0, z);
+        world.add(g);
+        return g;
+    }
+
+    function wall(x, z, len, h, rotY) {
+        const g = new THREE.Group();
+        const n = Math.max(2, Math.round(len / 1.2));
+        for (let i = 0; i < n; i++) {
+            const hh = h * (0.45 + rand() * 0.55);
+            const b = new THREE.Mesh(new THREE.BoxGeometry(len / n + 0.02, hh, 0.7), STONE);
+            b.position.set(-len / 2 + (i + 0.5) * (len / n), hh / 2, 0);
+            g.add(b);
+        }
+        g.position.set(x, 0, z);
+        g.rotation.y = rotY;
+        world.add(g);
+    }
+
+    function arch(x, z, rotY, w = 3.4, h = 3.8, collapsed = false) {
+        const g = new THREE.Group();
+        for (const s of [-1, 1]) {
+            const p = new THREE.Mesh(new THREE.BoxGeometry(0.8, h, 0.8), STONE);
+            p.position.set(s * w / 2, h / 2, 0);
+            g.add(p);
+        }
+        const top = new THREE.Mesh(new THREE.TorusGeometry(w / 2, 0.38, 4, 10, collapsed ? Math.PI * 0.55 : Math.PI), STONE);
+        top.position.y = h;
+        g.add(top);
+        g.position.set(x, 0, z);
+        g.rotation.y = rotY;
+        world.add(g);
+        return g;
+    }
+
+    function rubble(x, z, n, spread) {
+        for (let i = 0; i < n; i++) {
+            const r = 0.15 + rand() * 0.45;
+            const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), ROUGH);
+            m.position.set(x + (rand() - 0.5) * spread, r * 0.6, z + (rand() - 0.5) * spread);
+            m.rotation.set(rand() * 3, rand() * 3, rand() * 3);
+            world.add(m);
+        }
+    }
+
+    // The road in: broken pillars either side, a collapsed gateway arch
+    for (let z = 30; z > 10; z -= 4) {
+        pillar(-3.2, z + rand(), 1.5 + rand() * 3.2);
+        pillar(3.2, z + rand(), 1.2 + rand() * 3.6);
+        rubble(-4.5, z, 3, 2);
+        rubble(4.5, z, 3, 2);
+    }
+    arch(0, 17, 0, 4.2, 4.2, true);
+    rubble(1.8, 16.4, 6, 1.6);
+
+    // The courtyard: a ring of ruined walls with three exits (west, north, east) and the road in (south)
+    const R = 9.4;
+    const exits = [Math.PI, Math.PI * 1.5, 0, Math.PI / 2];   // west, north, east, south (angles around the fire)
+    for (let i = 0; i < 4; i++) {
+        const a0 = exits[i] + 0.32, a1 = exits[(i + 1) % 4] + (i === 3 ? Math.PI * 2 : 0) - 0.32;
+        const steps = 3;
+        for (let s = 0; s < steps; s++) {
+            const a = a0 + (a1 - a0) * (s + 0.5) / steps;
+            const len = R * (a1 - a0) / steps * 1.05;
+            wall(Math.cos(a) * R, Math.sin(a) * R, len, 2.4 + rand() * 1.6, -a + Math.PI / 2);
+        }
+    }
+    for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + 0.39;
+        pillar(Math.cos(a) * 6.6, Math.sin(a) * 6.6, 1.2 + rand() * 3.5, rand() < 0.75);
+    }
+    rubble(-5, -4, 5, 2.5);
+    rubble(5, 4.5, 4, 2);
+
+    // West exit: a dark doorway (The Work)
+    arch(-R, 0, Math.PI / 2, 2.6, 3.6);
+    const door = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 4.8), DARK);
+    door.position.set(-R - 0.45, 2.4, 0);
+    door.rotation.y = Math.PI / 2;
+    world.add(door);
+
+    // North exit: stairs climbing into the dark (The Games)
+    for (let i = 0; i < 7; i++) {
+        const st = new THREE.Mesh(new THREE.BoxGeometry(3, 0.32, 0.9), STONE);
+        st.position.set(0, 0.16 + i * 0.32, -R - 0.2 - i * 0.85);
+        st.scale.y = 1 + i;
+        st.position.y = (0.32 * (1 + i)) / 2;
+        world.add(st);
+    }
+    pillar(-2, -R - 1, 3.4, true);
+    pillar(2, -R - 1, 2.2, true);
+
+    // East exit: a broken bridge out over nothing (The Stories)
+    for (let i = 0; i < 9; i++) {
+        if (i === 6) continue;
+        const pl = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.16, 2.2), ROUGH);
+        pl.position.set(R + 0.6 + i * 0.9, 0.08 - (i > 6 ? 0.25 : 0), (rand() - 0.5) * 0.15);
+        pl.rotation.y = (rand() - 0.5) * 0.12;
+        world.add(pl);
+    }
+    for (let i = 0; i < 4; i++) for (const s of [-1, 1]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.9 + rand() * 0.5, 0.14), ROUGH);
+        post.position.set(R + 0.8 + i * 2, 0.5, s * 1.1);
+        world.add(post);
+    }
+
+    // Far silhouettes so the fog has depth
+    for (let i = 0; i < 10; i++) {
+        const a = rand() * Math.PI * 2, d = 26 + rand() * 18, h = 6 + rand() * 14;
+        const t = new THREE.Mesh(new THREE.BoxGeometry(2 + rand() * 4, h, 2 + rand() * 4), DARK);
+        t.position.set(Math.cos(a) * d, h / 2, Math.sin(a) * d);
+        if (Math.abs(Math.cos(a) * d) < 6 && Math.sin(a) > 0) continue;   // keep the road clear
+        world.add(t);
+    }
+
+    // The cairn and brazier at the centre, and a broken column drum to sit on
+    for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * Math.PI * 2;
+        const st = new THREE.Mesh(new THREE.DodecahedronGeometry(0.28 + rand() * 0.12, 0), ROUGH);
+        st.position.set(Math.cos(a) * 0.75, 0.18, Math.sin(a) * 0.75);
+        st.rotation.set(rand() * 3, rand() * 3, rand() * 3);
+        world.add(st);
+    }
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.32, 0.38, 8, 1, true), new THREE.MeshLambertMaterial({ color: '#2a2220', side: THREE.DoubleSide }));
+    bowl.position.y = 0.42;
+    world.add(bowl);
+    const SEAT = new THREE.Vector3(1.75, 0, 1.75);
+    const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.46, 0.46, 8), STONE);
+    seat.position.set(SEAT.x + 0.25, 0.23, SEAT.z + 0.25);
+    world.add(seat);
+
+    // ── Fire, embers and smoke as additive points ──
+    const FIRE_N = touch ? 70 : 120;
+    const fireGeo = new THREE.BufferGeometry();
+    const fPos = new Float32Array(FIRE_N * 3), fCol = new Float32Array(FIRE_N * 3);
+    const fState = Array.from({ length: FIRE_N }, () => ({ life: Math.random(), x: 0, z: 0, vy: 0, vx: 0, vz: 0 }));
+    fireGeo.setAttribute('position', new THREE.BufferAttribute(fPos, 3));
+    fireGeo.setAttribute('color', new THREE.BufferAttribute(fCol, 3));
+    const fire = new THREE.Points(fireGeo, new THREE.PointsMaterial({ size: 0.42, map: GLOW, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+    world.add(fire);
+    beacon.material.map = GLOW;
+
+    // Ash drifting through the air
+    const ASH_N = touch ? 120 : 220;
+    const ashGeo = new THREE.BufferGeometry();
+    const aPos = new Float32Array(ASH_N * 3);
+    for (let i = 0; i < ASH_N; i++) { aPos[i * 3] = (Math.random() - 0.5) * 40; aPos[i * 3 + 1] = Math.random() * 10; aPos[i * 3 + 2] = Math.random() * 40 - 12; }
+    ashGeo.setAttribute('position', new THREE.BufferAttribute(aPos, 3));
+    world.add(new THREE.Points(ashGeo, new THREE.PointsMaterial({ size: 0.05, color: '#9a8f86', transparent: true, opacity: 0.6, depthWrite: false })));
+
+    // Red eyes in the dark, until the flame is lit
+    const lurkers = [];
+    const eyeMat = new THREE.SpriteMaterial({ map: GLOW, color: '#ff2020', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+    function spawnLurker(near) {
+        const g = new THREE.Group();
+        for (const s of [-1, 1]) {
+            const sp = new THREE.Sprite(eyeMat.clone());
+            sp.scale.set(0.22, 0.12, 1);
+            sp.position.x = s * 0.17;
+            g.add(sp);
+        }
+        const side = Math.random() < 0.5 ? -1 : 1;
+        g.position.set(side * (5 + Math.random() * 7), 1 + Math.random() * 1.6, near - 4 - Math.random() * 10);
+        g.userData = { born: performance.now(), life: 1600 + Math.random() * 2200 };
+        world.add(g);
+        lurkers.push(g);
+    }
+
+    // ═════════════ Origin select stage ═════════════
+    const stage = new THREE.Scene();
+    stage.background = new THREE.Color('#050406');
+    stage.fog = new THREE.Fog('#050406', 6, 14);
+    stage.add(new THREE.HemisphereLight('#6a7aa0', '#140c08', 0.5));
+    const torch = new THREE.PointLight('#ff9a4a', 9, 9, 1.6);
+    torch.position.set(1.4, 2.3, -0.6);
+    stage.add(torch);
+    const rim = new THREE.DirectionalLight('#8aa0d0', 0.7);
+    rim.position.set(-3, 4, -4);
+    stage.add(rim);
+    const dais = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 0.4, 10), STONE);
+    dais.position.y = -0.2;
+    stage.add(dais);
+    const torchGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: '#ff9a4a', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    torchGlow.scale.set(0.35, 0.35, 1);
+    // A warm fill from the front so faces read
+    const fill = new THREE.PointLight('#ffb070', 3, 8, 1.8);
+    fill.position.set(-1.2, 1.6, 2.6);
+    stage.add(fill);
+    torchGlow.position.copy(torch.position);
+    stage.add(torchGlow);
+
+    // ═════════════ State ═════════════
+    let mode = 'loading';       // loading → select → walk → arrived → kindling → resting → leaving
+    let hero = null, heroCls = null;
+    let selIndex = 0;            // index into the class names (Wanderer, Wretch)
+    let selSex = 'm';
+    const NAMES = [...new Set(CLASSES.map(c => c.name))];
+    const pickClass = () => CLASSES.find(c => c.name === NAMES[selIndex] && c.sex === selSex);
+    let stageChar = null, stageLoadToken = 0;
+    let lit = false, litAt = 0, kindleAt = 0;
+    const held = new Set();
+    let wheelBoost = 0;
+
+    const saved = store.get(STORE_ORIGIN);
+    const savedCls = CLASSES.find(c => c.id === saved);
+    if (savedCls) { selIndex = NAMES.indexOf(savedCls.name); selSex = savedCls.sex; }
+    const kindled = store.get(STORE_KINDLED) === '1' && savedCls;
+
+    // ── Origin UI ──
+    function updateOriginUI() {
+        const c = pickClass();
+        $('className').textContent = c.name.toUpperCase();
+        $('lore').textContent = c.lore;
+        $('sexM').setAttribute('aria-pressed', String(selSex === 'm'));
+        $('sexF').setAttribute('aria-pressed', String(selSex === 'f'));
+        showOnStage(c);
+    }
+    async function showOnStage(c) {
+        const token = ++stageLoadToken;
+        const ch = await loadCharacter(c);
+        if (token !== stageLoadToken) return;
+        if (stageChar) stage.remove(stageChar.root);
+        stageChar = ch;
+        stage.add(ch.root);
+        ch.play(c.pose, { fade: 0 });
+    }
+    $('prev').onclick = () => { selIndex = (selIndex + NAMES.length - 1) % NAMES.length; updateOriginUI(); };
+    $('next').onclick = () => { selIndex = (selIndex + 1) % NAMES.length; updateOriginUI(); };
+    $('sexM').onclick = () => { selSex = 'm'; updateOriginUI(); };
+    $('sexF').onclick = () => { selSex = 'f'; updateOriginUI(); };
+    $('begin').onclick = () => begin();
+    addEventListener('keydown', e => {
+        if (mode !== 'select') return;
+        if (e.key === 'ArrowLeft') $('prev').click();
+        else if (e.key === 'ArrowRight') $('next').click();
+        else if (e.key === 'Enter' && document.activeElement === document.body) begin();
+    });
+
+    async function begin() {
+        heroCls = pickClass();
+        store.set(STORE_ORIGIN, heroCls.id);
+        fadeTo(true);
+        await sleep(450);
+        await spawnHero(heroCls);
+        $('origin').hidden = true;
+        startWalk();
+        fadeTo(false);
+    }
+
+    async function spawnHero(c) {
+        if (hero) world.remove(hero.root);
+        hero = await loadCharacter(c);
+        world.add(hero.root);
+    }
+
+    // ── Walking ──
+    const START_Z = 30, STOP_Z = 2.4, SPEED = 1.55;
+    function startWalk() {
+        mode = 'walk';
+        hero.root.position.set(0, 0, START_Z);
+        hero.root.rotation.y = Math.PI;
+        hero.play('Idle_Loop', { fade: 0 });
+        $('caption').hidden = false;
+        $('caption').textContent = 'A flame flickers in the distance';
+        $('hint').hidden = false;
+        $('hint').textContent = touch ? 'HOLD THE SCREEN TO WALK' : 'HOLD CLICK · W · ↑ · OR SCROLL TO WALK';
+        $('skip').hidden = false;
+        camera.position.set(0.8, 2.1, START_Z + 4.4);
+    }
+
+    const isUI = t => t.closest && t.closest('button, a, .origin');
+    addEventListener('pointerdown', e => { if (!isUI(e.target)) held.add('pointer'); });
+    addEventListener('pointerup', () => held.delete('pointer'));
+    addEventListener('pointercancel', () => held.delete('pointer'));
+    addEventListener('blur', () => held.clear());
+    addEventListener('contextmenu', e => { if (!isUI(e.target)) e.preventDefault(); });
+    addEventListener('keydown', e => {
+        if (mode === 'walk' && ['w', 'W', 'ArrowUp', ' '].includes(e.key)) { held.add(e.key); e.preventDefault(); }
+        if (mode === 'arrived' && ['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); kindle(); }
+    });
+    addEventListener('keyup', e => held.delete(e.key));
+    addEventListener('wheel', e => { if (mode === 'walk' && e.deltaY > 0) wheelBoost = Math.min(1.2, wheelBoost + e.deltaY * 0.004); }, { passive: true });
+
+    $('skip').onclick = () => { if (mode === 'walk') { hero.root.position.z = STOP_Z; arrive(); } };
+
+    function arrive() {
+        mode = 'arrived';
+        hero.play('Idle_Loop');
+        $('hint').hidden = true;
+        $('skip').hidden = true;
+        $('caption').textContent = 'An unlit flame. Warmth, waiting.';
+        $('kindle').hidden = false;
+        if (!touch) $('kindle').focus({ preventScroll: true });
+    }
+
+    $('kindle').onclick = () => kindle();
+    function kindle() {
+        if (mode !== 'arrived') return;
+        mode = 'kindling';
+        kindleAt = performance.now();
+        $('kindle').hidden = true;
+        $('caption').style.opacity = 0;
+        hero.play('Fixing_Kneeling', { fade: 0.4 });
+        store.set(STORE_KINDLED, '1');
+        // The flame catches a beat after the hand reaches it
+        setTimeout(() => { lit = true; litAt = performance.now(); $('banner').classList.add('show'); }, reduce ? 0 : 1300);
+        setTimeout(sitDown, reduce ? 400 : 3400);
+    }
+
+    function sitDown() {
+        mode = 'resting';
+        // Step to the column drum and sit facing the fire
+        hero.root.position.copy(SEAT);
+        hero.root.rotation.y = Math.atan2(-SEAT.x, -SEAT.z);
+        const enter = hero.play('Sitting_Enter', { fade: 0.25, once: true });
+        const onDone = e => { if (e.action === enter) { hero.mixer.removeEventListener('finished', onDone); hero.play('Sitting_Idle_Loop', { fade: 0.2 }); } };
+        hero.mixer.addEventListener('finished', onDone);
+        showPaths();
+    }
+
+    // ── Paths around the fire ──
+    const PATHS = [
+        { el: $('pathWork'), at: new THREE.Vector3(-R + 0.4, 3.9, 0), go: new THREE.Vector3(-R - 1, 0, 0) },
+        { el: $('pathGames'), at: new THREE.Vector3(0, 4.2, -R - 2), go: new THREE.Vector3(0, 0, -R - 1) },
+        { el: $('pathStories'), at: new THREE.Vector3(R + 2.2, 2.4, 0), go: new THREE.Vector3(R + 2, 0, 0) }
+    ];
+    let pathIdx = 0;
+    function showPaths() {
+        $('pathsTitle').hidden = false;
+        $('change').hidden = false;
+        PATHS.forEach(p => { p.el.hidden = false; });
+        selectPath(0);
+    }
+    function selectPath(i) {
+        pathIdx = (i + PATHS.length) % PATHS.length;
+        PATHS.forEach((p, n) => p.el.classList.toggle('current', n === pathIdx));
+    }
+    PATHS.forEach((p, i) => {
+        p.el.addEventListener('mouseenter', () => selectPath(i));
+        p.el.addEventListener('focus', () => selectPath(i));
+        p.el.addEventListener('click', e => { e.preventDefault(); travel(i); });
+    });
+    addEventListener('keydown', e => {
+        if (mode !== 'resting') return;
+        if (['ArrowRight', 'ArrowDown'].includes(e.key)) { selectPath(pathIdx + 1); PATHS[pathIdx].el.focus(); e.preventDefault(); }
+        else if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { selectPath(pathIdx - 1); PATHS[pathIdx].el.focus(); e.preventDefault(); }
+        else if (e.key === 'Enter' && document.activeElement === document.body) travel(pathIdx);
+    });
+
+    let leaveTo = null;
+    function travel(i) {
+        if (mode === 'leaving') return;
+        mode = 'leaving';
+        const p = PATHS[i];
+        leaveTo = p.go;
+        PATHS.forEach(q => { q.el.hidden = true; });
+        $('pathsTitle').hidden = true;
+        $('change').hidden = true;
+        hero.root.rotation.y = Math.atan2(p.go.x - hero.root.position.x, p.go.z - hero.root.position.z);
+        hero.play('Walk_Loop', { fade: 0.3 });
+        setTimeout(() => fadeTo(true), 900);
+        setTimeout(() => { location.href = p.el.href; }, 1500);
+    }
+
+    $('change').onclick = () => {
+        store.del(STORE_KINDLED);
+        store.del(STORE_ORIGIN);
+        location.reload();
+    };
+
+    // ── Helpers ──
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    function fadeTo(on) { $('fade').classList.toggle('on', on); }
+
+    // ── Main loop ──
+    const clock = new THREE.Clock();
+    const camTarget = new THREE.Vector3(), camLook = new THREE.Vector3(0, 1, 0), tmp = new THREE.Vector3();
+    const REST_CAM = new THREE.Vector3(0.5, 7.2, 13.5), REST_LOOK = new THREE.Vector3(0, 0.8, -1.5);
+    let nextLurker = 0;
+
+    function updateFire(dt, t) {
+        const strength = lit ? Math.min(1, (performance.now() - litAt) / 600) : 0;
+        const flare = lit ? 1 + Math.max(0, 1 - (performance.now() - litAt) / 900) * 1.2 : 0;
+        const active = lit ? FIRE_N : 6;
+        for (let i = 0; i < FIRE_N; i++) {
+            const p = fState[i];
+            if (i >= active) { fPos[i * 3 + 1] = -10; continue; }
+            p.life += dt * (lit ? 1.4 + (i % 5) * 0.12 : 0.5);
+            if (p.life >= 1) {
+                p.life = 0;
+                const r = lit ? 0.32 : 0.12;
+                p.x = (Math.random() - 0.5) * r; p.z = (Math.random() - 0.5) * r;
+                p.vx = (Math.random() - 0.5) * 0.25; p.vz = (Math.random() - 0.5) * 0.25;
+                p.vy = lit ? 1.1 + Math.random() * 0.9 : 0.3;
             }
-            wheelBoost *= 0.8;
+            const l = p.life, pull = 1 - l * 0.85;
+            fPos[i * 3] = (p.x * pull + p.vx * l + Math.sin(t * 7 + i) * 0.03) * flare;
+            fPos[i * 3 + 1] = 0.55 + p.vy * l * (lit ? 0.9 * flare : 0.6);
+            fPos[i * 3 + 2] = (p.z * pull + p.vz * l) * flare;
+            const fade = Math.sin(Math.PI * Math.min(1, l * 1.1));
+            const c = lit ? [1, 0.9 - l * 0.6, 0.45 - l * 0.45] : [0.9, 0.3, 0.08];
+            const k = lit ? fade * (0.9 + 0.1 * strength) : fade * 0.6;
+            fCol[i * 3] = c[0] * k; fCol[i * 3 + 1] = c[1] * k; fCol[i * 3 + 2] = Math.max(0, c[2]) * k;
+        }
+        fireGeo.attributes.position.needsUpdate = true;
+        fireGeo.attributes.color.needsUpdate = true;
+        const flick = 0.85 + 0.1 * Math.sin(t * 17) + 0.05 * Math.sin(t * 31);
+        fireLight.intensity = lit ? (22 * strength * flick * Math.max(1, flare * 0.8)) : 0.6 + 0.3 * Math.sin(t * 3);
+        fireLight.distance = lit ? 16 : 4;
+        world.fog.density = lit ? 0.035 : 0.045;
+        // Beacon: big and soft from afar, fading as the real flame takes over
+        const dist = hero ? hero.root.position.distanceTo(beacon.position) : 20;
+        const b = lit ? 1.6 + 0.2 * flick : Math.min(2.4, 0.5 + dist * 0.07) * (0.85 + 0.15 * Math.sin(t * 3));
+        beacon.scale.set(b, b, 1);
+        beacon.material.opacity = lit ? 0.35 : 0.9;
+    }
 
-            if (kindling < 0) {
-                if (p >= 1 && !wasArrived) {
-                    walkHint.hidden = true;
-                    kindleBtn.hidden = false;
-                    keyHint.hidden = touch;
-                    skip.hidden = true;
-                    caption.textContent = 'An unlit flame. Warmth, waiting.';
-                    if (!touch) kindleBtn.focus({ preventScroll: true });
-                } else if (p < 1) {
-                    const cap = p < 0.3 ? 'A flame flickers in the distance' : p < 0.75 ? 'Keep walking' : 'Almost there';
-                    if (caption.textContent !== cap) caption.textContent = cap;
-                }
-            }
+    function frame(manual) {
+        if (manual !== true) requestAnimationFrame(frame);
+        const dt = Math.min(0.1, clock.getDelta());
+        const t = clock.elapsedTime;
 
-            const sinceLit = lit ? (now - kindling) / 1000 - 0.9 : -1;
-            const flare = lit ? 1 + Math.max(0, 0.8 - sinceLit) * 1.3 : 0;
-            const glow = lit ? Math.min(1, Math.max(0, sinceLit) * 2 + (kindling < -1e8 ? 1 : 0)) : 0;
-            const bob = walking && !reduce ? Math.sin(walkPhase * 2) * 0.35 * u : 0;
+        if (mode === 'select') {
+            // Sway slowly around the front of the character, like a creation screen
+            const a = Math.sin(t * 0.3) * 0.65;
+            camera.position.set(Math.sin(a) * 5.4, 1.35, Math.cos(a) * 5.4);
+            camera.lookAt(0, innerWidth < 760 ? 0.35 : 0.55, 0);
+            torch.intensity = 8 + Math.sin(t * 13) * 0.8 + Math.sin(t * 29) * 0.5;
+            if (stageChar) stageChar.mixer.update(dt);
+            renderer.render(stage, camera);
+            return;
+        }
 
-            // Sky
-            const sky = ctx.createLinearGradient(0, 0, 0, horizon);
-            sky.addColorStop(0, '#020203');
-            sky.addColorStop(0.6, lit ? '#1a0c07' : '#140a08');
-            sky.addColorStop(1, lit ? '#3d1c0e' : '#2e1610');
-            ctx.fillStyle = sky;
-            ctx.fillRect(0, 0, cw, ch);
-
-            ctx.save();
-            ctx.translate(0, bob);
-
-            // Ground, darkening towards you
-            const ground = ctx.createLinearGradient(0, horizon, 0, ch);
-            ground.addColorStop(0, '#22120c');
-            ground.addColorStop(0.25, '#110907');
-            ground.addColorStop(1, '#040202');
-            ctx.fillStyle = ground;
-            ctx.fillRect(0, horizon, cw, ch - horizon + 4);
-
-            // Stones streaming past underfoot
-            for (const s of stones) {
-                const q = project(s.X, s.z);
-                if (q.x < 0 || q.x > cw) continue;
-                const a = Math.min(0.6, 0.12 + (1 - s.z / 22) * 0.5);
-                ctx.fillStyle = `rgba(95, 65, 50, ${a})`;
-                const sz = Math.max(1, Math.round(q.s * u * 1.2));
-                ctx.fillRect(Math.round(q.x), Math.round(q.y), sz, Math.max(1, Math.round(sz * 0.5)));
-            }
-
-            // The path: two faint edges converging on the flame
-            const zf = NEAR + PATH * (1 - p);
-            const fq = project(FIRE_X, zf);
-            ctx.strokeStyle = 'rgba(70, 42, 30, 0.35)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            const pl = project(FIRE_X - 14, 0.6), pr = project(FIRE_X + 14, 0.6);
-            ctx.moveTo(pl.x, pl.y); ctx.lineTo(fq.x - 2, fq.y);
-            ctx.moveTo(pr.x, pr.y); ctx.lineTo(fq.x + 2, fq.y);
-            ctx.stroke();
-
-            // Lurkers in the dark until the fire is lit
-            if (!lit && !reduce && now > nextLurker) {
-                const side = Math.random() < 0.5 ? -1 : 1;
-                lurkers.push({ x: fq.x + side * (20 + Math.random() * 50) * u, y: horizon - Math.random() * 10 * u + 3 * u, s: (0.6 + Math.random()) * u * 0.8, born: now, life: 1400 + Math.random() * 1800 });
-                nextLurker = now + 1500 + Math.random() * 3000;
-            }
-            for (let i = lurkers.length - 1; i >= 0; i--) {
-                const l = lurkers[i], lt = (now - l.born) / l.life;
-                if (lt > 1 || lit) { lurkers.splice(i, 1); continue; }
-                const open = Math.min(1, lt * 6, (1 - lt) * 6);
-                ctx.fillStyle = '#ff1a1a';
-                for (const sd of [-1, 1]) {
-                    ctx.beginPath();
-                    ctx.ellipse(l.x + sd * l.s * 2, l.y, l.s, Math.max(0.3, l.s * 0.45 * open), 0, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-
-            // Fire glow (behind the props so ruins silhouette against it); fire is sized to the knight
-            const su = fq.s * u * 0.75;
-            const flick = 1 + 0.06 * Math.sin(t * 17) + 0.04 * Math.sin(t * 31);
-            const gr = (lit ? 60 : 24) * su * flick * (lit ? Math.max(1, flare * 0.8) : 1) + (lit ? 0 : 10);
-            const g = ctx.createRadialGradient(fq.x, fq.y - 6 * su, 0, fq.x, fq.y - 6 * su, gr);
-            g.addColorStop(0, lit ? `rgba(255, 140, 55, ${0.45 * glow})` : `rgba(255, 90, 25, ${0.38 + 0.12 * Math.sin(t * 2)})`);
-            g.addColorStop(0.5, lit ? `rgba(200, 70, 20, ${0.15 * glow})` : 'rgba(255, 80, 20, 0.05)');
-            g.addColorStop(1, 'rgba(255, 80, 20, 0)');
-            ctx.fillStyle = g;
-            ctx.fillRect(0, 0, cw, ch);
-            if (lit) {
-                ctx.fillStyle = `rgba(255, 120, 40, ${0.12 * glow})`;
-                ctx.beginPath(); ctx.ellipse(fq.x, fq.y + 2 * su, 50 * su, 12 * su, 0, 0, Math.PI * 2); ctx.fill();
-            }
-
-            // Props and the flame, far to near
-            const drawables = props.map(o => ({ z: o.z, draw: () => drawProp(o, fq, glow) }));
-            drawables.push({ z: zf, draw: () => {
-                drawCairn(fq.x, fq.y, su, glow);
-                if (lit) {
-                    drawFire(fq.x, fq.y - 3.5 * su, su, t, flare);
-                    if (!reduce && Math.random() < 0.6) embers.push({ x: fq.x + (Math.random() - 0.5) * 8 * su, y: fq.y - 12 * su, vx: (Math.random() - 0.5) * 6, vy: -(10 + Math.random() * 20), life: 1 });
+        if (hero) {
+            if (mode === 'walk') {
+                const moving = held.size > 0 || wheelBoost > 0.05;
+                if (moving) {
+                    hero.play('Walk_Loop', { fade: 0.25 });
+                    hero.root.position.z -= SPEED * dt * (held.size > 0 ? 1 : wheelBoost);
                 } else {
-                    const a = 0.7 + 0.3 * Math.sin(t * 3);
-                    ctx.fillStyle = `rgba(255, 120, 40, ${a})`;
-                    ctx.beginPath(); ctx.arc(fq.x, fq.y - 3.5 * su, Math.max(1.3, 1.6 * su), 0, Math.PI * 2); ctx.fill();
-                    ctx.fillStyle = `rgba(255, 220, 150, ${a * 0.8})`;
-                    ctx.fillRect(Math.round(fq.x), Math.round(fq.y - 3.5 * su), 1, 1);
-                    if (!reduce && Math.random() < 0.2) embers.push({ x: fq.x, y: fq.y - 4 * su, vx: (Math.random() - 0.5) * 2, vy: -(4 + Math.random() * 4), life: 1, smoke: true });
+                    hero.play('Idle_Loop', { fade: 0.35 });
                 }
-            } });
-            drawables.sort((a, b) => b.z - a.z).forEach(d => { if (d.z > 0.55) d.draw(); });
-
-            // Embers and smoke
-            for (let i = embers.length - 1; i >= 0; i--) {
-                const e = embers[i];
-                e.x += e.vx * dt * (fq.s + 0.3);
-                e.y += e.vy * dt * (fq.s + 0.3);
-                e.vx += (Math.random() - 0.5) * 8 * dt;
-                e.life -= dt * (e.smoke ? 0.5 : 0.8);
-                if (e.life <= 0) { embers.splice(i, 1); continue; }
-                ctx.fillStyle = e.smoke ? `rgba(90, 80, 75, ${e.life * 0.25})` : `rgba(255, ${140 + Math.random() * 80 | 0}, 60, ${e.life})`;
-                const rr = e.smoke ? Math.max(1, 2.5 * su * (1.5 - e.life)) : 1;
-                ctx.fillRect(Math.round(e.x), Math.round(e.y), rr, rr);
+                wheelBoost *= Math.pow(0.15, dt);
+                const z = hero.root.position.z;
+                const p = 1 - (z - STOP_Z) / (START_Z - STOP_Z);
+                const cap = p < 0.3 ? 'A flame flickers in the distance' : p < 0.75 ? 'Keep walking' : 'Almost there';
+                if ($('caption').textContent !== cap) $('caption').textContent = cap;
+                if (z <= STOP_Z) { hero.root.position.z = STOP_Z; arrive(); }
             }
-            ctx.restore();
-
-            // The knight, always just ahead of the camera
-            const kneelFor = (now - kindling) / 1000;
-            const pose = resting ? 'sit' : kindling >= 0 ? (kneelFor < 3.2 ? 'kneel' : 'sit') : walking ? 'walk' : 'idle';
-            const kx = cx - 9 * u, ky = ch * 0.88;
-            drawKnight(kx, ky, u * 0.78, pose, walkPhase, t, glow * Math.min(1, p * 1.5));
-
-            // Ash drifting through the air
-            for (const a of ash) {
-                a.x -= dt * (0.01 + a.s * 0.02);
-                a.y += dt * (0.02 + a.s * 0.03) * (walking ? 2.2 : 1);
-                if (a.x < 0) a.x += 1;
-                if (a.y > 1) a.y -= 1;
-                ctx.fillStyle = `rgba(160, 150, 140, ${0.15 + a.s * 0.3})`;
-                ctx.fillRect(Math.round(a.x * cw), Math.round(a.y * ch), 1, 1);
+            if (mode === 'leaving' && leaveTo) {
+                tmp.copy(leaveTo).sub(hero.root.position).setY(0);
+                if (tmp.length() > 0.2) hero.root.position.addScaledVector(tmp.normalize(), SPEED * dt);
             }
+            hero.mixer.update(dt);
 
-            // Vignette
-            const v = ctx.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.max(cw, ch) * 0.75);
-            v.addColorStop(0, 'rgba(0,0,0,0)');
-            v.addColorStop(1, 'rgba(0,0,0,0.85)');
-            ctx.fillStyle = v;
-            ctx.fillRect(0, 0, cw, ch);
-
-            // Ignition flash
-            if (lit && sinceLit >= 0 && sinceLit < 0.6) {
-                ctx.fillStyle = `rgba(255, 200, 130, ${0.65 * (1 - sinceLit / 0.6)})`;
-                ctx.fillRect(0, 0, cw, ch);
+            // Camera: follow from behind while walking, swing wide over the courtyard once resting
+            const hp = hero.root.position;
+            heroLight.position.set(hp.x - 1.2, 3.2, hp.z + 1.8);
+            heroLight.intensity = lit ? 0.8 : 2.2;
+            if (mode === 'walk' || mode === 'arrived' || mode === 'kindling') {
+                // Over the right shoulder, high enough to see the flame ahead
+                camTarget.set(hp.x + 1.3, 2.5, hp.z + 4.4);
+                tmp.set(hp.x - 0.3, 1.5, hp.z - 4);
+                if (mode === 'kindling') { camTarget.set(hp.x + 2.6, 1.9, hp.z + 2.6); tmp.set(0, 0.7, 0); }
+            } else {
+                camTarget.copy(REST_CAM);
+                tmp.copy(REST_LOOK);
             }
+            const k = 1 - Math.pow(mode === 'walk' ? 0.02 : 0.25, dt);
+            camera.position.lerp(camTarget, k);
+            camLook.lerp(tmp, k);
+            if (mode === 'walk' && !reduce && held.size) camera.position.y += Math.sin(t * 9) * 0.008;
+            camera.lookAt(camLook);
 
-            // Grain
-            if (frameNo % 2 === 0) refreshNoise();
-            ctx.globalAlpha = 0.08;
-            ctx.fillStyle = ctx.createPattern(noise, 'repeat');
-            ctx.save();
-            ctx.translate(Math.random() * 96, Math.random() * 96);
-            ctx.fillRect(-96, -96, cw + 192, ch + 192);
-            ctx.restore();
-            ctx.globalAlpha = 1;
-
-            if (!document.hidden) requestAnimationFrame(frame);
+            // Lurkers stay out of the light
+            if (!lit && !reduce && performance.now() > nextLurker) { spawnLurker(hp.z); nextLurker = performance.now() + 1400 + Math.random() * 2600; }
+        }
+        for (let i = lurkers.length - 1; i >= 0; i--) {
+            const g = lurkers[i], u = (performance.now() - g.userData.born) / g.userData.life;
+            if (u > 1 || lit) { world.remove(g); lurkers.splice(i, 1); continue; }
+            const open = Math.min(1, u * 6, (1 - u) * 6);
+            g.children.forEach(s => { s.scale.y = 0.12 * Math.max(0.05, open); });
         }
 
-        document.addEventListener('visibilitychange', () => { if (!document.hidden) { last = performance.now(); requestAnimationFrame(frame); } });
+        // Ash drifts
+        for (let i = 0; i < ASH_N; i++) {
+            aPos[i * 3] -= dt * 0.25;
+            aPos[i * 3 + 1] -= dt * 0.18;
+            if (aPos[i * 3 + 1] < 0) { aPos[i * 3 + 1] = 10; aPos[i * 3] = (Math.random() - 0.5) * 40 + camera.position.x; aPos[i * 3 + 2] = camera.position.z - Math.random() * 30; }
+        }
+        ashGeo.attributes.position.needsUpdate = true;
+
+        updateFire(dt, t);
+        renderer.render(world, camera);
+
+        // Keep the path labels pinned over their exits
+        if (mode === 'resting') {
+            for (const p of PATHS) {
+                tmp.copy(p.at).project(camera);
+                const vis = tmp.z < 1;
+                p.el.style.visibility = vis ? 'visible' : 'hidden';
+                // Keep the whole label on screen
+                const half = p.el.offsetWidth / 2 + 10;
+                const x = Math.min(innerWidth - half, Math.max(half, (tmp.x * 0.5 + 0.5) * innerWidth));
+                const y = Math.min(innerHeight - 60, Math.max(p.el.offsetHeight + 70, (-tmp.y * 0.5 + 0.5) * innerHeight));
+                p.el.style.left = x + 'px';
+                p.el.style.top = y + 'px';
+            }
+        }
+    }
+
+    // ── Boot ──
+    (async () => {
+        try {
+            if (kindled) {
+                // Returning visitor: straight to the lit fire with their origin resting
+                heroCls = savedCls;
+                await spawnHero(heroCls);
+                lit = true;
+                litAt = performance.now() - 5000;
+                mode = 'resting';
+                hero.root.position.copy(SEAT);
+                hero.root.rotation.y = Math.atan2(-SEAT.x, -SEAT.z);
+                hero.play('Sitting_Idle_Loop', { fade: 0 });
+                camera.position.copy(REST_CAM);
+                camLook.copy(REST_LOOK);
+                showPaths();
+            } else {
+                mode = 'select';
+                $('origin').hidden = false;
+                await showOnStage(pickClass());
+                updateOriginUI();
+                // Warm the cache for the other origins in the background
+                CLASSES.forEach(c => loadCharacter(c).catch(() => {}));
+            }
+        } catch (e) {
+            $('loading').textContent = 'SOMETHING WENT WRONG · RELOAD';
+            console.error(e);
+            return;
+        }
+        $('loading').hidden = true;
+        fadeTo(false);
         requestAnimationFrame(frame);
-
-        // ?debug: step the scene by hand (for testing in background tabs where frames are paused)
-        if (location.search.includes('debug')) {
-            let fake = performance.now();
-            window.__flame = {
-                step(seconds, fps = 30) { for (let i = 0; i < seconds * fps; i++) { fake = Math.max(fake, last) + 1000 / fps; frame(fake); } },
-                hold(on) { on ? held.add('debug') : held.delete('debug'); },
-                state: () => ({ p: +p.toFixed(3), lit, resting, kindling: kindling >= 0 })
-            };
-        }
     })();
+
+    // ?debug: drive the scene by hand when the tab can't animate (background testing)
+    if (location.search.includes('debug')) {
+        window.__scene = {
+            state: () => ({ mode, lit, z: hero && +hero.root.position.z.toFixed(2), cls: heroCls?.id }),
+            hold: on => (on ? held.add('debug') : held.delete('debug')),
+            step(seconds, fps = 30) {
+                const real = clock.getDelta;
+                clock.getDelta = () => 1 / fps;
+                for (let i = 0; i < seconds * fps; i++) { clock.elapsedTime += 1 / fps; frame(true); }
+                clock.getDelta = real;
+            }
+        };
+    }
     </script>
 </body>
 </html>
