@@ -5,16 +5,27 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const BASE = new URL('./models/', import.meta.url).href;
 
-export const CLASSES = [
-    { id: 'wanderer_m', name: 'Wanderer', sex: 'm', outfit: 'male_ranger', body: 'base_male', pose: 'Sword_Idle',
-      lore: 'A hooded traveller who walks every road twice. Always moving, always learning the lay of the land.' },
-    { id: 'wanderer_f', name: 'Wanderer', sex: 'f', outfit: 'female_ranger', body: 'base_female', pose: 'Sword_Idle',
-      lore: 'A hooded traveller who walks every road twice. Always moving, always learning the lay of the land.' },
-    { id: 'wretch_m', name: 'Wretch', sex: 'm', outfit: 'male_peasant', body: 'base_male', pose: 'Spell_Simple_Idle_Loop',
-      lore: 'Starts with nothing but stubbornness. Builds the rest from scratch, one stolen hour at a time.' },
-    { id: 'wretch_f', name: 'Wretch', sex: 'f', outfit: 'female_peasant', body: 'base_female', pose: 'Spell_Simple_Idle_Loop',
-      lore: 'Starts with nothing but stubbornness. Builds the rest from scratch, one stolen hour at a time.' }
+// Each origin is assembled from outfit parts: the first entry supplies the skeleton,
+// later entries borrow pieces (by name) from other outfits. `tint` multiplies the colours.
+const ORIGINS = [
+    { name: 'Wanderer', pose: 'Sword_Idle',
+      lore: 'A hooded traveller who walks every road twice. Always moving, always learning the lay of the land.',
+      parts: s => [{ file: `${s}_ranger` }] },
+    { name: 'Hunter', pose: 'Sword_Idle',
+      lore: 'Reads the tracks others miss. Patient, precise, and always the first to see where the herd is heading.',
+      parts: s => [{ file: `${s}_ranger`, drop: /Head_Hood/, tint: '#a8784a' }] },
+    { name: 'Pilgrim', pose: 'Spell_Simple_Idle_Loop',
+      lore: 'Walks for the story, not the destination. Carries a hundred worlds in a battered pack.',
+      parts: s => [{ file: `${s}_peasant`, drop: /Feet/, tint: '#8c8782' }, { file: `${s}_ranger`, keep: /Head_Hood|Pauldron|Feet/, tint: '#6f6b67' }] },
+    { name: 'Wretch', pose: 'Spell_Simple_Idle_Loop',
+      lore: 'Starts with nothing but stubbornness. Builds the rest from scratch, one stolen hour at a time.',
+      parts: s => [{ file: `${s}_peasant` }] }
 ];
+
+export const CLASSES = ORIGINS.flatMap(o => ['m', 'f'].map(sex => {
+    const s = sex === 'm' ? 'male' : 'female';
+    return { id: `${o.name.toLowerCase()}_${sex}`, name: o.name, sex, pose: o.pose, lore: o.lore, parts: o.parts(s), body: `base_${s}` };
+}));
 
 const loader = new GLTFLoader();
 const cache = new Map();
@@ -60,17 +71,57 @@ function rebind(mesh, boneByName) {
     mesh.bind(new THREE.Skeleton(bones, mesh.skeleton.boneInverses), mesh.bindMatrix);
 }
 
+// A mesh's own name plus its parents' (multi-material parts are split into child meshes)
+function nameChain(o) {
+    let s = '';
+    for (let n = o; n; n = n.parent) s += n.name + ' ';
+    return s;
+}
+const wanted = (o, part) => {
+    const n = nameChain(o);
+    return (!part.keep || part.keep.test(n)) && (!part.drop || !part.drop.test(n));
+};
+
+function tintMeshes(meshes, tint) {
+    if (!tint) return;
+    const c = new THREE.Color(tint);
+    for (const m of meshes) {
+        m.material = Array.isArray(m.material) ? m.material.map(x => x.clone()) : m.material.clone();
+        (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => {
+            // Leave bare skin alone, only dye the clothes
+            if (!/Regular|Superhero/i.test(x.name)) x.color.multiply(c);
+        });
+    }
+}
+
 export async function loadCharacter(cls) {
-    const [outfitG, bodyG, clips] = await Promise.all([load(cls.outfit), load(cls.body), loadClips()]);
+    const files = [...new Set(cls.parts.map(p => p.file))];
+    const [bodyG, clips, ...outfits] = await Promise.all([load(cls.body), loadClips(), ...files.map(load)]);
+    const byFile = Object.fromEntries(files.map((f, i) => [f, outfits[i]]));
     const { clone } = await import('three/addons/utils/SkeletonUtils.js');
-    const root = clone(outfitG.scene);
+
+    // The first part provides the skeleton everything else binds to
+    const [first, ...rest] = cls.parts;
+    const root = clone(byFile[first.file].scene);
     const body = clone(bodyG.scene);
 
     const boneByName = new Map();
     root.traverse(o => { if (o.isBone) boneByName.set(o.name, o); });
 
     let skinParent = null;
-    root.traverse(o => { if (o.isSkinnedMesh && !skinParent) skinParent = o.parent; });
+    const firstMeshes = [];
+    root.traverse(o => { if (o.isSkinnedMesh) { if (!skinParent) skinParent = o.parent; firstMeshes.push(o); } });
+    for (const m of firstMeshes) if (!wanted(m, first)) m.parent.remove(m);
+    tintMeshes(firstMeshes.filter(m => wanted(m, first)), first.tint);
+
+    // Borrowed pieces from other outfits
+    for (const part of rest) {
+        const src = clone(byFile[part.file].scene);
+        const picked = [];
+        src.traverse(o => { if (o.isSkinnedMesh && wanted(o, part)) picked.push(o); });
+        tintMeshes(picked, part.tint);
+        for (const m of picked) { rebind(m, boneByName); (skinParent || root).add(m); }
+    }
 
     // Head, eyes and brows from the base body
     const extras = [];
