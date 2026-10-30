@@ -4,88 +4,529 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
-    <title>Aumritash Maitra - New site (W.I.P)</title>
+    <title>Aumritash Maitra</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Nunito:wght@800;900&family=VT323&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0a0a0a;
-            --border: #222222;
-            --text: #e8e8e8;
-            --text-dim: #888888;
-            --accent: #c8ff00;
-            --serif: 'Instrument Serif', Georgia, serif;
-            --sans: 'DM Sans', -apple-system, sans-serif;
-            --mono: 'JetBrains Mono', monospace;
+            --red: #e3001b;
+            --white: #f2f2f2;
+            --linkedin: #0a66c2;
+            --dub: #f4632b;
+            --dub-2: #f7a82e;
+            --dub-brow: #c0391a;
+            --dub-eye: #efebe4;
+            --dub-pupil: #3a241c;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html, body { height: 100%; }
+
         body {
-            font-family: var(--sans);
             background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+            color: var(--white);
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ── Flood: brand colour spreading out from the hovered corner ── */
+        .flood {
+            position: fixed;
+            inset: 0;
+            background: var(--flood, var(--bg));
+            clip-path: circle(0% at var(--fx, 50%) var(--fy, 50%));
+            transition: clip-path 0.65s cubic-bezier(0.7, 0, 0.3, 1);
+            z-index: 0;
+        }
+
+        body.flooded .flood { clip-path: circle(150% at var(--fx, 50%) var(--fy, 50%)); }
+
+        /* Scanlines + red vignette, on top of everything but never blocking clicks */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 50;
+            background:
+                repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px),
+                radial-gradient(ellipse at center, transparent 55%, rgba(227, 0, 27, 0.12) 100%);
+            transition: opacity 0.4s;
+        }
+
+        body.flooded::after { opacity: 0.4; }
+
+        .name {
+            position: fixed;
+            top: 1.6rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.15rem;
+            letter-spacing: 0.35em;
+            color: rgba(242, 242, 242, 0.45);
+            z-index: 5;
+            white-space: nowrap;
+        }
+
+        /* ── The watcher ── */
+        .stage {
+            position: fixed;
+            inset: 0;
             display: flex;
             flex-direction: column;
+            align-items: center;
             justify-content: center;
-            padding: 4rem 1.5rem;
-            -webkit-font-smoothing: antialiased;
+            z-index: 2;
+            pointer-events: none;
         }
 
-        main {
-            max-width: 640px;
-            margin: 0 auto;
+        .face {
+            width: min(80vw, 64vh, 560px);
+            height: auto;
+            overflow: visible;
         }
 
-        .label {
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 1.5rem;
+        .layer {
+            opacity: 0;
+            transform: scale(0.9);
+            transform-box: view-box;
+            transform-origin: 200px 210px;
+            transition: opacity 0.35s, transform 0.45s cubic-bezier(0.3, 1.4, 0.5, 1);
         }
 
-        h1 {
-            font-family: var(--serif);
-            font-size: clamp(2.5rem, 7vw, 4.5rem);
-            font-weight: 400;
-            line-height: 1.05;
-            margin-bottom: 1.5rem;
+        body[data-state="linkedin"] .human,
+        body[data-state="dubdub"] .dubby,
+        body[data-state="more"] .smile { opacity: 1; transform: none; }
+
+        .eye-white {
+            fill: var(--white);
+            transition: ry 0.35s, rx 0.35s, fill 0.35s;
         }
 
-        h1 em { color: var(--accent); }
+        .pupil { fill: #111; transition: r 0.35s, fill 0.35s; }
+        .glint { fill: var(--white); transition: opacity 0.35s; }
 
-        p {
-            color: var(--text-dim);
-            font-size: 1.05rem;
-            line-height: 1.8;
-            margin-bottom: 2.5rem;
+        body[data-state="dubdub"] .eye-white { fill: var(--dub-eye); rx: 32px; ry: 40px; }
+        body[data-state="dubdub"] .pupil { fill: var(--dub-pupil); r: 19px; }
+        body[data-state="linkedin"] .pupil { r: 10px; }
+
+        /* Eyelid: a flat, bg-coloured block sliding over the top of each eye */
+        .lid {
+            fill: var(--bg);
+            transform: translateY(-10px);
+            transition: transform 0.35s ease, opacity 0.3s;
         }
 
-        a {
-            font-family: var(--mono);
-            font-size: 0.75rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--text);
+        body[data-state="more"] .lid { transform: translateY(-34px); }
+        body[data-state="tbd"] .lid { transform: translateY(2px); }
+        body[data-state="linkedin"] .lid,
+        body[data-state="dubdub"] .lid { opacity: 0; }
+
+        .blink {
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        .blink.closing { animation: blink 0.22s ease-in-out; }
+
+        @keyframes blink {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.06); }
+        }
+
+        .caption {
+            margin-top: 1.2rem;
+            font-size: clamp(1.4rem, 3.5vw, 2rem);
+            color: var(--red);
+            min-height: 2.4rem;
+            text-align: center;
+            transition: color 0.3s;
+        }
+
+        .caption::after {
+            content: '_';
+            animation: cursor 1s steps(1) infinite;
+        }
+
+        @keyframes cursor { 50% { opacity: 0; } }
+
+        body[data-state="linkedin"] .caption,
+        body[data-state="dubdub"] .caption { color: #fff; }
+
+        /* ── Corner buttons (ULTRAKILL-ish: hard, skewed, loud) ── */
+        .corner {
+            position: fixed;
+            z-index: 10;
             text-decoration: none;
-            padding: 0.9rem 1.6rem;
-            border: 1px solid var(--border);
-            display: inline-block;
-            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
         }
 
-        a:hover { border-color: var(--accent); color: var(--accent); }
+        .tl { top: 2rem; left: 2rem; }
+        .tr { top: 2rem; right: 2rem; align-items: flex-end; }
+        .bl { bottom: 2rem; left: 2rem; }
+        .br { bottom: 2rem; right: 2rem; align-items: flex-end; }
+        .bl, .br { flex-direction: column-reverse; }
+
+        .btn {
+            font-family: 'Anton', sans-serif;
+            font-size: 1.7rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--white);
+            background: #000;
+            border: 3px solid var(--white);
+            padding: 0.45rem 1.3rem;
+            transform: skewX(-12deg);
+            box-shadow: 6px 6px 0 var(--red);
+            transition: background 0.25s, color 0.25s, border-color 0.25s, border-radius 0.3s, box-shadow 0.25s, transform 0.25s, font-family 0s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            white-space: nowrap;
+        }
+
+        .btn > * { transform: skewX(12deg); transition: transform 0.25s; }
+
+        .sub {
+            font-size: 1rem;
+            letter-spacing: 0.15em;
+            color: var(--red);
+            transition: color 0.3s, opacity 0.3s;
+        }
+
+        .brand { display: none; }
+
+        /* Generic ULTRAKILL hover for the plain buttons */
+        .br:hover .btn, .br.active .btn {
+            background: var(--red);
+            box-shadow: 6px 6px 0 var(--white);
+            animation: shake 0.25s steps(2) 1;
+        }
+
+        .tr:hover .btn, .tr.active .btn {
+            border-style: dashed;
+            animation: shake 0.3s steps(3) 1;
+        }
+
+        @keyframes shake {
+            0% { transform: skewX(-12deg) translate(0, 0); }
+            33% { transform: skewX(-12deg) translate(-3px, 2px); }
+            66% { transform: skewX(-12deg) translate(3px, -2px); }
+            100% { transform: skewX(-12deg) translate(0, 0); }
+        }
+
+        /* While a brand has flooded the page, the other buttons step back */
+        body.flooded .corner:not(.active) { opacity: 0.45; }
+        body.flooded .sub { color: rgba(255, 255, 255, 0.8); }
+        body.flooded .corner:not(.active) .btn { box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35); }
+
+        /* LinkedIn: the button turns into LinkedIn */
+        .tl.active .btn {
+            font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-transform: none;
+            background: #fff;
+            color: var(--linkedin);
+            border-color: #fff;
+            border-radius: 999px;
+            transform: none;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            padding: 0.55rem 1.2rem 0.55rem 0.6rem;
+        }
+
+        .tl.active .btn > * { transform: none; }
+
+        .in-badge {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            background: var(--linkedin);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.15rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* dubdub: the button turns into dubdub */
+        .bl.active .btn {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 1.35rem;
+            letter-spacing: 0;
+            text-transform: none;
+            background: #fff8f0;
+            color: var(--dub);
+            border-color: #fff8f0;
+            border-radius: 18px;
+            transform: none;
+            box-shadow: 0 6px 0 var(--dub-brow);
+            padding: 0.4rem 1.2rem 0.4rem 0.6rem;
+        }
+
+        .bl.active .btn > * { transform: none; }
+        .dub-icon { width: 34px; height: 34px; }
+
+        .corner.active .plain { display: none; }
+        .corner.active .brand { display: inline-flex; align-items: center; gap: 0.6rem; }
+
+        .music-hint { display: none; }
+
+        /* ── Phones ── */
+        @media (max-width: 640px) {
+            .tl { top: 1rem; left: 1rem; }
+            .tr { top: 1rem; right: 1rem; }
+            .bl { bottom: 1rem; left: 1rem; }
+            .br { bottom: 1rem; right: 1rem; }
+            .btn { font-size: 1.1rem; padding: 0.35rem 0.8rem; border-width: 2px; box-shadow: 4px 4px 0 var(--red); }
+            .sub { font-size: 0.85rem; letter-spacing: 0.08em; }
+            .tl.active .btn { font-size: 0.9rem; }
+            .bl.active .btn { font-size: 1rem; }
+            .in-badge { width: 24px; height: 24px; font-size: 0.95rem; }
+            .dub-icon { width: 26px; height: 26px; }
+            .name { top: 5.5rem; font-size: 0.95rem; letter-spacing: 0.25em; }
+            .face { width: min(86vw, 50vh); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .flood, .layer, .lid, .btn { transition: none !important; }
+            .btn, .caption::after { animation: none !important; }
+        }
     </style>
 </head>
-<body>
-    <main>
-        <p class="label">Work in progress</p>
-        <h1>Something new is <em>being built.</em></h1>
-        <p>This is where the new aumritash.com is taking shape. Check back soon.</p>
-        <a href="/">← Back to the current site</a>
-    </main>
+<body data-state="idle">
+    <div class="flood" aria-hidden="true"></div>
+
+    <p class="name">AUMRITASH MAITRA</p>
+
+    <div class="stage">
+        <svg class="face" viewBox="-40 -20 480 460" aria-hidden="true">
+            <defs>
+                <linearGradient id="dubFlame" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#f4632b"/>
+                    <stop offset="1" stop-color="#f7a82e"/>
+                </linearGradient>
+                <!-- Lids only ever cover the eye itself, whatever colour the page is -->
+                <clipPath id="eyeClipL"><ellipse cx="150" cy="200" rx="35" ry="25"/></clipPath>
+                <clipPath id="eyeClipR"><ellipse cx="250" cy="200" rx="35" ry="25"/></clipPath>
+            </defs>
+
+            <!-- dubdub: Dubby's flame body around the eyes (same shape as the dubdub mark) -->
+            <g class="layer dubby">
+                <g transform="translate(-11 -70) scale(4.35)">
+                    <path fill="url(#dubFlame)" stroke="#fff8f0" stroke-width="1.2" d="M22,86 C11,79 13,55 21,45 C25,33 33,31 37,38 C39,27 47,26 51,35 C55,18 70,14 74,30 C75,20 82,19 86,28 C91,42 89,68 83,79 C79,86 70,89 60,89 L34,89 C29,89 25,88 22,86 Z"/>
+                    <path d="M27,49 C31,44 40,44 44,48" stroke="#c0391a" stroke-width="4" stroke-linecap="round" fill="none"/>
+                    <path d="M52,47 C58,42 68,43 72,48" stroke="#c0391a" stroke-width="4" stroke-linecap="round" fill="none"/>
+                    <path d="M40,75 C45,82 53,82 58,75" stroke="#3a241c" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                </g>
+            </g>
+
+            <!-- LinkedIn: a serious, sharp human face -->
+            <g class="layer human" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                <path d="M80 200 C80 70 320 70 320 200 L320 255 C320 345 262 395 200 395 C138 395 80 345 80 255 Z" fill="rgba(255,255,255,0.06)"/>
+                <path d="M80 190 C66 100 128 42 200 44 C282 44 340 100 320 190 C300 140 254 122 200 130 C150 118 108 140 80 190 Z" fill="#083b70"/>
+                <path d="M80 215 C62 212 60 250 82 256 M320 215 C338 212 340 250 318 256"/>
+                <path d="M112 152 L188 160 M212 160 L288 152" stroke-width="7"/>
+                <path d="M200 236 L190 286 L208 288"/>
+                <path d="M168 330 L232 330"/>
+                <path d="M150 395 L150 430 M250 395 L250 430"/>
+                <path d="M120 430 L200 405 L280 430" stroke-width="4"/>
+            </g>
+
+            <!-- Know more: just a smile -->
+            <g class="layer smile">
+                <path d="M145 285 Q200 335 255 285" stroke="#f2f2f2" stroke-width="7" stroke-linecap="round" fill="none"/>
+            </g>
+
+            <!-- The eyes (always there, always watching) -->
+            <g class="eye" data-cx="150" data-cy="200">
+                <g class="blink">
+                    <ellipse class="eye-white" cx="150" cy="200" rx="34" ry="24"/>
+                    <circle class="pupil" cx="150" cy="200" r="12"/>
+                    <circle class="glint" cx="146" cy="196" r="3.5"/>
+                </g>
+                <g clip-path="url(#eyeClipL)"><rect class="lid" x="108" y="140" width="84" height="60"/></g>
+            </g>
+            <g class="eye" data-cx="250" data-cy="200">
+                <g class="blink">
+                    <ellipse class="eye-white" cx="250" cy="200" rx="34" ry="24"/>
+                    <circle class="pupil" cx="250" cy="200" r="12"/>
+                    <circle class="glint" cx="246" cy="196" r="3.5"/>
+                </g>
+                <g clip-path="url(#eyeClipR)"><rect class="lid" x="208" y="140" width="84" height="60"/></g>
+            </g>
+
+            <!-- LinkedIn glasses sit over the eyes -->
+            <g class="layer human" stroke="#fff" stroke-width="6" stroke-linejoin="round" fill="none">
+                <rect x="102" y="166" width="96" height="66" rx="6"/>
+                <rect x="202" y="166" width="96" height="66" rx="6"/>
+                <path d="M198 192 Q200 186 202 192" stroke-width="5"/>
+                <path d="M102 186 L80 180 M298 186 L320 180" stroke-width="5"/>
+                <path d="M112 178 L128 172 M212 178 L228 172" stroke-width="3" opacity="0.7"/>
+            </g>
+        </svg>
+        <p class="caption" id="caption">I see you</p>
+    </div>
+
+    <!-- Top left: LinkedIn -->
+    <a class="corner tl" data-state="linkedin" href="https://www.linkedin.com/in/aumritashmaitra/" target="_blank" rel="noopener" aria-label="Aumritash Maitra on LinkedIn">
+        <span class="btn">
+            <span class="plain">LinkedIn</span>
+            <span class="brand"><span class="in-badge">in</span>Connect with Aumritash</span>
+        </span>
+        <span class="sub">// CONNECT</span>
+    </a>
+
+    <!-- Top right: still being decided -->
+    <a class="corner tr" data-state="tbd" href="#" aria-label="Coming soon">
+        <span class="btn"><span>???</span></span>
+        <span class="sub">// LOCKED</span>
+    </a>
+
+    <!-- Bottom left: dubdub -->
+    <a class="corner bl" data-state="dubdub" href="https://www.godubdub.com/" target="_blank" rel="noopener" aria-label="dubdub (godubdub.com)">
+        <span class="btn">
+            <span class="plain">dubdub</span>
+            <span class="brand">
+                <svg class="dub-icon" viewBox="0 0 100 100" aria-hidden="true">
+                    <path fill="url(#dubFlame)" d="M22,86 C11,79 13,55 21,45 C25,33 33,31 37,38 C39,27 47,26 51,35 C55,18 70,14 74,30 C75,20 82,19 86,28 C91,42 89,68 83,79 C79,86 70,89 60,89 L34,89 C29,89 25,88 22,86 Z"/>
+                    <ellipse cx="37" cy="62" rx="8" ry="10" fill="#efebe4"/><ellipse cx="60" cy="61" rx="8" ry="10" fill="#efebe4"/>
+                    <circle cx="38" cy="64" r="5" fill="#3a241c"/><circle cx="61" cy="63" r="5" fill="#3a241c"/>
+                </svg>
+                dubdub
+            </span>
+        </span>
+        <span class="sub">// VISIT</span>
+    </a>
+
+    <!-- Bottom right: Know more -->
+    <a class="corner br" data-state="more" href="/#about" aria-label="Know more about Aumritash">
+        <span class="btn"><span>Know more...</span></span>
+        <span class="sub">// ABOUT ME</span>
+    </a>
+
+    <script>
+        const body = document.body;
+        const caption = document.getElementById('caption');
+        const svg = document.querySelector('.face');
+        const eyes = [...document.querySelectorAll('.eye')].map(el => ({
+            el,
+            cx: +el.dataset.cx,
+            cy: +el.dataset.cy,
+            pupil: el.querySelector('.pupil'),
+            glint: el.querySelector('.glint'),
+            x: 0, y: 0
+        }));
+
+        const CAPTIONS = {
+            idle: 'I see you',
+            linkedin: 'Strictly business',
+            dubdub: "Hi! I'm Dubby",
+            more: 'Curious? Good',
+            tbd: 'Not yet. Stop peeking'
+        };
+
+        const FLOODS = {
+            linkedin: '#0a66c2',
+            dubdub: 'linear-gradient(160deg, #f4632b, #f7a82e)'
+        };
+
+        // ── State: hovering a corner changes the face (and maybe floods the page) ──
+        function setState(name, corner) {
+            body.dataset.state = name;
+            caption.textContent = CAPTIONS[name];
+            document.querySelectorAll('.corner').forEach(c => c.classList.toggle('active', c === corner));
+            if (FLOODS[name]) {
+                const r = corner.getBoundingClientRect();
+                body.style.setProperty('--fx', (r.left + r.width / 2) + 'px');
+                body.style.setProperty('--fy', (r.top + r.height / 2) + 'px');
+                body.style.setProperty('--flood', FLOODS[name]);
+                body.classList.add('flooded');
+            } else {
+                body.classList.remove('flooded');
+            }
+        }
+
+        const touch = matchMedia('(hover: none)').matches;
+
+        document.querySelectorAll('.corner').forEach(corner => {
+            // Taps fire fake mouseenter/focus events, so hover and focus only drive the face on devices with a real pointer
+            if (!touch) {
+                corner.addEventListener('mouseenter', () => setState(corner.dataset.state, corner));
+                corner.addEventListener('mouseleave', () => setState('idle', null));
+                corner.addEventListener('focus', () => setState(corner.dataset.state, corner));
+                corner.addEventListener('blur', () => setState('idle', null));
+            }
+            corner.addEventListener('click', e => {
+                // On phones there is no hover: the first tap shows the reaction, the second one opens the link
+                if (touch && !corner.classList.contains('active')) {
+                    e.preventDefault();
+                    setState(corner.dataset.state, corner);
+                }
+                if (corner.getAttribute('href') === '#') e.preventDefault();
+            });
+        });
+
+        if (touch) {
+            document.addEventListener('click', e => { if (!e.target.closest('.corner')) setState('idle', null); });
+        }
+
+        // ── Eyes follow the pointer; wander a little when nobody is moving ──
+        let target = null, lastMove = 0;
+
+        addEventListener('pointermove', e => { target = { x: e.clientX, y: e.clientY }; lastMove = performance.now(); });
+        addEventListener('pointerdown', e => { target = { x: e.clientX, y: e.clientY }; lastMove = performance.now(); });
+
+        let wander = { x: innerWidth / 2, y: innerHeight / 2 }, nextWander = 0;
+
+        function frame(now) {
+            let look = target;
+            if (!look || now - lastMove > 4000) {
+                if (now > nextWander) {
+                    wander = { x: Math.random() * innerWidth, y: Math.random() * innerHeight };
+                    nextWander = now + 1800 + Math.random() * 2500;
+                }
+                look = wander;
+            }
+
+            const ctm = svg.getScreenCTM();
+            const dubby = body.dataset.state === 'dubdub';
+            for (const eye of eyes) {
+                const cx = ctm.a * eye.cx + ctm.e;
+                const cy = ctm.d * eye.cy + ctm.f;
+                const dx = look.x - cx, dy = look.y - cy;
+                const len = Math.hypot(dx, dy) || 1;
+                const pull = Math.min(1, len / 260);
+                const maxX = dubby ? 10 : 17, maxY = dubby ? 16 : 9;
+                const tx = dx / len * maxX * pull, ty = dy / len * maxY * pull;
+                eye.x += (tx - eye.x) * 0.15;
+                eye.y += (ty - eye.y) * 0.15;
+                const t = `translate(${eye.x.toFixed(2)} ${eye.y.toFixed(2)})`;
+                eye.pupil.setAttribute('transform', t);
+                eye.glint.setAttribute('transform', t);
+            }
+            requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+
+        // ── Calm, slightly irregular blinking ──
+        const blinks = document.querySelectorAll('.blink');
+        function blink() {
+            blinks.forEach(b => { b.classList.remove('closing'); void b.getBBox(); b.classList.add('closing'); });
+            const double = Math.random() < 0.15;
+            setTimeout(blink, double ? 300 : 2500 + Math.random() * 3500);
+        }
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setTimeout(blink, 1800);
+    </script>
 </body>
 </html>
