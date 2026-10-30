@@ -168,6 +168,19 @@
         .finale p { color: var(--dim); font-size: 1.05rem; max-width: 620px; margin: 0 auto; }
         .finale p + p { margin-top: 0.7rem; }
 
+        /* A word from the boss */
+        .rec {
+            margin: 1.5rem 0 1rem;
+            padding: 1.75rem 2rem;
+            border-left: 3px solid var(--red);
+            background: var(--panel);
+        }
+
+        .rec blockquote p { font-size: 1.05rem; font-style: italic; }
+        .rec blockquote p + p { margin-top: 0.7rem; }
+        .rec figcaption { margin-top: 1rem; font-family: var(--pixel); font-size: 1.1rem; letter-spacing: 0.1em; color: var(--dim); }
+        .rec figcaption strong { color: var(--red); font-weight: 400; }
+
         .src { color: var(--muted); font-size: 0.8rem; margin-top: 1rem; }
         .src a { color: var(--dim); }
 
@@ -179,6 +192,7 @@
             .vids { grid-template-columns: 1fr; }
             .story-card .inner { padding: 1.25rem; }
             .finale { padding: 2rem 1.25rem; }
+            .rec { padding: 1.25rem; }
         }
     </style>
 </head>
@@ -197,7 +211,7 @@
 
         <section aria-label="Highlights">
             <div class="stats">
-                <div class="stat"><div class="stat-value">250K+</div><div class="stat-label">peak live viewers at an event we built</div></div>
+                <div class="stat"><div class="stat-value">350K</div><div class="stat-label">peak live viewers across the NLC's 2025</div></div>
                 <div class="stat"><div class="stat-value">200K</div><div class="stat-label">users acquired for a core product</div></div>
                 <div class="stat"><div class="stat-value">$20K+</div><div class="stat-label">revenue in 10 months, from zero</div></div>
                 <div class="stat"><div class="stat-value">60K+</div><div class="stat-label">organic visitors in one month</div></div>
@@ -226,15 +240,32 @@
             </article>
 
             <article class="act">
-                <p class="act-num">ACT II<span>2024 — 2026</span></p>
+                <p class="act-num">ACT II<span>JUN 2024</span></p>
                 <div>
-                    <h3>Brands at the table</h3>
-                    <p>Esports runs on partners, so a lot of my time went into the brands behind the league and the events. That meant sitting across from household names, including <strong>KitKat</strong>, Riot's long-running sponsor across the European leagues, and working directly with them.</p>
+                    <h3>Building the network</h3>
+                    <p>Two months in, we launched the <strong>Gaming Operator Network</strong>: a free monthly session bringing together <em>"key players in the Gaming market, including Game Publishers, Esport Federations, and Pro Esport teams."</em> The first one went live on July 3 with Esport Danmark as guests. Leagues' own announcement ended with <em>"Shout out to Aaron Bakhshi &amp; Aumritash Maitra for making this happen."</em></p>
                 </div>
             </article>
 
             <article class="act">
-                <p class="act-num">ACT III<span>MAY — JUN 2025</span></p>
+                <p class="act-num">ACT III<span>2024 — 2026</span></p>
+                <div>
+                    <h3>Brands at the table</h3>
+                    <p>Esports runs on partners, so a lot of my time went into the brands behind the league and the events. That meant sitting across from household names, including <strong>KitKat</strong>, Riot's long-running sponsor across the European leagues, and working directly with them.</p>
+                    <p>In 2025, <strong>Arozzi</strong> came on as the NLC's title sponsor, and in its first month the <strong>Arozzi NLC</strong> was the <strong>4th most-watched esports tournament in the world</strong> for English-speaking viewers.</p>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT IV<span>2024 — 2026</span></p>
+                <div>
+                    <h3>A bot in 48,000 servers</h3>
+                    <p>Leagues ran four things, and one of them lived inside Discord: <strong>ValoTracker</strong>, a VALORANT bot that gives players their stats, match history and live match reports, and hands out rank and region roles automatically. We scaled it into <strong>48,900+ Discord servers</strong> and <strong>434,000+ players</strong>, in 20 languages.</p>
+                </div>
+            </article>
+
+            <article class="act">
+                <p class="act-num">ACT V<span>MAY — JUN 2025</span></p>
                 <div>
                     <h3>We didn't just run finals. We threw a festival.</h3>
                     <p><strong>Leagues Disrupt</strong> took over K.B. Hallen in Copenhagen for two days: the NLC finals, live music, streamers co-streaming from the venue, an expo floor, giveaways and community meetups. A brand-new kind of esports event for Northern Europe, and it broke the league's records.</p>
@@ -249,7 +280,7 @@
             </article>
 
             <article class="act">
-                <p class="act-num">ACT IV<span>JUL 2025</span></p>
+                <p class="act-num">ACT VI<span>JUL 2025</span></p>
                 <div>
                     <h3>Opening the gates</h3>
                     <p>With Riot Games, we ran the <strong>Northern Nexus Showdown</strong>, an open qualifier <em>"run in partnership with Leagues.gg and the NLC."</em> Any team in Northern Europe could sign up on Leagues.gg, fight through a Swiss stage and playoffs in one weekend, and the winner flew to the LEC Finals in Madrid as VIPs.</p>
@@ -258,10 +289,11 @@
             </article>
 
             <article class="act">
-                <p class="act-num">ACT V<span>AUG 2025</span></p>
+                <p class="act-num">ACT VII<span>AUG 2025</span></p>
                 <div>
                     <h3>Stockholm, louder</h3>
                     <p>Three months later we did it again, bigger: <strong>Leagues Disrupt Stockholm</strong> at Hovet Arena, with room for <strong>5,000</strong>, the summer finals, an after-party, and the NLC's first-ever K-pop performance, from <strong>PRIMROSE</strong>. It even had its own anthem.</p>
+                    <p>By the end of the year, Leagues Media had <em>"broke all records with 640M live impressions and a peak CCV of 350K,"</em> one of the most-viewed livestreamed events anywhere.</p>
                     <div class="vids">
                         <button class="yt" data-id="r29BT8BWRjA" style="background-image: url('../assets/work/yt-r29BT8BWRjA.jpg')"><span class="play">▶ PLAY</span><span class="vt">Leagues Disrupt Stockholm 2025 · Official Aftermovie</span></button>
                         <button class="yt" data-id="-nasat270To" style="background-image: url('../assets/work/yt--nasat270To.jpg')"><span class="play">▶ PLAY</span><span class="vt">"SHUT UP, DISRUPT!" · Official Anthem</span></button>
@@ -270,15 +302,16 @@
             </article>
 
             <article class="act">
-                <p class="act-num">ACT VI<span>2025</span></p>
+                <p class="act-num">ACT VIII<span>2025</span></p>
                 <div>
                     <h3>More than one league</h3>
                     <p>The NLC was the headline, but it was never the whole job. Leagues also ran <strong>Danmark Ligaen</strong>, Denmark's national VALORANT league, together with Esport Danmark, plus community competitions on Leagues.gg and the official EMEA League of Legends and VALORANT Discord communities. On the platform side, I helped drive <strong>200K users</strong> to a core product through partnerships, campaigns and platform-led initiatives.</p>
+                    <p>In October we even went beyond esports: <strong>Leagues.gg × SLASHPLAY</strong>, <em>"something big for the Minecraft Online community,"</em> where I reached out to the hosts and community leaders behind it.</p>
                 </div>
             </article>
 
             <article class="act">
-                <p class="act-num">ACT VII<span>LATE 2025</span></p>
+                <p class="act-num">ACT IX<span>LATE 2025</span></p>
                 <div>
                     <h3>Writing our way up</h3>
                     <p>We built the content engine from scratch: blogs, guides and <strong>Leagues News</strong>, daily League of Legends esports coverage living on Leagues.gg. Search took notice, with <strong>60K+ organic visitors in a single month</strong>.</p>
@@ -286,7 +319,7 @@
             </article>
 
             <article class="act">
-                <p class="act-num">ACT VIII<span>MAR 2026</span></p>
+                <p class="act-num">ACT X<span>MAR 2026</span></p>
                 <div>
                     <h3>The last split</h3>
                     <p>After the 2026 Winter Split, Leagues told Riot it was <em>"no longer in a position to operate the league."</em> The Spring Split was postponed, and Riot went looking for a new organizer.</p>
@@ -297,9 +330,18 @@
                 <p class="kicker">APR 2026 · THE END</p>
                 <h3>THE LAST ONE STANDING</h3>
                 <p>When Leagues ApS shut down and the team was let go, I was the final employee: there until the very end.</p>
-                <p>Two festivals, a national league, a Riot partnership, the brands and a content engine, all from a team small enough to fit in one room. I'd do it all again.</p>
+                <p>Two festivals, a national league, a Discord bot in 48,000 servers, a Riot partnership, the brands and a content engine, all from a team small enough to fit in one room. I'd do it all again.</p>
             </div>
-            <p class="src">Sources: <a href="https://esportsadvocate.net/2026/04/leagues-aps-shut-down/" target="_blank" rel="noopener">The Esports Advocate</a> · <a href="https://www.leagueoflegends.com/en-gb/news/community/northern-nexus-showdown/" target="_blank" rel="noopener">Riot Games</a> · <a href="https://esports-news.co.uk/2025/08/20/tickets-on-sale-primrose-leagues-disrupt-league-of-legends-k-pop/" target="_blank" rel="noopener">Esports News UK</a> · <a href="https://kbhallen.dk/en/past-events/leagues-disrupt_2025-05-31/" target="_blank" rel="noopener">K.B. Hallen</a> · Leagues Media · Images © Leagues ApS / NLC</p>
+
+            <figure class="rec">
+                <blockquote>
+                    <p>"I can warmly recommend Aumritash as one of the best people I've had the pleasure of working with."</p>
+                    <p>"Beyond his performance, Aumritash brings a positive energy to the workplace that elevates the entire team. He naturally creates a sense of shared mission, making those around him feel motivated and included."</p>
+                    <p>"…someone who delivers, uplifts others, and genuinely cares about the success of the mission."</p>
+                </blockquote>
+                <figcaption><strong>Mathias Horn</strong> · Leagues ApS · managed me directly · March 31, 2026</figcaption>
+            </figure>
+            <p class="src">Sources: <a href="https://esportsadvocate.net/2026/04/leagues-aps-shut-down/" target="_blank" rel="noopener">The Esports Advocate</a> · <a href="https://www.leagueoflegends.com/en-gb/news/community/northern-nexus-showdown/" target="_blank" rel="noopener">Riot Games</a> · <a href="https://esports-news.co.uk/2025/08/20/tickets-on-sale-primrose-leagues-disrupt-league-of-legends-k-pop/" target="_blank" rel="noopener">Esports News UK</a> · <a href="https://kbhallen.dk/en/past-events/leagues-disrupt_2025-05-31/" target="_blank" rel="noopener">K.B. Hallen</a> · <a href="https://www.valotracker.com/" target="_blank" rel="noopener">ValoTracker</a> · LinkedIn posts by Leagues.gg, Leagues Media, Mathias Horn, Christian Henriksen and Arozzi · Images © Leagues ApS / NLC</p>
         </section>
 
         <!-- ═══════════ STORY II: CAPTAINSIDE ═══════════ -->
@@ -350,7 +392,9 @@
                 <div>
                     <h3>Tinder, but for games</h3>
                     <p>Every studio we worked with had the same problem: getting found. So we built the answer ourselves. <strong>captainside.com</strong> helps you <em>"find your next game in 30 seconds"</em> by swiping short gameplay clips from real players. No trailers, no PR, just real footage.</p>
-                    <p>Around it: a YouTube channel with reviews and coverage, including <strong>India's room at Summer Game Fest</strong> and a collaboration with the official Borderlands account, plus the <strong>r/CaptainSide</strong> community and an Instagram that's posted 340+ times.</p>
+                    <p>Around it, we built a community: <strong>r/CaptainSide</strong> hit <strong>100K+ unique weekly visitors</strong> within months, with no paid promotion, just consistent content and SEO doing the heavy lifting. Before its first birthday it had climbed to the <strong>#19 gaming subreddit on Reddit</strong>: <strong>240K+ weekly visitors</strong> and <strong>22K+ weekly contributors</strong>, more contributors than r/pcgaming or r/xbox. At its peak it reached <strong>500K+ weekly active users</strong>. In a single month it now sees <strong>26,000+ people</strong> posting and nearly <strong>40,000 comments</strong>.</p>
+                    <p>There's also a YouTube channel with reviews and coverage, including <strong>India's room at Summer Game Fest</strong> and a collaboration with the official Borderlands account.</p>
+                    <p>In November 2025 we took the idea to <strong>IGDC in Chennai</strong>, sharing our vision for user-driven game discovery with developers, artists and some of the people leading the industry.</p>
                     <div class="vids">
                         <button class="yt" data-id="vMAJMTsXJ78" style="background-image: url('../assets/work/yt-vMAJMTsXJ78.jpg')"><span class="play">▶ PLAY</span><span class="vt">We Built Tinder For Games</span></button>
                         <button class="yt" data-id="G-1ZzaeVAZ0" style="background-image: url('../assets/work/yt-G-1ZzaeVAZ0.jpg')"><span class="play">▶ PLAY</span><span class="vt">India Had Its Own Room at Summer Game Fest · IGS 2026</span></button>
@@ -358,7 +402,7 @@
                     <div class="links"><a href="https://www.captainside.com/" target="_blank" rel="noopener" class="btn small">Try CaptainSide ↗</a><a href="https://www.youtube.com/@captainside2064" target="_blank" rel="noopener" class="btn small">YouTube ↗</a><a href="https://www.reddit.com/r/CaptainSide/" target="_blank" rel="noopener" class="btn small">r/CaptainSide ↗</a></div>
                 </div>
             </article>
-            <p class="src">Sources: <a href="https://tracker.gg/valorant/premier/teams/f8f6beb2-7dba-42d8-a144-8744c7951a02" target="_blank" rel="noopener">VALORANT Premier via Tracker.gg</a> · <a href="https://playtics.net/organizer/captain-side-esports/" target="_blank" rel="noopener">Playtics</a> · <a href="https://www.youtube.com/@captainside2064" target="_blank" rel="noopener">CaptainSide on YouTube</a></p>
+            <p class="src">Sources: <a href="https://tracker.gg/valorant/premier/teams/f8f6beb2-7dba-42d8-a144-8744c7951a02" target="_blank" rel="noopener">VALORANT Premier via Tracker.gg</a> · <a href="https://playtics.net/organizer/captain-side-esports/" target="_blank" rel="noopener">Playtics</a> · <a href="https://www.youtube.com/@captainside2064" target="_blank" rel="noopener">CaptainSide on YouTube</a> · <a href="https://syften.com/reddit/r/captainside" target="_blank" rel="noopener">Syften subreddit stats</a> · LinkedIn posts by Sumit Dubey and Aumritash Maitra</p>
         </section>
 
         <section>
