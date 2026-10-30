@@ -9,210 +9,745 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/chapter.css">
     <style>
-        body { overflow-x: hidden; }
+        html, body { height: 100%; overflow: hidden; }
+        body::before { display: none; }
+        body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
 
-        .select {
-            min-height: calc(100vh - 5rem);
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3rem;
+        #scene {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .top { position: fixed; top: 0; left: 0; right: 0; z-index: 10; }
+
+        .caption {
+            position: fixed;
+            top: 14%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: var(--pixel);
+            font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+            letter-spacing: 0.2em;
+            color: rgba(232, 226, 218, 0.75);
+            z-index: 5;
+            pointer-events: none;
+            transition: opacity 0.6s;
+            padding: 0 1rem;
+        }
+
+        .prompt {
+            position: fixed;
+            top: 24%;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 2rem 2rem 4rem;
-            animation: fadein 0.6s ease;
+            gap: 0.6rem;
+            z-index: 6;
+            font-family: var(--pixel);
+            letter-spacing: 0.2em;
+        }
+
+        .walk-hint {
+            font-size: 1.3rem;
+            color: var(--dim);
+            animation: breathe 2.4s ease-in-out infinite;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        @keyframes breathe { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+        .kindle {
+            font-size: 1.8rem;
+            padding: 0.5rem 1.6rem 0.4rem;
+            border-color: #ffcf8a;
+            color: #ffe2b8;
+            box-shadow: 0 0 24px rgba(255, 140, 50, 0.35);
+        }
+
+        .kindle:hover, .kindle:focus-visible { background: #ffcf8a; color: #1a0a00; }
+
+        .key-hint { font-size: 1.05rem; color: var(--muted); }
+
+        [hidden] { display: none !important; }
+
+        /* "Flame kindled" banner */
+        .banner {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 42%;
+            transform: translateY(-50%);
+            z-index: 8;
+            text-align: center;
+            padding: 1.4rem 1rem;
+            background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.75) 20%, rgba(0, 0, 0, 0.75) 80%, transparent);
+            font-family: var(--pixel);
+            font-size: clamp(2.6rem, 8vw, 5rem);
+            letter-spacing: 0.18em;
+            color: #ffd9a0;
+            text-shadow: 0 0 18px rgba(255, 150, 60, 0.8);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .banner.show { animation: banner 2.6s ease forwards; }
+
+        @keyframes banner {
+            0% { opacity: 0; letter-spacing: 0.4em; }
+            20% { opacity: 1; letter-spacing: 0.18em; }
+            75% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Rest menu */
+        .rest {
+            position: fixed;
+            right: 6%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: min(380px, 86vw);
+            z-index: 7;
+            animation: fadein 0.8s ease;
         }
 
         @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 
-        .watcher { width: 120px; height: 40px; margin-bottom: 1.5rem; }
-
-        .select h1 {
+        .rest-title {
             font-family: var(--pixel);
-            font-weight: 400;
-            font-size: clamp(2.6rem, 6vw, 4rem);
-            line-height: 1;
-            letter-spacing: 0.08em;
-            margin-bottom: 2rem;
-            text-shadow: 3px 0 rgba(255, 0, 0, 0.55), -2px 0 rgba(0, 255, 255, 0.2);
+            font-size: 1.2rem;
+            letter-spacing: 0.3em;
+            color: #ffcf8a;
+            margin-bottom: 0.9rem;
         }
 
-        .menu { list-style: none; display: flex; flex-direction: column; gap: 0.9rem; }
+        .rest ul { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
 
-        .menu a {
-            display: flex;
-            align-items: baseline;
-            gap: 1rem;
+        .rest a {
+            display: block;
             text-decoration: none;
-            font-family: var(--pixel);
-            font-size: 1.9rem;
-            line-height: 1;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
             border: 2px solid var(--text);
-            background: rgba(0, 0, 0, 0.55);
-            padding: 0.65rem 1.2rem 0.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 0.6rem 1rem 0.5rem;
             outline: none;
         }
 
-        .menu a .num { color: var(--red); font-size: 1.3rem; }
-        .menu a .desc { display: none; }
-
-        .menu a:hover, .menu a:focus-visible, .menu a.current {
-            background: var(--text);
-            color: #000;
+        .rest a .t {
+            font-family: var(--pixel);
+            font-size: 1.8rem;
+            line-height: 1;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
         }
 
-        .menu a:hover .num, .menu a:focus-visible .num, .menu a.current .num { color: #b00012; }
+        .rest a .d { font-size: 0.88rem; color: var(--dim); margin-top: 0.25rem; display: block; }
 
-        .menu a:active { background: var(--red); border-color: var(--red); }
+        .rest a:hover, .rest a:focus-visible, .rest a.current { background: var(--text); color: #000; }
+        .rest a:hover .d, .rest a:focus-visible .d, .rest a.current .d { color: #3a3330; }
 
-        .hint {
+        .rest-foot {
+            margin-top: 1rem;
             font-family: var(--pixel);
-            font-size: 1.1rem;
+            font-size: 1rem;
             letter-spacing: 0.15em;
             color: var(--muted);
-            margin-top: 1.5rem;
         }
 
-        .preview { min-height: 320px; }
-
-        .preview .kicker { margin-bottom: 0.5rem; }
-
-        .preview h2 {
-            font-family: var(--pixel);
-            font-weight: 400;
-            font-size: 3.2rem;
-            line-height: 1;
-            letter-spacing: 0.05em;
-            margin-bottom: 1rem;
+        .fade {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 20;
+            opacity: 1;
+            pointer-events: none;
+            transition: opacity 0.6s steps(5);
         }
 
-        .preview p { color: var(--dim); font-size: 1.05rem; margin-bottom: 1.25rem; }
-
-        .preview ul { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
-
-        .preview li {
-            font-family: var(--pixel);
-            font-size: 1.25rem;
-            letter-spacing: 0.08em;
-            color: var(--text);
-        }
-
-        .preview li::before { content: '> '; color: var(--red); }
+        .fade.out { opacity: 0; }
 
         @media (max-width: 760px) {
-            .select { grid-template-columns: 1fr; gap: 0; padding: 1rem 1rem 3rem; min-height: 0; }
-            .preview { display: none; }
-            .menu a { flex-wrap: wrap; font-size: 1.6rem; }
-            .menu a .desc {
-                display: block;
-                width: 100%;
-                font-family: var(--sans);
-                font-size: 0.9rem;
-                letter-spacing: 0;
-                text-transform: none;
-                color: var(--dim);
-                margin-top: 0.4rem;
-            }
-            .menu a:hover .desc, .menu a.current .desc { color: #333; }
-            .hint { display: none; }
+            .rest { right: auto; left: 50%; top: 4.5rem; transform: translateX(-50%); }
+            .rest a .t { font-size: 1.45rem; }
+            .rest a .d { display: none; }
+            .rest-foot { display: none; }
+            .caption { top: 11%; }
+            .prompt { top: 21%; }
+            .walk-hint { font-size: 1.1rem; }
         }
     </style>
 </head>
 <body>
+    <canvas id="scene" aria-hidden="true"></canvas>
+
     <header class="top">
-        <a href="../" class="btn small">&lt; Back</a>
-        <span class="name">AUMRITASH MAITRA</span>
+        <a href="../" class="btn small">&lt; Title</a>
+        <button class="btn small skip" id="skip">Skip &gt;</button>
     </header>
 
-    <main class="select">
-        <div>
-            <svg class="watcher" viewBox="0 0 120 40" aria-hidden="true">
-                <ellipse cx="32" cy="20" rx="22" ry="11" fill="#d9cfb8"/>
-                <ellipse cx="88" cy="20" rx="22" ry="11" fill="#d9cfb8"/>
-                <circle class="pupil" cx="32" cy="20" r="7" fill="#5c0009"/>
-                <circle class="pupil" cx="88" cy="20" r="7" fill="#5c0009"/>
-                <rect x="8" y="4" width="48" height="9" fill="#050505"/>
-                <rect x="64" y="4" width="48" height="9" fill="#050505"/>
-            </svg>
-            <h1>KNOW MORE</h1>
-            <ul class="menu" id="menu">
-                <li><a href="../work/" class="current" data-i="0"><span class="num">01</span>The Work<span class="desc">Career, case studies and results.</span></a></li>
-                <li><a href="../games/" data-i="1"><span class="num">02</span>The Games<span class="desc">What I play, and what nearly broke me.</span></a></li>
-                <li><a href="../stories/" data-i="2"><span class="num">03</span>The Stories<span class="desc">The fiction that shaped me.</span></a></li>
-            </ul>
-            <p class="hint">↑ ↓ TO CHOOSE · ENTER TO START</p>
-        </div>
+    <p class="caption" id="caption">A flame flickers in the distance</p>
 
-        <div class="preview panel" aria-live="polite">
-            <p class="kicker" id="pKicker">CHAPTER 01</p>
-            <h2 id="pTitle">THE WORK</h2>
-            <p id="pText"></p>
-            <ul id="pList"></ul>
-        </div>
-    </main>
+    <div class="prompt">
+        <p class="walk-hint" id="walkHint">HOLD TO WALK</p>
+        <button class="btn kindle" id="kindle" hidden>Kindle the flame</button>
+        <p class="key-hint" id="keyHint" hidden>[E] TO KINDLE</p>
+    </div>
+
+    <div class="banner" id="banner" aria-live="polite">FLAME KINDLED</div>
+
+    <nav class="rest" id="rest" hidden aria-label="Chapters">
+        <p class="rest-title">REST · TRAVEL TO</p>
+        <ul>
+            <li><a href="../work/" class="current"><span class="t">The Work</span><span class="d">Career, case studies and results</span></a></li>
+            <li><a href="../games/"><span class="t">The Games</span><span class="d">What I play, and what nearly broke me</span></a></li>
+            <li><a href="../stories/"><span class="t">The Stories</span><span class="d">The fiction that shaped me</span></a></li>
+        </ul>
+        <p class="rest-foot">↑ ↓ TO CHOOSE · ENTER TO TRAVEL</p>
+    </nav>
+
+    <div class="fade" id="fade"></div>
 
     <script>
-        const CHAPTERS = [
-            {
-                title: 'THE WORK',
-                text: 'Product, growth and partnerships, mostly in gaming. What I built, what I grew, and the numbers behind it.',
-                list: ['CaptainSide · Co-founder & COO', 'Leagues.gg · Partnerships & Product', 'Player Journey Tool · built with AI']
-            },
-            {
-                title: 'THE GAMES',
-                text: 'The games I play, the ones I keep coming back to, and the bosses that took far too many tries.',
-                list: ['Currently playing', 'All-time favourites', 'Bosses that broke me']
-            },
-            {
-                title: 'THE STORIES',
-                text: 'Books, shows, films and anime. The fiction I love and the worlds I keep thinking about.',
-                list: ['Books', 'Shows & anime', 'Films']
-            }
-        ];
+    (() => {
+        const canvas = document.getElementById('scene');
+        const ctx = canvas.getContext('2d');
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const touch = matchMedia('(hover: none)').matches;
+        const $ = id => document.getElementById(id);
+        const caption = $('caption'), walkHint = $('walkHint'), kindleBtn = $('kindle'), keyHint = $('keyHint');
+        const banner = $('banner'), rest = $('rest'), fade = $('fade'), skip = $('skip');
+        const STORE = 'aumritash-kindled';
 
-        const items = [...document.querySelectorAll('#menu a')];
+        walkHint.textContent = touch ? 'HOLD THE SCREEN TO WALK' : 'HOLD CLICK · W · ↑ · OR SCROLL TO WALK';
+
+        // ── Low-res canvas + a simple perspective camera ──
+        let P, cw, ch, u, cx, horizon, G;
+        function resize() {
+            P = Math.max(2, Math.round(Math.min(innerWidth, innerHeight) / 170));
+            cw = Math.ceil(innerWidth / P);
+            ch = Math.ceil(innerHeight / P);
+            canvas.width = cw;
+            canvas.height = ch;
+            u = Math.min(cw, ch) / 100;
+            cx = innerWidth > 760 ? cw * 0.4 : cw / 2;   // leave room for the menu on desktop
+            horizon = ch * 0.5;
+            G = (ch * 0.8 - horizon) * 1.25;             // ground depth, so z = 1.25 (the fire on arrival) lands beside the knight
+        }
+        resize();
+        addEventListener('resize', resize);
+
+        // World space: X is sideways (in u), z is depth. The fire sits ahead on the path.
+        const PATH = 18, FIRE_X = 7, NEAR = 1.25;
+        const project = (X, z) => ({ x: cx + X * u * NEAR / z, y: horizon + G / z, s: NEAR / z });
+
+        // ── State ──
+        let p = 0, walkPhase = 0, kindling = -1, lit = false, resting = false;
+        let kindled = false;
+        try { kindled = localStorage.getItem(STORE) === '1'; } catch (e) {}
+
+        // Ruins either side of the path: broken pillars, dead trees, rocks
+        function rand(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+        const R = rand(11);
+        function makeProp(z) {
+            const side = R() < 0.5 ? -1 : 1;
+            const kind = R() < 0.45 ? 'pillar' : R() < 0.6 ? 'tree' : 'rock';
+            return { X: side * (22 + R() * 45), z, kind, h: kind === 'pillar' ? 18 + R() * 30 : kind === 'tree' ? 28 + R() * 25 : 4 + R() * 5, w: kind === 'pillar' ? 4 + R() * 3 : 6 + R() * 6, seed: Math.floor(R() * 1e6) };
+        }
+        const props = Array.from({ length: 26 }, (_, i) => makeProp(1.4 + i * (21 / 26) + R() * 0.6));
+        const stones = Array.from({ length: 90 }, () => ({ X: (R() - 0.5) * 120, z: 1 + R() * 21 }));
+        const ash = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), s: Math.random() }));
+        const embers = [], lurkers = [];
+        let nextLurker = performance.now() + 1500;
+
+        // ── Input ──
+        const held = new Set();
+        const isUI = t => t.closest && t.closest('button, a, nav');
+        addEventListener('pointerdown', e => { if (!isUI(e.target)) held.add('pointer'); });
+        addEventListener('pointerup', () => held.delete('pointer'));
+        addEventListener('pointercancel', () => held.delete('pointer'));
+        addEventListener('blur', () => held.clear());
+        addEventListener('contextmenu', e => { if (!isUI(e.target)) e.preventDefault(); });
+        addEventListener('keydown', e => {
+            if (['w', 'W', 'ArrowUp', ' '].includes(e.key) && kindling < 0) { held.add(e.key); e.preventDefault(); }
+            if ((e.key === 'e' || e.key === 'E' || e.key === 'Enter') && p >= 1 && kindling < 0) { e.preventDefault(); kindle(); }
+        });
+        addEventListener('keyup', e => held.delete(e.key));
+        let wheelBoost = 0;
+        addEventListener('wheel', e => { if (kindling < 0 && e.deltaY > 0) wheelBoost += Math.min(e.deltaY, 120) * 0.0008; }, { passive: true });
+
+        skip.addEventListener('click', () => { advance(1 - p); });
+        kindleBtn.addEventListener('click', kindle);
+
+        // Walking forward moves the whole world towards you
+        function advance(dp) {
+            dp = Math.max(0, Math.min(dp, 1 - p));
+            if (!dp) return;
+            p += dp;
+            const dz = dp * PATH;
+            for (const o of props) { o.z -= dz; if (o.z < 0.55) Object.assign(o, makeProp(o.z + 21)); }
+            for (const s of stones) { s.z -= dz; if (s.z < 0.6) { s.z += 21; s.X = (R() - 0.5) * 120; } }
+        }
+
+        let clock = performance.now();
+        function kindle() {
+            if (kindling >= 0) return;
+            kindling = clock;
+            try { localStorage.setItem(STORE, '1'); } catch (e) {}
+            kindleBtn.hidden = true;
+            keyHint.hidden = true;
+            skip.hidden = true;
+            caption.style.opacity = 0;
+            // The knight kneels first; the fire catches a beat later, like at a real bonfire
+            setTimeout(() => { lit = true; banner.classList.add('show'); }, reduce ? 0 : 900);
+            setTimeout(() => { resting = true; showRest(); }, reduce ? 300 : 3200);
+        }
+
+        // ── Rest menu ──
+        const items = [...rest.querySelectorAll('a')];
         let current = 0;
-
         function select(i) {
             current = (i + items.length) % items.length;
             items.forEach((a, n) => a.classList.toggle('current', n === current));
-            const c = CHAPTERS[current];
-            document.getElementById('pKicker').textContent = 'CHAPTER 0' + (current + 1);
-            document.getElementById('pTitle').textContent = c.title;
-            document.getElementById('pText').textContent = c.text;
-            document.getElementById('pList').innerHTML = c.list.map(t => '<li></li>').join('');
-            document.querySelectorAll('#pList li').forEach((li, n) => { li.textContent = c.list[n]; });
         }
-
         items.forEach((a, i) => {
             a.addEventListener('mouseenter', () => select(i));
             a.addEventListener('focus', () => select(i));
+            a.addEventListener('click', e => { e.preventDefault(); travel(a.href); });
         });
+        let menuKeys = false;
+        function showRest() {
+            rest.hidden = false;
+            if (menuKeys) return;
+            menuKeys = true;
+            addEventListener('keydown', e => {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    select(current + (e.key === 'ArrowDown' ? 1 : -1));
+                    items[current].focus();
+                } else if (e.key === 'Enter' && document.activeElement === document.body) {
+                    travel(items[current].href);
+                }
+            });
+        }
+        function travel(href) {
+            fade.classList.remove('out');
+            setTimeout(() => { location.href = href; }, 550);
+        }
 
-        // Arrow keys move through the menu like a game's chapter select
-        addEventListener('keydown', e => {
-            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                e.preventDefault();
-                select(current + (e.key === 'ArrowDown' ? 1 : -1));
-                items[current].focus();
-            } else if (e.key === 'Enter' && document.activeElement === document.body) {
-                location.href = items[current].href;
+        // Returning visitors find the knight already resting by a lit fire
+        if (kindled) {
+            advance(1);
+            kindling = -1e9;
+            lit = true;
+            resting = true;
+            caption.style.opacity = 0;
+            walkHint.hidden = true;
+            skip.hidden = true;
+            showRest();
+        }
+
+        requestAnimationFrame(() => fade.classList.add('out'));
+
+        // ── Noise ──
+        const noise = document.createElement('canvas');
+        noise.width = noise.height = 96;
+        const nctx = noise.getContext('2d');
+        const nimg = nctx.createImageData(96, 96);
+        function refreshNoise() {
+            const d = nimg.data;
+            for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+            nctx.putImageData(nimg, 0, 0);
+        }
+
+        // ── Props ──
+        function drawProp(o, fire, glow) {
+            const q = project(o.X, o.z);
+            if (q.x < -60 || q.x > cw + 60) return;
+            const sc = q.s * u;
+            // Far props fade into the hazy horizon colour
+            const fog = Math.min(0.85, o.z / 24);
+            const near = 1 - fog;
+            const shade = `rgb(${Math.round(7 + 30 * fog)}, ${Math.round(5 + 14 * fog)}, ${Math.round(4 + 10 * fog)})`;
+            const lr = R2(o.seed);
+            ctx.save();
+            if (o.kind === 'pillar') {
+                const w = o.w * sc, h = o.h * sc;
+                ctx.fillStyle = shade;
+                ctx.fillRect(q.x - w / 2, q.y - h, w, h);
+                // Broken, jagged top
+                ctx.fillRect(q.x - w / 2, q.y - h - 2 * sc, w * 0.35, 2 * sc);
+                ctx.fillRect(q.x + w * 0.1, q.y - h - 4 * sc * lr(), w * 0.25, 4 * sc * lr());
+                // Base and capital
+                ctx.fillRect(q.x - w * 0.7, q.y - 1.5 * sc, w * 1.4, 1.5 * sc);
+                if (glow > 0 && Math.abs(q.x - fire.x) < 90 * u) {
+                    const side = fire.x > q.x ? 1 : -1;
+                    ctx.fillStyle = `rgba(200, 95, 35, ${0.35 * glow * near})`;
+                    ctx.fillRect(side > 0 ? q.x + w / 2 - Math.max(1, sc) : q.x - w / 2, q.y - h, Math.max(1, sc), h);
+                }
+            } else if (o.kind === 'tree') {
+                ctx.strokeStyle = shade;
+                ctx.lineCap = 'round';
+                ctx.lineWidth = Math.max(1, 1.6 * sc);
+                const h = o.h * sc;
+                ctx.beginPath();
+                ctx.moveTo(q.x, q.y);
+                ctx.lineTo(q.x + (lr() - 0.5) * 4 * sc, q.y - h);
+                ctx.stroke();
+                ctx.lineWidth = Math.max(1, 0.8 * sc);
+                for (let b = 0; b < 4; b++) {
+                    const by = q.y - h * (0.45 + b * 0.14);
+                    const dir = b % 2 ? 1 : -1;
+                    ctx.beginPath();
+                    ctx.moveTo(q.x, by);
+                    ctx.lineTo(q.x + dir * (5 + lr() * 8) * sc, by - (3 + lr() * 6) * sc);
+                    ctx.stroke();
+                }
+            } else {
+                ctx.fillStyle = shade;
+                ctx.beginPath();
+                ctx.ellipse(q.x, q.y - o.h * sc * 0.4, o.w * sc, o.h * sc * 0.6, 0, Math.PI, Math.PI * 2);
+                ctx.fill();
             }
-        });
+            ctx.restore();
+        }
 
-        select(0);
+        function R2(seed) { let s = seed || 1; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
 
-        // The eyes from the title screen keep watching
-        const pupils = document.querySelectorAll('.watcher .pupil');
-        const svg = document.querySelector('.watcher');
-        addEventListener('pointermove', e => {
-            const r = svg.getBoundingClientRect();
-            const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
-            const len = Math.hypot(dx, dy) || 1, pull = Math.min(1, len / 300);
-            pupils.forEach(p => p.setAttribute('transform', `translate(${(dx / len * 11 * pull).toFixed(1)} ${(dy / len * 3 * pull).toFixed(1)})`));
-        });
+        // ── The flame and its cairn ──
+        function tongue(x, y, w, h, sway, color) {
+            ctx.beginPath();
+            ctx.moveTo(x - w, y);
+            ctx.quadraticCurveTo(x - w * 1.15, y - h * 0.55, x + sway, y - h);
+            ctx.quadraticCurveTo(x + w * 1.15, y - h * 0.55, x + w, y);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        function drawFire(fx, fy, su, t, flare) {
+            for (const [dx, ph] of [[-0.55, 1.7], [0.6, 3.1]]) {
+                const h = 15 * su * flare * (1 + 0.15 * Math.sin(t * 11 + ph));
+                tongue(fx + dx * 8 * su, fy, 4 * su, h, Math.sin(t * 6 + ph) * 2 * su, '#d63c10');
+            }
+            [['#a8260c', 26, 9], ['#ff6a14', 20, 7], ['#ffb347', 14, 5], ['#fff0c2', 8, 2.6]].forEach(([color, h, w], i) => {
+                const hh = h * su * flare * (1 + 0.09 * Math.sin(t * 13 + i * 1.3) + 0.05 * Math.sin(t * 29 + i));
+                const sway = (Math.sin(t * 5 + i) + Math.sin(t * 9.3 + i * 2) * 0.5) * 1.6 * su;
+                tongue(fx, fy, w * su, hh, sway, color);
+            });
+        }
+
+        function drawCairn(fx, fy, su, glow) {
+            const stonesC = [[-9, 1, 6, 3.2], [9, 1, 6, 3.4], [-4, 2.5, 6.5, 3.5], [4.5, 2.6, 6, 3.3], [0, 0.2, 5.5, 3]];
+            for (const [dx, dy, rx, ry] of stonesC) {
+                ctx.beginPath();
+                ctx.ellipse(fx + dx * su, fy + dy * su, rx * su, ry * su, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#17110f';
+                ctx.fill();
+                if (glow > 0) {
+                    ctx.beginPath();
+                    ctx.ellipse(fx + dx * su, fy + (dy - ry * 0.45) * su, rx * 0.8 * su, ry * 0.4 * su, 0, Math.PI, Math.PI * 2);
+                    ctx.fillStyle = `rgba(150, 70, 30, ${0.7 * glow})`;
+                    ctx.fill();
+                }
+            }
+            ctx.beginPath();
+            ctx.moveTo(fx - 7 * su, fy - 4 * su);
+            ctx.lineTo(fx + 7 * su, fy - 4 * su);
+            ctx.lineTo(fx + 4.5 * su, fy + 0.5 * su);
+            ctx.lineTo(fx - 4.5 * su, fy + 0.5 * su);
+            ctx.closePath();
+            ctx.fillStyle = '#0e0b0a';
+            ctx.fill();
+            ctx.strokeStyle = glow > 0 ? `rgba(200, 110, 50, ${0.6 * glow})` : '#2a2220';
+            ctx.lineWidth = Math.max(1, 0.5 * su);
+            ctx.stroke();
+        }
+
+        // ── The knight, seen from behind ──
+        const C = {
+            armor: '#3a3430', armorDark: '#25211e', helm: '#4b443d', cape: '#3d1d15', capeDark: '#2a130d',
+            shield: '#4a3a29', rim: '#6d5a40', blade: '#a3a8ad', hilt: '#5a4630', boot: '#1c1816'
+        };
+
+        function drawKnight(x, y, k, pose, phase, t, light) {
+            const r = (x0, y0, x1, y1, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x + x0 * k), Math.round(y + y0 * k), Math.max(1, Math.round((x1 - x0) * k)), Math.max(1, Math.round((y1 - y0) * k))); };
+            const poly = (pts, c) => { ctx.beginPath(); pts.forEach(([px, py], i) => (i ? ctx.lineTo : ctx.moveTo).call(ctx, x + px * k, y + py * k)); ctx.closePath(); ctx.fillStyle = c; ctx.fill(); };
+            const line = (x0, y0, x1, y1, w, c) => { ctx.strokeStyle = c; ctx.lineWidth = Math.max(1, w * k); ctx.beginPath(); ctx.moveTo(x + x0 * k, y + y0 * k); ctx.lineTo(x + x1 * k, y + y1 * k); ctx.stroke(); };
+
+            // Shadow on the ground
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath(); ctx.ellipse(x, y, 7 * k, 1.6 * k, 0, 0, Math.PI * 2); ctx.fill();
+
+            if (pose === 'walk' || pose === 'idle') {
+                const s = Math.sin(phase);
+                const bob = pose === 'walk' ? -Math.abs(s) * 0.6 : Math.sin(t * 2) * 0.15;
+                const liftL = pose === 'walk' ? Math.max(0, s) * 1.8 : 0;
+                const liftR = pose === 'walk' ? Math.max(0, -s) * 1.8 : 0;
+                const swing = pose === 'walk' ? s : 0;
+                // Legs
+                r(-3, -10 + bob, -0.6, -1 - liftL, C.armorDark);
+                r(-3.3, -1.6 - liftL, -0.3, 0 - liftL, C.boot);
+                r(0.6, -10 + bob, 3, -1 - liftR, C.armorDark);
+                r(0.3, -1.6 - liftR, 3.3, 0 - liftR, C.boot);
+                // Shield arm
+                r(-7.8, -17 + bob + swing * 0.5, -4.6, -8.5 + bob + swing * 0.5, C.shield);
+                r(-7.8, -17 + bob + swing * 0.5, -7.1, -8.5 + bob + swing * 0.5, C.rim);
+                // Cape over the back
+                const sw = swing * 0.7;
+                poly([[-4.7, -19.5 + bob], [4.7, -19.5 + bob], [5.6 + sw, -6 + bob], [4 + sw, -5 + bob], [2.5 + sw, -6.4 + bob], [0.8 + sw, -5.2 + bob], [-1 + sw, -6.5 + bob], [-2.8 + sw, -5.1 + bob], [-4.4 + sw, -6.3 + bob], [-5.6 + sw, -5.4 + bob]], C.cape);
+                poly([[0, -19 + bob], [1.5, -19 + bob], [2 + sw, -6 + bob], [0.6 + sw, -5.5 + bob]], C.capeDark);
+                // Pauldrons and helmet
+                r(-5.4, -20.5 + bob, -3, -17.6 + bob, C.armor);
+                r(3, -20.5 + bob, 5.4, -17.6 + bob, C.armor);
+                r(-2.5, -25 + bob, 2.5, -19.8 + bob, C.helm);
+                r(-0.4, -26 + bob, 0.4, -25 + bob, C.helm);
+                // Sword arm
+                r(4.6, -18 + bob, 6, -12 + bob - swing * 0.6, C.armor);
+                r(4.9, -12.8 + bob - swing * 0.6, 6.6, -11.9 + bob - swing * 0.6, C.hilt);
+                line(5.8, -12 + bob - swing * 0.6, 7.4 + swing * 0.9, -2.5 + bob, 0.75, C.blade);
+            } else if (pose === 'kneel') {
+                // One knee down, reaching towards the fire
+                r(-3, -5, -0.6, 0, C.armorDark);
+                r(-3.4, -1.2, -0.2, 0, C.boot);
+                r(0.6, -6.5, 3.2, -3.5, C.armorDark);
+                r(1.6, -3.6, 3.4, 0, C.boot);
+                r(-7.4, -12, -4.4, -4.5, C.shield);
+                r(-7.4, -12, -6.8, -4.5, C.rim);
+                poly([[-4.6, -15], [4.6, -15], [5.4, -1.6], [2, -1], [-1.5, -1.8], [-5.4, -1.2]], C.cape);
+                r(-5.2, -16, -3, -13.4, C.armor);
+                r(3, -16, 5.2, -13.4, C.armor);
+                r(-2.4, -20.5, 2.4, -15.4, C.helm);
+                line(4.5, -14.5, 9.5, -17.5, 1.4, C.armor);
+                line(-9, -0.2, 1, -0.6, 0.7, C.blade);
+            } else {
+                // Sitting by the fire, sword planted beside him
+                line(7.5, -15, 7.5, 0, 0.75, C.blade);
+                r(6.3, -13.2, 8.7, -12.4, C.hilt);
+                r(-3.6, -6, -1.4, -2.6, C.armorDark);
+                r(1.4, -6, 3.6, -2.6, C.armorDark);
+                poly([[-4.5, -13], [4.5, -13], [7, 0], [-7, 0]], C.cape);
+                poly([[0, -12.5], [1.4, -12.5], [2.4, 0], [0.4, 0]], C.capeDark);
+                r(-5.2, -14, -3, -11.4, C.armor);
+                r(3, -14, 5.2, -11.4, C.armor);
+                r(-2.4, -18.2 + Math.sin(t * 1.2) * 0.12, 2.4, -13.2, C.helm);
+                r(-7.8, -7, -4.8, 0, C.shield);
+                r(-7.8, -7, -7.2, 0, C.rim);
+            }
+
+            // Firelight catching his right side
+            if (light > 0) {
+                const top = pose === 'walk' || pose === 'idle' ? -25 : pose === 'kneel' ? -20.5 : -18;
+                ctx.fillStyle = `rgba(230, 120, 45, ${0.45 * light})`;
+                ctx.fillRect(Math.round(x + 3.6 * k), Math.round(y + top * k), Math.max(1, Math.round(1.2 * k)), Math.round(-top * k * 0.85));
+                ctx.fillRect(Math.round(x + 1.5 * k), Math.round(y + top * k), Math.max(1, Math.round(1 * k)), Math.max(1, Math.round(1 * k)));
+            }
+        }
+
+        // ── Main loop ──
+        let last = performance.now(), frameNo = 0;
+
+        function frame(now) {
+            clock = now;
+            const dt = Math.max(0, Math.min(0.25, (now - last) / 1000));
+            last = now;
+            frameNo++;
+            const t = now / 1000;
+
+            // Walk
+            const wasArrived = p >= 1;
+            const walking = kindling < 0 && p < 1 && (held.size > 0 || wheelBoost > 0.0005);
+            if (walking) {
+                const step = (held.size > 0 ? dt * 0.14 : 0) + Math.min(wheelBoost, 0.04);
+                advance(step);
+                walkPhase += (held.size > 0 ? dt * 9 : 0) + Math.min(wheelBoost, 0.04) * 60;
+            }
+            wheelBoost *= 0.8;
+
+            if (kindling < 0) {
+                if (p >= 1 && !wasArrived) {
+                    walkHint.hidden = true;
+                    kindleBtn.hidden = false;
+                    keyHint.hidden = touch;
+                    skip.hidden = true;
+                    caption.textContent = 'An unlit flame. Warmth, waiting.';
+                    if (!touch) kindleBtn.focus({ preventScroll: true });
+                } else if (p < 1) {
+                    const cap = p < 0.3 ? 'A flame flickers in the distance' : p < 0.75 ? 'Keep walking' : 'Almost there';
+                    if (caption.textContent !== cap) caption.textContent = cap;
+                }
+            }
+
+            const sinceLit = lit ? (now - kindling) / 1000 - 0.9 : -1;
+            const flare = lit ? 1 + Math.max(0, 0.8 - sinceLit) * 1.3 : 0;
+            const glow = lit ? Math.min(1, Math.max(0, sinceLit) * 2 + (kindling < -1e8 ? 1 : 0)) : 0;
+            const bob = walking && !reduce ? Math.sin(walkPhase * 2) * 0.35 * u : 0;
+
+            // Sky
+            const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+            sky.addColorStop(0, '#020203');
+            sky.addColorStop(0.6, lit ? '#1a0c07' : '#140a08');
+            sky.addColorStop(1, lit ? '#3d1c0e' : '#2e1610');
+            ctx.fillStyle = sky;
+            ctx.fillRect(0, 0, cw, ch);
+
+            ctx.save();
+            ctx.translate(0, bob);
+
+            // Ground, darkening towards you
+            const ground = ctx.createLinearGradient(0, horizon, 0, ch);
+            ground.addColorStop(0, '#22120c');
+            ground.addColorStop(0.25, '#110907');
+            ground.addColorStop(1, '#040202');
+            ctx.fillStyle = ground;
+            ctx.fillRect(0, horizon, cw, ch - horizon + 4);
+
+            // Stones streaming past underfoot
+            for (const s of stones) {
+                const q = project(s.X, s.z);
+                if (q.x < 0 || q.x > cw) continue;
+                const a = Math.min(0.6, 0.12 + (1 - s.z / 22) * 0.5);
+                ctx.fillStyle = `rgba(95, 65, 50, ${a})`;
+                const sz = Math.max(1, Math.round(q.s * u * 1.2));
+                ctx.fillRect(Math.round(q.x), Math.round(q.y), sz, Math.max(1, Math.round(sz * 0.5)));
+            }
+
+            // The path: two faint edges converging on the flame
+            const zf = NEAR + PATH * (1 - p);
+            const fq = project(FIRE_X, zf);
+            ctx.strokeStyle = 'rgba(70, 42, 30, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            const pl = project(FIRE_X - 14, 0.6), pr = project(FIRE_X + 14, 0.6);
+            ctx.moveTo(pl.x, pl.y); ctx.lineTo(fq.x - 2, fq.y);
+            ctx.moveTo(pr.x, pr.y); ctx.lineTo(fq.x + 2, fq.y);
+            ctx.stroke();
+
+            // Lurkers in the dark until the fire is lit
+            if (!lit && !reduce && now > nextLurker) {
+                const side = Math.random() < 0.5 ? -1 : 1;
+                lurkers.push({ x: fq.x + side * (20 + Math.random() * 50) * u, y: horizon - Math.random() * 10 * u + 3 * u, s: (0.6 + Math.random()) * u * 0.8, born: now, life: 1400 + Math.random() * 1800 });
+                nextLurker = now + 1500 + Math.random() * 3000;
+            }
+            for (let i = lurkers.length - 1; i >= 0; i--) {
+                const l = lurkers[i], lt = (now - l.born) / l.life;
+                if (lt > 1 || lit) { lurkers.splice(i, 1); continue; }
+                const open = Math.min(1, lt * 6, (1 - lt) * 6);
+                ctx.fillStyle = '#ff1a1a';
+                for (const sd of [-1, 1]) {
+                    ctx.beginPath();
+                    ctx.ellipse(l.x + sd * l.s * 2, l.y, l.s, Math.max(0.3, l.s * 0.45 * open), 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Fire glow (behind the props so ruins silhouette against it); fire is sized to the knight
+            const su = fq.s * u * 0.75;
+            const flick = 1 + 0.06 * Math.sin(t * 17) + 0.04 * Math.sin(t * 31);
+            const gr = (lit ? 60 : 24) * su * flick * (lit ? Math.max(1, flare * 0.8) : 1) + (lit ? 0 : 10);
+            const g = ctx.createRadialGradient(fq.x, fq.y - 6 * su, 0, fq.x, fq.y - 6 * su, gr);
+            g.addColorStop(0, lit ? `rgba(255, 140, 55, ${0.45 * glow})` : `rgba(255, 90, 25, ${0.38 + 0.12 * Math.sin(t * 2)})`);
+            g.addColorStop(0.5, lit ? `rgba(200, 70, 20, ${0.15 * glow})` : 'rgba(255, 80, 20, 0.05)');
+            g.addColorStop(1, 'rgba(255, 80, 20, 0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, cw, ch);
+            if (lit) {
+                ctx.fillStyle = `rgba(255, 120, 40, ${0.12 * glow})`;
+                ctx.beginPath(); ctx.ellipse(fq.x, fq.y + 2 * su, 50 * su, 12 * su, 0, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Props and the flame, far to near
+            const drawables = props.map(o => ({ z: o.z, draw: () => drawProp(o, fq, glow) }));
+            drawables.push({ z: zf, draw: () => {
+                drawCairn(fq.x, fq.y, su, glow);
+                if (lit) {
+                    drawFire(fq.x, fq.y - 3.5 * su, su, t, flare);
+                    if (!reduce && Math.random() < 0.6) embers.push({ x: fq.x + (Math.random() - 0.5) * 8 * su, y: fq.y - 12 * su, vx: (Math.random() - 0.5) * 6, vy: -(10 + Math.random() * 20), life: 1 });
+                } else {
+                    const a = 0.7 + 0.3 * Math.sin(t * 3);
+                    ctx.fillStyle = `rgba(255, 120, 40, ${a})`;
+                    ctx.beginPath(); ctx.arc(fq.x, fq.y - 3.5 * su, Math.max(1.3, 1.6 * su), 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = `rgba(255, 220, 150, ${a * 0.8})`;
+                    ctx.fillRect(Math.round(fq.x), Math.round(fq.y - 3.5 * su), 1, 1);
+                    if (!reduce && Math.random() < 0.2) embers.push({ x: fq.x, y: fq.y - 4 * su, vx: (Math.random() - 0.5) * 2, vy: -(4 + Math.random() * 4), life: 1, smoke: true });
+                }
+            } });
+            drawables.sort((a, b) => b.z - a.z).forEach(d => { if (d.z > 0.55) d.draw(); });
+
+            // Embers and smoke
+            for (let i = embers.length - 1; i >= 0; i--) {
+                const e = embers[i];
+                e.x += e.vx * dt * (fq.s + 0.3);
+                e.y += e.vy * dt * (fq.s + 0.3);
+                e.vx += (Math.random() - 0.5) * 8 * dt;
+                e.life -= dt * (e.smoke ? 0.5 : 0.8);
+                if (e.life <= 0) { embers.splice(i, 1); continue; }
+                ctx.fillStyle = e.smoke ? `rgba(90, 80, 75, ${e.life * 0.25})` : `rgba(255, ${140 + Math.random() * 80 | 0}, 60, ${e.life})`;
+                const rr = e.smoke ? Math.max(1, 2.5 * su * (1.5 - e.life)) : 1;
+                ctx.fillRect(Math.round(e.x), Math.round(e.y), rr, rr);
+            }
+            ctx.restore();
+
+            // The knight, always just ahead of the camera
+            const kneelFor = (now - kindling) / 1000;
+            const pose = resting ? 'sit' : kindling >= 0 ? (kneelFor < 3.2 ? 'kneel' : 'sit') : walking ? 'walk' : 'idle';
+            const kx = cx - 9 * u, ky = ch * 0.88;
+            drawKnight(kx, ky, u * 0.78, pose, walkPhase, t, glow * Math.min(1, p * 1.5));
+
+            // Ash drifting through the air
+            for (const a of ash) {
+                a.x -= dt * (0.01 + a.s * 0.02);
+                a.y += dt * (0.02 + a.s * 0.03) * (walking ? 2.2 : 1);
+                if (a.x < 0) a.x += 1;
+                if (a.y > 1) a.y -= 1;
+                ctx.fillStyle = `rgba(160, 150, 140, ${0.15 + a.s * 0.3})`;
+                ctx.fillRect(Math.round(a.x * cw), Math.round(a.y * ch), 1, 1);
+            }
+
+            // Vignette
+            const v = ctx.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.max(cw, ch) * 0.75);
+            v.addColorStop(0, 'rgba(0,0,0,0)');
+            v.addColorStop(1, 'rgba(0,0,0,0.85)');
+            ctx.fillStyle = v;
+            ctx.fillRect(0, 0, cw, ch);
+
+            // Ignition flash
+            if (lit && sinceLit >= 0 && sinceLit < 0.6) {
+                ctx.fillStyle = `rgba(255, 200, 130, ${0.65 * (1 - sinceLit / 0.6)})`;
+                ctx.fillRect(0, 0, cw, ch);
+            }
+
+            // Grain
+            if (frameNo % 2 === 0) refreshNoise();
+            ctx.globalAlpha = 0.08;
+            ctx.fillStyle = ctx.createPattern(noise, 'repeat');
+            ctx.save();
+            ctx.translate(Math.random() * 96, Math.random() * 96);
+            ctx.fillRect(-96, -96, cw + 192, ch + 192);
+            ctx.restore();
+            ctx.globalAlpha = 1;
+
+            if (!document.hidden) requestAnimationFrame(frame);
+        }
+
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) { last = performance.now(); requestAnimationFrame(frame); } });
+        requestAnimationFrame(frame);
+
+        // ?debug: step the scene by hand (for testing in background tabs where frames are paused)
+        if (location.search.includes('debug')) {
+            let fake = performance.now();
+            window.__flame = {
+                step(seconds, fps = 30) { for (let i = 0; i < seconds * fps; i++) { fake = Math.max(fake, last) + 1000 / fps; frame(fake); } },
+                hold(on) { on ? held.add('debug') : held.delete('debug'); },
+                state: () => ({ p: +p.toFixed(3), lit, resting, kindling: kindling >= 0 })
+            };
+        }
+    })();
     </script>
 </body>
 </html>
