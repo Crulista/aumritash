@@ -298,11 +298,16 @@
         <span class="btn">
             <span class="plain">dubdub</span>
             <span class="brand">
-                <svg class="dub-icon" viewBox="0 0 100 100" aria-hidden="true">
-                    <defs><linearGradient id="dubFlame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4632b"/><stop offset="1" stop-color="#f7a82e"/></linearGradient></defs>
-                    <path fill="url(#dubFlame)" d="M22,86 C11,79 13,55 21,45 C25,33 33,31 37,38 C39,27 47,26 51,35 C55,18 70,14 74,30 C75,20 82,19 86,28 C91,42 89,68 83,79 C79,86 70,89 60,89 L34,89 C29,89 25,88 22,86 Z"/>
-                    <ellipse cx="37" cy="62" rx="8" ry="10" fill="#efebe4"/><ellipse cx="60" cy="61" rx="8" ry="10" fill="#efebe4"/>
-                    <circle cx="38" cy="64" r="5" fill="#3a241c"/><circle cx="61" cy="63" r="5" fill="#3a241c"/>
+                <svg class="dub-icon" viewBox="150 200 780 660" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="dubFlame" gradientUnits="userSpaceOnUse" x1="300" y1="232" x2="760" y2="843"><stop offset="0" stop-color="#ff5a2a"/><stop offset="0.55" stop-color="#e55e2e"/><stop offset="1" stop-color="#ef942a"/></linearGradient>
+                        <clipPath id="dubEyeL"><ellipse cx="342" cy="564" rx="104" ry="62"/></clipPath>
+                        <clipPath id="dubEyeR"><ellipse cx="632" cy="564" rx="104" ry="62"/></clipPath>
+                    </defs>
+                    <path fill="url(#dubFlame)" stroke="#d14a1a" stroke-width="10" d="M375 843 C260 843 165 750 165 610 C165 480 262 395 380 392 C410 391 425 395 432 398 C460 300 540 235 640 232 C668 231 686 252 686 275 L686 328 L680 352 C730 280 790 232 868 232 C894 232 915 253 915 280 L915 625 C915 745 820 843 705 843 Z"/>
+                    <path d="M248 422 Q345 370 436 422 M522 456 Q635 380 742 456" stroke="#a02800" stroke-width="24" stroke-linecap="round" fill="none"/>
+                    <ellipse cx="342" cy="564" rx="104" ry="62" fill="#efefef"/><ellipse cx="632" cy="564" rx="104" ry="62" fill="#efefef"/>
+                    <circle cx="284" cy="569" r="46" fill="#2b0a02" clip-path="url(#dubEyeL)"/><circle cx="574" cy="569" r="46" fill="#2b0a02" clip-path="url(#dubEyeR)"/>
                 </svg>
                 dubdub
             </span>
@@ -680,43 +685,63 @@
             ctx.restore();
         }
 
-        const DUBBY = new Path2D('M22,86 C11,79 13,55 21,45 C25,33 33,31 37,38 C39,27 47,26 51,35 C55,18 70,14 74,30 C75,20 82,19 86,28 C91,42 89,68 83,79 C79,86 70,89 60,89 L34,89 C29,89 25,88 22,86 Z');
-        const DUB_BROWS = new Path2D('M27,49 C31,44 40,44 44,48 M52,47 C58,42 68,43 72,48');
-        const DUB_SMILE = new Path2D('M40,75 C45,82 53,82 58,75');
+        // Dubby, traced from the official artwork (1080×1080 coordinates)
+        const DUBBY = new Path2D('M375 843 C260 843 165 750 165 610 C165 480 262 395 380 392 C410 391 425 395 432 398 C460 300 540 235 640 232 C668 231 686 252 686 275 L686 328 L680 352 C730 280 790 232 868 232 C894 232 915 253 915 280 L915 625 C915 745 820 843 705 843 Z');
+        const DUB_BROWS = new Path2D('M248 422 Q345 370 436 422 M522 456 Q635 380 742 456');
+        const DUB_EYES = [[342, 564], [632, 564]];
 
         function drawDubby(now) {
-            const k = 0.62 * u;
-            const ox = cx - 52 * k, oy = cy - 58 * k;
+            const k = 54 * u / 750;
+            const ox = cx - 540 * k, oy = cy - 538 * k;
             const bounce = reduce ? 0 : Math.sin(now / 260) * 0.8 * u;
             ctx.save();
             ctx.translate(ox, oy + bounce);
             ctx.scale(k, k);
-            const g = ctx.createLinearGradient(0, 14, 0, 89);
-            g.addColorStop(0, '#f4632b');
-            g.addColorStop(1, '#f7a82e');
+            const g = ctx.createLinearGradient(300, 232, 760, 843);
+            g.addColorStop(0, '#ff5a2a');
+            g.addColorStop(0.55, '#e55e2e');
+            g.addColorStop(1, '#ef942a');
+            // Shadow and cream rim so he stands out on the orange flood
+            ctx.save();
+            ctx.translate(14, 20);
+            ctx.fillStyle = 'rgba(90, 20, 0, 0.35)';
+            ctx.fill(DUBBY);
+            ctx.restore();
+            ctx.strokeStyle = '#fff3e6';
+            ctx.lineWidth = 30;
+            ctx.stroke(DUBBY);
             ctx.fillStyle = g;
             ctx.fill(DUBBY);
-            ctx.strokeStyle = '#fff8f0';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#d14a1a';
+            ctx.lineWidth = 10;
             ctx.stroke(DUBBY);
             ctx.lineCap = 'round';
-            ctx.strokeStyle = '#c0391a';
-            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#a02800';
+            ctx.lineWidth = 24;
             ctx.stroke(DUB_BROWS);
-            ctx.strokeStyle = '#3a241c';
-            ctx.lineWidth = 3.5;
-            ctx.stroke(DUB_SMILE);
-            const open = 1 - blinkAmount(now) * 0.9;
-            [[37, 62, eyes[0]], [60, 61, eyes[1]]].forEach(([ex, ey, eye]) => {
-                ctx.fillStyle = '#efebe4';
-                ctx.beginPath(); ctx.ellipse(ex, ey, 8, 10 * open, 0, 0, Math.PI * 2); ctx.fill();
-                if (open > 0.3) {
-                    ctx.fillStyle = '#3a241c';
-                    ctx.beginPath(); ctx.arc(ex + eye.lx / k * 0.35, ey + eye.ly / k * 0.6, 5, 0, Math.PI * 2); ctx.fill();
-                }
-            });
+            // Side-eye: pupils slide inside the eye and get cut off by its edge
+            const open = 1 - blinkAmount(now) * 0.92;
+            const px = Math.max(-58, Math.min(58, eye0x() * 58));
+            const py = Math.max(-14, Math.min(14, eye0y() * 14));
+            for (const [ex, ey] of DUB_EYES) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.ellipse(ex, ey, 104, 62 * open, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#efefef';
+                ctx.fill();
+                ctx.clip();
+                ctx.fillStyle = '#2b0a02';
+                ctx.beginPath();
+                ctx.ellipse(ex + px, ey + py, 46, 46, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
             ctx.restore();
         }
+
+        // How far the main eyes are looking, as -1..1
+        function eye0x() { return eyes[0].lx / Math.max(1, 6 * u); }
+        function eye0y() { return eyes[0].ly / Math.max(1, 2.7 * u); }
 
         // ── Style meter ──
         const RANKS = [
