@@ -236,6 +236,7 @@
         .path:hover .d, .path:focus-visible .d, .path.current .d { color: #3a3330; }
 
         .change { position: fixed; right: 1.5rem; bottom: 1.2rem; z-index: 10; }
+        .sound { position: fixed; left: 1.5rem; bottom: 1.8rem; z-index: 10; }
 
         .credit {
             position: fixed;
@@ -265,6 +266,7 @@
             .hint { font-size: 1.05rem; }
             .origin-title { top: 12%; }
             .change { right: 1rem; bottom: 1rem; }
+            .sound { left: 1rem; bottom: 1rem; }
             .credit { display: none; }
         }
     </style>
@@ -309,6 +311,7 @@
     <a class="path" id="pathStories" href="../stories/" hidden><span class="t">The Stories</span><span class="d">The fiction that shaped me</span></a>
 
     <button class="btn small change" id="change" hidden>Change origin</button>
+    <button class="btn small sound" id="sound" hidden aria-pressed="true">♪ Sound on</button>
     <p class="credit">Characters &amp; animations: Quaternius (CC0)</p>
 
     <div class="fade on" id="fade"></div>
@@ -705,6 +708,8 @@
     });
 
     async function begin() {
+        // Browsers only allow sound from inside a click, so unlock the music now and let the walk start it
+        if (musicOn) music.play().then(() => { if (!musicAllowed) music.pause(); }).catch(() => {});
         heroCls = pickClass();
         store.set(STORE_ORIGIN, heroCls.id);
         fadeTo(true);
@@ -730,6 +735,8 @@
         hero.play('Idle_Loop', { fade: 0 });
         $('caption').hidden = false;
         $('caption').textContent = 'A flame flickers in the distance';
+        musicAllowed = true;
+        startMusic();
         $('hint').hidden = false;
         $('hint').textContent = touch ? 'HOLD THE SCREEN TO WALK' : 'HOLD CLICK · W · ↑ · OR SCROLL TO WALK';
         $('skip').hidden = false;
@@ -834,6 +841,41 @@
         store.del(STORE_KINDLED);
         store.del(STORE_ORIGIN);
         location.reload();
+    };
+
+    // ── Music: starts with the walk ("A flame flickers in the distance") and loops; muting is remembered ──
+    const STORE_MUSIC = 'aumritash-music', VOLUME = 0.45;
+    const music = new Audio('../assets/audio/theme.weba');
+    music.loop = true;
+    music.preload = 'auto';
+    music.volume = 0;
+    let musicOn = store.get(STORE_MUSIC) !== 'off', musicStarted = false, musicAllowed = false;
+    function fadeMusic(to, ms = 1500) {
+        const from = music.volume, t0 = performance.now();
+        const step = () => {
+            const k = Math.min(1, (performance.now() - t0) / ms);
+            music.volume = from + (to - from) * k;
+            if (k < 1) requestAnimationFrame(step); else if (to === 0) music.pause();
+        };
+        step();
+    }
+    function startMusic() {
+        if (!musicAllowed || !musicOn || musicStarted) return;
+        music.play().then(() => { musicStarted = true; fadeMusic(VOLUME, 2500); }).catch(() => {});
+    }
+    function renderSound() {
+        $('sound').textContent = musicOn ? '♪ Sound on' : '♪ Sound off';
+        $('sound').setAttribute('aria-pressed', String(musicOn));
+    }
+    music.addEventListener('canplay', () => { $('sound').hidden = false; renderSound(); startMusic(); }, { once: true });
+    addEventListener('pointerdown', startMusic);
+    addEventListener('keydown', startMusic);
+    $('sound').onclick = e => {
+        e.stopPropagation();
+        musicOn = !musicOn;
+        store.set(STORE_MUSIC, musicOn ? 'on' : 'off');
+        renderSound();
+        if (musicOn) { musicStarted = false; startMusic(); } else { musicStarted = false; fadeMusic(0, 600); }
     };
 
     // ── Helpers ──
@@ -995,6 +1037,7 @@
                 camera.position.copy(REST_CAM);
                 camLook.copy(REST_LOOK);
                 showPaths();
+                musicAllowed = true;
             } else {
                 mode = 'select';
                 $('origin').hidden = false;
@@ -1016,6 +1059,7 @@
     // ?debug: drive the scene by hand when the tab can't animate (background testing)
     if (location.search.includes('debug')) {
         window.__scene = {
+            music: () => ({ playing: !music.paused, volume: +music.volume.toFixed(2), ready: music.readyState, err: music.error && music.error.code, allowed: musicAllowed, on: musicOn }),
             state: () => ({ mode, lit, z: hero && +hero.root.position.z.toFixed(2), cls: heroCls?.id }),
             hold: on => (on ? held.add('debug') : held.delete('debug')),
             step(seconds, fps = 30) {
