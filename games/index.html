@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Games - Aumritash Maitra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/chapter.css">
+    <style>
+        /* A games rack: plastic cases stand spine-out, all the same size, on metal-edged shelves */
+        .rack {
+            --case-h: 210px;
+            --case-w: 34px;
+            --ledge: 14px;
+            --row: calc(var(--case-h) + 26px + var(--ledge));
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0 4px;
+            padding: 0 16px;
+            background:
+                repeating-linear-gradient(to bottom,
+                    transparent 0, transparent calc(var(--row) - var(--ledge)),
+                    #3a3d44 calc(var(--row) - var(--ledge)), #3a3d44 calc(var(--row) - var(--ledge) + 2px),
+                    #202227 calc(var(--row) - var(--ledge) + 2px), #121317 var(--row)),
+                radial-gradient(ellipse at 50% -20%, rgba(120, 150, 255, 0.08), transparent 60%),
+                linear-gradient(to bottom, #0d0e12, #08090b);
+            border: 1px solid #22242a;
+            border-left: 10px solid #1a1c21;
+            border-right: 10px solid #1a1c21;
+            box-shadow: inset 0 24px 40px -18px rgba(0, 0, 0, 0.9);
+        }
+
+        .gcase {
+            position: relative;
+            flex: 0 0 auto;
+            width: var(--case-w);
+            height: var(--case-h);
+            margin: 26px 0 var(--ledge);
+            padding: 0;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            color: #f2f2f2;
+            font: inherit;
+            /* glossy black plastic with a rounded edge */
+            background:
+                linear-gradient(to right, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02) 30%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.5)),
+                linear-gradient(to bottom, #1b1d22, #131418);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 2px 0 3px rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* The coloured band at the top of each case */
+        .gcase::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 30px;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.25), transparent 40%, rgba(0, 0, 0, 0.35)), var(--band);
+            border-radius: 2px 2px 0 0;
+        }
+
+        .g-title {
+            position: absolute;
+            inset: 40px 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            writing-mode: vertical-rl;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: var(--fs, 14px);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .g-plat {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 8px;
+            text-align: center;
+            font-family: var(--pixel);
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .gcase:hover, .gcase:focus-visible, .gcase.out {
+            transform: translateY(-10px);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 18px rgba(255, 255, 255, 0.08);
+            outline: none;
+            z-index: 2;
+        }
+
+        /* Box art that floats above the case you're on */
+        .peek {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 50;
+            width: 180px;
+            padding: 8px 8px 10px;
+            background: #08090b;
+            border: 2px solid var(--text);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+
+        .peek.show { opacity: 1; transform: none; }
+        .peek img { display: block; width: 100%; aspect-ratio: 600 / 900; object-fit: cover; background: #15161a; margin-bottom: 8px; }
+        .peek .title { font-size: 0.92rem; font-weight: 600; line-height: 1.25; }
+        .peek .tap-note { display: none; color: var(--muted); font-size: 0.72rem; margin-top: 6px; }
+        .peek.touch .tap-note { display: block; }
+
+        .rack-note { color: var(--muted); font-size: 0.85rem; margin-top: 0.75rem; }
+        .aside { color: var(--dim); }
+        .aside strong { color: var(--text); }
+
+        @media (max-width: 760px) {
+            .rack { --case-h: 168px; --case-w: 28px; --ledge: 12px; padding: 0 8px; gap: 0 3px; border-left-width: 6px; border-right-width: 6px; }
+            .g-title { font-size: calc(var(--fs, 14px) * 0.82); inset: 34px 0 26px; }
+            .gcase::before { height: 24px; }
+            .peek { width: 150px; }
+        }
+    </style>
+</head>
+<body>
+    <script src="../assets/arrive.js"></script>
+    <header class="top">
+        <a href="../more/" class="btn small">&lt; The flame</a>
+        <span class="name">AUMRITASH MAITRA</span>
+    </header>
+
+    <main class="wrap">
+        <div class="chapter-head">
+            <p class="kicker">THE NORTH STAIR</p>
+            <h1>THE GAMES</h1>
+            <p class="lede">Games are why I ended up working in games. Strategy, open worlds and anything that punishes you for getting greedy. "I shall always win."</p>
+        </div>
+
+        <section>
+            <h2 class="section-title">My favourite games</h2>
+            <div class="rack">
+                <button class="gcase" style="--band:#b3261e;--fs:14px" data-id="814380" data-title="Sekiro: Shadows Die Twice" aria-label="Sekiro: Shadows Die Twice"><span class="g-title">Sekiro</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#c9a24a;--fs:14px" data-id="1245620" data-title="Elden Ring" aria-label="Elden Ring"><span class="g-title">Elden Ring</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#7a6a55;--fs:14px" data-id="570940" data-title="Dark Souls: Remastered" aria-label="Dark Souls: Remastered"><span class="g-title">Dark Souls</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#8a3a22;--fs:12px" data-id="374320" data-title="Dark Souls III" aria-label="Dark Souls III"><span class="g-title">Dark Souls III</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#b8862e;--fs:9px" data-id="2358720" data-title="Black Myth: Wukong" aria-label="Black Myth: Wukong"><span class="g-title">Black Myth: Wukong</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#8a1a2a;--fs:14px" data-id="678960" data-title="Code Vein" aria-label="Code Vein"><span class="g-title">Code Vein</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#5a6a8a;--fs:13px" data-id="367520" data-title="Hollow Knight" aria-label="Hollow Knight"><span class="g-title">Hollow Knight</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#ff4655;--fs:14px" data-id="valorant" data-href="https://playvalorant.com/" data-title="VALORANT" aria-label="VALORANT"><span class="g-title">VALORANT</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#c89b3c;--fs:9px" data-id="league-of-legends" data-href="https://www.leagueoflegends.com/" data-title="League of Legends" aria-label="League of Legends"><span class="g-title">League of Legends</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#a8832e;--fs:11px" data-id="1771300" data-title="Kingdom Come: Deliverance II" aria-label="Kingdom Come: Deliverance II"><span class="g-title">Kingdom Come II</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#8a6a2a;--fs:14px" data-id="379430" data-title="Kingdom Come: Deliverance" aria-label="Kingdom Come: Deliverance"><span class="g-title">Kingdom Come</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#2e5a9a;--fs:9px" data-id="813780" data-title="Age of Empires II: Definitive Edition" aria-label="Age of Empires II: Definitive Edition"><span class="g-title">Age of Empires II</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#2e7a8a;--fs:11px" data-id="289070" data-title="Sid Meier's Civilization VI" aria-label="Sid Meier's Civilization VI"><span class="g-title">Civilization VI</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#9a2a2a;--fs:14px" data-id="34330" data-title="Total War: SHOGUN 2" aria-label="Total War: SHOGUN 2"><span class="g-title">Shogun 2</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#d8d02e;--fs:12px" data-id="1091500" data-title="Cyberpunk 2077" aria-label="Cyberpunk 2077"><span class="g-title">Cyberpunk 2077</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#7a8a6a;--fs:13px" data-id="292030" data-title="The Witcher 3: Wild Hunt" aria-label="The Witcher 3: Wild Hunt"><span class="g-title">The Witcher 3</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#6a3a8a;--fs:11px" data-id="1086940" data-title="Baldur's Gate 3" aria-label="Baldur's Gate 3"><span class="g-title">Baldur's Gate 3</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#8a2a1e;--fs:14px" data-id="1593500" data-title="God of War" aria-label="God of War"><span class="g-title">God of War</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#4a6a5a;--fs:14px" data-id="892970" data-title="Valheim" aria-label="Valheim"><span class="g-title">Valheim</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#2e8a8a;--fs:12px" data-id="1172620" data-title="Sea of Thieves" aria-label="Sea of Thieves"><span class="g-title">Sea of Thieves</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#c94a2e;--fs:14px" data-id="1145360" data-title="Hades" aria-label="Hades"><span class="g-title">Hades</span><span class="g-plat">PC</span></button>
+                <button class="gcase" style="--band:#e3001b;--fs:14px" data-id="1229490" data-title="ULTRAKILL" aria-label="ULTRAKILL"><span class="g-title">ULTRAKILL</span><span class="g-plat">PC</span></button>
+            </div>
+            <p class="rack-note">Hover a case to see the box art · the soulslikes up front are the reason this whole site walks you to a bonfire</p>
+        </section>
+
+        <section>
+            <h2 class="section-title">Where play meets work</h2>
+            <div class="panel">
+                <p class="aside">Playing is half the job. At Leagues I worked on a league that peaked at <strong>350K live viewers</strong>, and at CaptainSide we helped players find their next game.</p>
+                <div class="links"><a href="../work/" class="btn small">See the work &gt;</a></div>
+            </div>
+        </section>
+
+        <section class="ask" data-topic="The Games" data-prompt="What should I play next? Or ask me about anything on the rack."></section>
+
+        <nav class="chapter-nav">
+            <a href="../work/" class="btn">&lt; The Work</a>
+            <a href="../stories/" class="btn">Next: The Stories &gt;</a>
+        </nav>
+    </main>
+
+    <footer>© 2026 AUMRITASH MAITRA · Game art © its respective publishers, via Steam and the Epic Games Store</footer>
+
+    <div class="peek" id="peek" aria-hidden="true">
+        <img alt="">
+        <p class="title"></p>
+        <p class="tap-note">Tap again to open it</p>
+    </div>
+
+    <script>
+        // Hovering a case pulls it forward and floats its box art above it
+        const peek = document.getElementById('peek');
+        const touch = matchMedia('(hover: none)').matches;
+        let current = null, lastTap = false;
+
+        function show(c) {
+            if (current && current !== c) current.classList.remove('out');
+            current = c;
+            c.classList.add('out');
+            peek.querySelector('img').src = '../assets/games/' + c.dataset.id + '.jpg';
+            peek.querySelector('.title').textContent = c.dataset.title;
+            peek.classList.toggle('touch', lastTap);
+            const r = c.getBoundingClientRect();
+            const w = peek.offsetWidth, h = peek.offsetHeight || 320;
+            const x = Math.min(innerWidth - w - 8, Math.max(8, r.left + r.width / 2 - w / 2));
+            const y = r.top - h - 12 > 8 ? r.top - h - 12 : Math.min(innerHeight - h - 8, r.bottom + 12);
+            peek.style.left = x + 'px';
+            peek.style.top = y + 'px';
+            peek.classList.add('show');
+        }
+
+        function hide() {
+            if (current) current.classList.remove('out');
+            current = null;
+            peek.classList.remove('show');
+        }
+
+        const open = c => window.open(c.dataset.href || 'https://store.steampowered.com/app/' + c.dataset.id + '/', '_blank', 'noopener');
+
+        document.querySelectorAll('.gcase').forEach(c => {
+            c.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') show(c); });
+            c.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hide(); });
+            c.addEventListener('focus', () => show(c));
+            c.addEventListener('blur', hide);
+            c.addEventListener('pointerdown', e => { lastTap = e.pointerType !== 'mouse'; });
+            c.addEventListener('click', () => {
+                // Phones: first tap shows the art, second tap opens it. Desktop: clicking opens it.
+                if (lastTap && current !== c) { show(c); return; }
+                open(c);
+            });
+        });
+
+        document.addEventListener('click', e => { if (lastTap && !e.target.closest('.gcase')) hide(); });
+        addEventListener('scroll', hide, { passive: true });
+    </script>
+    <script src="../assets/ask.js"></script>
+</body>
+</html>

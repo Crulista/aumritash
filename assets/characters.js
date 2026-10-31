@@ -13,7 +13,7 @@ const ORIGINS = [
     { name: 'Wanderer', pose: 'Sword_Idle', show: 'Sword_Attack', walk: 'Walk_Loop', walkIdle: 'Idle_Loop', speed: 1, kindle: 'Fixing_Kneeling',
       lore: 'A hooded traveller who walks every road twice. Always moving, always learning the lay of the land.',
       parts: s => [{ file: `${s}_ranger` }] },
-    { name: 'Hunter', pose: 'Crouch_Idle_Loop', show: 'Roll', walk: 'Crouch_Fwd_Loop', walkIdle: 'Crouch_Idle_Loop', speed: 0.75, kindle: 'Interact',
+    { name: 'Hunter', pose: 'Idle_Loop', show: 'Roll', walk: 'Walk_Loop', walkIdle: 'Idle_Loop', speed: 1, kindle: 'Interact',
       lore: 'Reads the tracks others miss. Patient, precise, and always the first to see where the herd is heading.',
       parts: s => [{ file: `${s}_ranger`, drop: /Head_Hood/, tint: '#a8784a' }] },
     { name: 'Pilgrim', pose: 'Idle_Torch_Loop', show: 'Interact', walk: 'Walk_Formal_Loop', walkIdle: 'Idle_Torch_Loop', speed: 0.9, kindle: 'Fixing_Kneeling',

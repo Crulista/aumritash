@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Stories - Aumritash Maitra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/chapter.css">
+    <style>
+        /* ── A wooden bookcase: books stand spine-out on planks ── */
+        .case {
+            --slot: 200px;
+            --plank: 16px;
+            --row: calc(var(--slot) + var(--plank));
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 0 3px;
+            padding: 0 18px;
+            background:
+                repeating-linear-gradient(to bottom,
+                    transparent 0, transparent var(--slot),
+                    #5a3a22 var(--slot), #5a3a22 calc(var(--slot) + 3px),
+                    #3a2414 calc(var(--slot) + 3px), #1e120a var(--row)),
+                radial-gradient(ellipse at 50% 0%, rgba(255, 140, 60, 0.07), transparent 70%),
+                linear-gradient(to bottom, #140d09, #0c0806);
+            border: 1px solid #2a1a10;
+            border-left: 12px solid #3a2414;
+            border-right: 12px solid #3a2414;
+            box-shadow: inset 0 24px 40px -18px rgba(0, 0, 0, 0.9), 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Each book sits in a slot exactly one shelf tall, so every row lands on a plank */
+        .book {
+            position: relative;
+            flex: 0 0 auto;
+            width: var(--w);
+            height: var(--h);
+            margin-top: calc(var(--slot) - var(--h));
+            margin-bottom: var(--plank);
+            padding: 0;
+            border: none;
+            border-radius: 3px 3px 1px 1px;
+            cursor: pointer;
+            color: #f2e8d8;
+            font: inherit;
+            background:
+                /* rounded spine: light down the middle, shadow at the edges */
+                linear-gradient(to right, rgba(0, 0, 0, 0.45), rgba(255, 255, 255, 0.08) 35%, rgba(255, 255, 255, 0.12) 50%, rgba(0, 0, 0, 0.1) 70%, rgba(0, 0, 0, 0.5)),
+                var(--bind);
+            box-shadow: 2px 0 3px rgba(0, 0, 0, 0.5);
+            transition: transform 0.25s ease, filter 0.25s ease;
+            transform-origin: bottom center;
+        }
+
+        /* Gilt bands near the top and bottom of the spine */
+        .book::before, .book::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            right: 3px;
+            height: 3px;
+            background: rgba(214, 176, 102, 0.55);
+            border-top: 1px solid rgba(255, 230, 170, 0.35);
+        }
+
+        .book::before { top: 12px; }
+        .book::after { bottom: 12px; }
+
+        .spine-title {
+            position: absolute;
+            inset: 22px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            writing-mode: vertical-rl;
+            font-family: var(--pixel);
+            font-size: var(--fs, 17px);
+            letter-spacing: 0.06em;
+            line-height: 1;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+        }
+
+        .book[data-fav]::after { background: rgba(255, 140, 60, 0.85); }
+
+        .book:hover, .book:focus-visible { transform: translateY(-8px); filter: brightness(1.15); outline: none; z-index: 2; }
+        .book.out { transform: translateY(-22px); filter: brightness(1.25); z-index: 2; }
+        .book:focus-visible { box-shadow: 0 0 0 2px #ffcf8a; }
+
+        /* The peek: a cover card that floats above whichever spine you're on */
+        .peek {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 50;
+            width: 176px;
+            padding: 10px 10px 12px;
+            background: #0a0706;
+            border: 2px solid var(--text);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+
+        .peek.show { opacity: 1; transform: none; }
+
+        .peek img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 230 / 325;
+            object-fit: cover;
+            background: #1a1210;
+            margin-bottom: 8px;
+        }
+
+        .peek .kind { font-family: var(--pixel); font-size: 0.95rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+        .peek .title { font-size: 0.92rem; font-weight: 600; line-height: 1.25; margin: 2px 0 6px; }
+        .peek .fav-note { color: #ffb070; font-size: 0.8rem; margin-top: 4px; }
+        .peek .tap-note { display: none; color: var(--muted); font-size: 0.72rem; margin-top: 6px; }
+        .peek.touch .tap-note { display: block; }
+
+        .shelf-note { color: var(--muted); font-size: 0.85rem; margin-top: 0.75rem; }
+
+        @media (max-width: 760px) {
+            .case { --slot: 160px; --plank: 12px; padding: 0 8px; border-left-width: 6px; border-right-width: 6px; gap: 0 2px; }
+            .book { width: calc(var(--w) * 0.78); height: calc(var(--h) * 0.8); margin-top: calc(var(--slot) - var(--h) * 0.8); }
+            .spine-title { font-size: calc(var(--fs, 17px) * 0.82); inset: 18px 0; }
+            .peek { width: 150px; }
+        }
+        /* Favourite lines, as game dialogue boxes */
+        .lines { display: flex; flex-direction: column; gap: 1.25rem; }
+        .line { display: grid; grid-template-columns: 72px 1fr; gap: 1rem; align-items: center; margin: 0; }
+        .line img { width: 72px; aspect-ratio: 2 / 3; object-fit: cover; border: 2px solid var(--line-2); }
+        .line .box { position: relative; padding: 1.6rem 1.4rem 1.2rem; background: rgba(0, 0, 0, 0.7); border: 2px solid var(--text); }
+        .line .speaker {
+            position: absolute;
+            top: -0.85rem;
+            left: 1rem;
+            padding: 0.1rem 0.6rem 0;
+            background: var(--bg);
+            border: 2px solid var(--text);
+            font-family: var(--pixel);
+            font-size: 1.05rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+        .line blockquote { font-family: var(--pixel); font-size: clamp(1.4rem, 3.4vw, 1.9rem); line-height: 1.25; letter-spacing: 0.03em; }
+        .line blockquote::before { content: '“'; color: var(--red); }
+        .line blockquote::after { content: '”'; color: var(--red); }
+        .line.long blockquote { font-size: clamp(1.15rem, 2.6vw, 1.45rem); line-height: 1.35; }
+        .line .more { position: absolute; right: 0.8rem; bottom: 0.4rem; font-size: 0.8rem; color: var(--red); animation: nudge 1s steps(2) infinite; }
+        @keyframes nudge { 50% { transform: translateY(3px); } }
+        @media (max-width: 760px) {
+            .line { grid-template-columns: 52px 1fr; gap: 0.75rem; }
+            .line img { width: 52px; }
+        }
+    </style>
+</head>
+<body>
+    <script src="../assets/arrive.js"></script>
+    <header class="top">
+        <a href="../more/" class="btn small">&lt; The flame</a>
+        <span class="name">AUMRITASH MAITRA</span>
+    </header>
+
+    <main class="wrap">
+        <div class="chapter-head">
+            <p class="kicker">THE EAST BRIDGE</p>
+            <h1>THE STORIES</h1>
+            <p class="lede">Action, drama and fantasy, the longer the better. Mostly anime and manga, with Westeros, Pearson Specter and the Shelby family on the side.</p>
+        </div>
+
+        <section>
+            <h2 class="section-title">The anime shelf</h2>
+            <div class="case" data-detail="animeDetail">
+                <button class="book" style="--bind:#8f632f;--h:170px;--w:38px;--fs:17px" data-id="21" data-kind="anime" data-href="https://anilist.co/anime/21" data-title="ONE PIECE" data-fav="1" aria-label="ONE PIECE"><span class="spine-title">One Piece</span></button>
+                <button class="book" style="--bind:#8f6b2f;--h:150px;--w:42px;--fs:10px" data-id="136430" data-kind="anime" data-href="https://anilist.co/anime/136430" data-title="Vinland Saga Season 2" data-fav="1" aria-label="Vinland Saga Season 2"><span class="spine-title">Vinland Saga II</span></button>
+                <button class="book" style="--bind:#975c45;--h:160px;--w:42px;--fs:17px" data-id="918" data-kind="anime" data-href="https://anilist.co/anime/918" data-title="Gintama" aria-label="Gintama"><span class="spine-title">Gintama</span></button>
+                <button class="book" style="--bind:#8f5c37;--h:180px;--w:38px;--fs:14px" data-id="114129" data-kind="anime" data-href="https://anilist.co/anime/114129" data-title="Gintama: THE VERY FINAL" aria-label="Gintama: THE VERY FINAL"><span class="spine-title">Gintama: Final</span></button>
+                <button class="book" style="--bind:#818197;--h:180px;--w:34px;--fs:12px" data-id="6624" data-kind="anime" data-href="https://anilist.co/anime/6624" data-title="Kara no Kyoukai Remix: Gate of seventh heaven" aria-label="Kara no Kyoukai Remix: Gate of seventh heaven"><span class="spine-title">Garden of Sinners</span></button>
+                <button class="book" style="--bind:#977920;--h:180px;--w:34px;--fs:17px" data-id="21804" data-kind="anime" data-href="https://anilist.co/anime/21804" data-title="The Disastrous Life of Saiki K." aria-label="The Disastrous Life of Saiki K."><span class="spine-title">Saiki K.</span></button>
+                <button class="book" style="--bind:#8f793e;--h:180px;--w:34px;--fs:16px" data-id="2904" data-kind="anime" data-href="https://anilist.co/anime/2904" data-title="Code Geass: Lelouch of the Rebellion R2" aria-label="Code Geass: Lelouch of the Rebellion R2"><span class="spine-title">Code Geass R2</span></button>
+                <button class="book" style="--bind:#8f5420;--h:170px;--w:38px;--fs:16px" data-id="11741" data-kind="anime" data-href="https://anilist.co/anime/11741" data-title="Fate/Zero Season 2" aria-label="Fate/Zero Season 2"><span class="spine-title">Fate/Zero II</span></button>
+                <button class="book" style="--bind:#9e8872;--h:160px;--w:38px;--fs:16px" data-id="9253" data-kind="anime" data-href="https://anilist.co/anime/9253" data-title="Steins;Gate" aria-label="Steins;Gate"><span class="spine-title">Steins;Gate</span></button>
+                <button class="book" style="--bind:#978f81;--h:150px;--w:34px;--fs:10px" data-id="98460" data-kind="anime" data-href="https://anilist.co/anime/98460" data-title="Devilman Crybaby" aria-label="Devilman Crybaby"><span class="spine-title">Devilman Crybaby</span></button>
+                <button class="book" style="--bind:#54973e;--h:190px;--w:38px;--fs:17px" data-id="120377" data-kind="anime" data-href="https://anilist.co/anime/120377" data-title="Cyberpunk: Edgerunners" aria-label="Cyberpunk: Edgerunners"><span class="spine-title">Edgerunners</span></button>
+                <button class="book" style="--bind:#978172;--h:180px;--w:38px;--fs:13px" data-id="108489" data-kind="anime" data-href="https://anilist.co/anime/108489" data-title="My Teen Romantic Comedy SNAFU Climax!" aria-label="My Teen Romantic Comedy SNAFU Climax!"><span class="spine-title">Oregairu Climax</span></button>
+                <button class="book" style="--bind:#3e798f;--h:170px;--w:34px;--fs:11px" data-id="102976" data-kind="anime" data-href="https://anilist.co/anime/102976" data-title="KONOSUBA -God's blessing on this wonderful world!- Legend of Crimson" aria-label="KONOSUBA -God's blessing on this wonderful world!- Legend of Crimson"><span class="spine-title">Konosuba: Crimson</span></button>
+                <button class="book" style="--bind:#208837;--h:190px;--w:42px;--fs:13px" data-id="146722" data-kind="anime" data-href="https://anilist.co/anime/146722" data-title="JoJo's Bizarre Adventure: STONE OCEAN Part 2" aria-label="JoJo's Bizarre Adventure: STONE OCEAN Part 2"><span class="spine-title">JoJo: Stone Ocean</span></button>
+                <button class="book" style="--bind:#9e2f81;--h:190px;--w:34px;--fs:17px" data-id="150672" data-kind="anime" data-href="https://anilist.co/anime/150672" data-title="OSHI NO KO" aria-label="OSHI NO KO"><span class="spine-title">Oshi no Ko</span></button>
+                <button class="book" style="--bind:#882020;--h:160px;--w:42px;--fs:10px" data-id="130298" data-kind="anime" data-href="https://anilist.co/anime/130298" data-title="The Eminence in Shadow" aria-label="The Eminence in Shadow"><span class="spine-title">Eminence in Shadow</span></button>
+                <button class="book" style="--bind:#8f3e20;--h:170px;--w:42px;--fs:17px" data-id="131586" data-kind="anime" data-href="https://anilist.co/anime/131586" data-title="86 EIGHTY-SIX Part 2" aria-label="86 EIGHTY-SIX Part 2"><span class="spine-title">86</span></button>
+                <button class="book" style="--bind:#4d2020;--h:150px;--w:42px;--fs:13px" data-id="127230" data-kind="anime" data-href="https://anilist.co/anime/127230" data-title="Chainsaw Man" aria-label="Chainsaw Man"><span class="spine-title">Chainsaw Man</span></button>
+                <button class="book" style="--bind:#5a2a22;--h:160px;--w:46px;--fs:17px" data-id="126403" data-kind="anime" data-href="https://anilist.co/anime/126403" data-title="Link Click" aria-label="Link Click"><span class="spine-title">Link Click</span></button>
+                <button class="book" style="--bind:#88976b;--h:190px;--w:46px;--fs:17px" data-id="125367" data-kind="anime" data-href="https://anilist.co/anime/125367" data-title="Kaguya-sama: Love is War -Ultra Romantic-" aria-label="Kaguya-sama: Love is War -Ultra Romantic-"><span class="spine-title">Kaguya-sama</span></button>
+            </div>
+            <p class="shelf-note">Hover a book to see its cover · orange band = all-time favourite · <a href="https://anilist.co/user/Crulista" target="_blank" rel="noopener">full list on AniList ↗</a></p>
+        </section>
+
+        <section>
+            <h2 class="section-title">The manga shelf</h2>
+            <div class="case" data-detail="mangaDetail">
+                <button class="book" style="--bind:#5a2a22;--h:170px;--w:34px;--fs:17px" data-id="30656" data-kind="manga" data-href="https://anilist.co/manga/30656" data-title="Vagabond" data-fav="1" aria-label="Vagabond"><span class="spine-title">Vagabond</span></button>
+                <button class="book" style="--bind:#818f45;--h:170px;--w:42px;--fs:13px" data-id="31706" data-kind="manga" data-href="https://anilist.co/manga/31706" data-title="JoJo's Bizarre Adventure: Part 7–Steel Ball Run" aria-label="JoJo's Bizarre Adventure: Part 7–Steel Ball Run"><span class="spine-title">Steel Ball Run</span></button>
+                <button class="book" style="--bind:#9e8f3e;--h:180px;--w:34px;--fs:13px" data-id="118424" data-kind="manga" data-href="https://anilist.co/manga/118424" data-title="The Archmage Returns After 4000 Years" aria-label="The Archmage Returns After 4000 Years"><span class="spine-title">Archmage Returns</span></button>
+                <button class="book" style="--bind:#8f4d37;--h:150px;--w:38px;--fs:17px" data-id="46765" data-kind="manga" data-href="https://anilist.co/manga/46765" data-title="Kingdom" aria-label="Kingdom"><span class="spine-title">Kingdom</span></button>
+                <button class="book" style="--bind:#974d37;--h:190px;--w:42px;--fs:17px" data-id="30642" data-kind="manga" data-href="https://anilist.co/manga/30642" data-title="Vinland Saga" aria-label="Vinland Saga"><span class="spine-title">Vinland Saga</span></button>
+                <button class="book" style="--bind:#22403f;--h:170px;--w:34px;--fs:17px" data-id="30936" data-kind="manga" data-href="https://anilist.co/manga/30936" data-title="Homunculus" aria-label="Homunculus"><span class="spine-title">Homunculus</span></button>
+                <button class="book" style="--bind:#9e7937;--h:170px;--w:42px;--fs:12px" data-id="30026" data-kind="manga" data-href="https://anilist.co/manga/30026" data-title="Hunter x Hunter" aria-label="Hunter x Hunter"><span class="spine-title">Hunter x Hunter</span></button>
+                <button class="book" style="--bind:#97812f;--h:160px;--w:34px;--fs:17px" data-id="86848" data-kind="manga" data-href="https://anilist.co/manga/86848" data-title="Lookism" aria-label="Lookism"><span class="spine-title">Lookism</span></button>
+                <button class="book" style="--bind:#8f3e54;--h:180px;--w:34px;--fs:13px" data-id="132144" data-kind="manga" data-href="https://anilist.co/manga/132144" data-title="Return of the Blossoming Blade" aria-label="Return of the Blossoming Blade"><span class="spine-title">Blossoming Blade</span></button>
+                <button class="book" style="--bind:#974d45;--h:170px;--w:38px;--fs:10px" data-id="85141" data-kind="manga" data-href="https://anilist.co/manga/85141" data-title="The God of High School" aria-label="The God of High School"><span class="spine-title">God of High School</span></button>
+                <button class="book" style="--bind:#8f6337;--h:170px;--w:34px;--fs:12px" data-id="103156" data-kind="manga" data-href="https://anilist.co/manga/103156" data-title="The Skeleton Soldier Failed to Defend the Dungeon" aria-label="The Skeleton Soldier Failed to Defend the Dungeon"><span class="spine-title">Skeleton Soldier</span></button>
+                <button class="book" style="--bind:#22403f;--h:160px;--w:46px;--fs:14px" data-id="85143" data-kind="manga" data-href="https://anilist.co/manga/85143" data-title="Tower of God" aria-label="Tower of God"><span class="spine-title">Tower of God</span></button>
+                <button class="book" style="--bind:#88205c;--h:180px;--w:42px;--fs:13px" data-id="100994" data-kind="manga" data-href="https://anilist.co/manga/100994" data-title="Hell’s Paradise: Jigokuraku" aria-label="Hell’s Paradise: Jigokuraku"><span class="spine-title">Hell's Paradise</span></button>
+                <button class="book" style="--bind:#2a3a4a;--h:160px;--w:42px;--fs:10px" data-id="107098" data-kind="manga" data-href="https://anilist.co/manga/107098" data-title="Record of Ragnarok" aria-label="Record of Ragnarok"><span class="spine-title">Record of Ragnarok</span></button>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">The TV &amp; film shelf</h2>
+            <div class="case">
+                <button class="book" style="--bind:#3b3f45;--h:160px;--w:36px;--fs:11px" data-img="tv-82" data-kind="show" data-href="https://www.tvmaze.com/shows/82" data-title="Game of Thrones" aria-label="Game of Thrones"><span class="spine-title">Game of Thrones</span></button>
+                <button class="book" style="--bind:#5a4426;--h:190px;--w:44px;--fs:11px" data-img="tv-53063" data-kind="show" data-href="https://www.tvmaze.com/shows/53063" data-title="A Knight of the Seven Kingdoms" aria-label="A Knight of the Seven Kingdoms"><span class="spine-title">Knight of 7 Kingdoms</span></button>
+                <button class="book" style="--bind:#22324a;--h:180px;--w:40px;--fs:17px" data-img="tv-172" data-kind="show" data-href="https://www.tvmaze.com/shows/172" data-title="Suits" aria-label="Suits"><span class="spine-title">Suits</span></button>
+                <button class="book" style="--bind:#2f4a2a;--h:170px;--w:36px;--fs:16px" data-img="tv-169" data-kind="show" data-href="https://www.tvmaze.com/shows/169" data-title="Breaking Bad" aria-label="Breaking Bad"><span class="spine-title">Breaking Bad</span></button>
+                <button class="book" style="--bind:#4a3a2a;--h:160px;--w:44px;--fs:16px" data-img="tv-28276" data-kind="show" data-href="https://www.tvmaze.com/shows/28276" data-title="The Witcher" aria-label="The Witcher"><span class="spine-title">The Witcher</span></button>
+                <button class="book" style="--bind:#2a2826;--h:190px;--w:40px;--fs:16px" data-img="tv-269" data-kind="show" data-href="https://www.tvmaze.com/shows/269" data-title="Peaky Blinders" aria-label="Peaky Blinders"><span class="spine-title">Peaky Blinders</span></button>
+                <button class="book" style="--bind:#3a2a4a;--h:180px;--w:36px;--fs:17px" data-img="tv-55138" data-kind="show" data-href="https://www.tvmaze.com/shows/55138" data-title="Arcane" aria-label="Arcane"><span class="spine-title">Arcane</span></button>
+                <button class="book" style="--bind:#2a4a3a;--h:180px;--w:40px;--fs:15px" data-img="tv-216" data-kind="show" data-href="https://www.tvmaze.com/shows/216" data-title="Rick and Morty" aria-label="Rick and Morty"><span class="spine-title">Rick and Morty</span></button>
+                <button class="book" style="--bind:#4a2a38;--h:190px;--w:40px;--fs:14px" data-img="tv-184" data-kind="show" data-href="https://www.tvmaze.com/shows/184" data-title="BoJack Horseman" aria-label="BoJack Horseman"><span class="spine-title">BoJack Horseman</span></button>
+                <button class="book" style="--bind:#3a2424;--h:170px;--w:36px;--fs:17px" data-img="tv-15299" data-kind="show" data-href="https://www.tvmaze.com/shows/15299" data-title="The Boys" aria-label="The Boys"><span class="spine-title">The Boys</span></button>
+                <button class="book" style="--bind:#2a3a5a;--h:180px;--w:36px;--fs:17px" data-img="tv-50603" data-kind="show" data-href="https://www.tvmaze.com/shows/50603" data-title="Peacemaker" aria-label="Peacemaker"><span class="spine-title">Peacemaker</span></button>
+                <button class="book" style="--bind:#1e2430;--h:170px;--w:44px;--fs:12px" data-img="film-the-dark-knight" data-kind="film" data-href="https://en.wikipedia.org/wiki/The_Dark_Knight" data-title="The Dark Knight" aria-label="The Dark Knight"><span class="spine-title">The Dark Knight</span></button>
+                <button class="book" style="--bind:#5a3a1e;--h:160px;--w:40px;--fs:17px" data-img="film-gladiator-2000-film" data-kind="film" data-href="https://en.wikipedia.org/wiki/Gladiator_(2000_film)" data-title="Gladiator" aria-label="Gladiator"><span class="spine-title">Gladiator</span></button>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">Lines that stayed</h2>
+            <div class="lines">
+                <figure class="line">
+                    <img src="../assets/covers/tv-184.jpg" alt="BoJack Horseman cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Todd · BoJack Horseman</figcaption>
+                        <blockquote>You are all the things that are wrong with you.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line">
+                    <img src="../assets/covers/30656.jpg" alt="Vagabond cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Takuan · Vagabond</figcaption>
+                        <blockquote>There is no light for those who do not know darkness.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line long">
+                    <img src="../assets/covers/line-ubw.jpg" alt="Fate/stay night: Unlimited Blade Works cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Shirou · Unlimited Blade Works</figcaption>
+                        <blockquote>I can't lose against myself. There's no element that would make me lose if we are equal. To admit defeat against such an enemy is to declare that I'm wrong.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line long">
+                    <img src="../assets/covers/line-ubw.jpg" alt="Fate/stay night: Unlimited Blade Works cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Archer · Unlimited Blade Works</figcaption>
+                        <blockquote>Do not think about other things, there is only one thing you can do. So master that one thing. Do not forget. What you must imagine is always that you, yourself, are the strongest. You do not need outside enemies. For you, the one you have to fight is none other than your own image.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line">
+                    <img src="../assets/covers/tv-82.jpg" alt="Game of Thrones cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Tyrion · Game of Thrones</figcaption>
+                        <blockquote>Never forget what you are. The rest of the world will not. Wear it like armor, and it can never be used to hurt you.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line">
+                    <img src="../assets/covers/tv-50603.jpg" alt="Peacemaker cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Peacemaker · Peacemaker</figcaption>
+                        <blockquote>You don't wanna believe in miracles, that's on you.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line">
+                    <img src="../assets/covers/tv-50603.jpg" alt="Peacemaker cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Adebayo · Peacemaker</figcaption>
+                        <blockquote>I know inside my mind I'm not supposed to be giving a speech, but sometimes my mouth just does what it wants.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">The book shelf</h2>
+            <div class="case">
+                <button class="book" style="--bind:#8a2a24;--h:160px;--w:36px;--fs:12px" data-img="book-wimpy-kid" data-kind="book" data-href="https://openlibrary.org/works/OL8483260W" data-title="Diary of a Wimpy Kid (books 1–14)" aria-label="Diary of a Wimpy Kid (books 1–14)"><span class="spine-title">Wimpy Kid 1–14</span></button>
+                <button class="book" style="--bind:#2a2a30;--h:190px;--w:44px;--fs:17px" data-img="book-black-beauty" data-kind="book" data-href="https://openlibrary.org/works/OL15854658W" data-title="Black Beauty" aria-label="Black Beauty"><span class="spine-title">Black Beauty</span></button>
+                <button class="book" style="--bind:#4a3a2e;--h:180px;--w:40px;--fs:10px" data-img="book-and-then-there-were-none" data-kind="book" data-href="https://openlibrary.org/works/OL471565W" data-title="And Then There Were None" aria-label="And Then There Were None"><span class="spine-title">And Then There Were None</span></button>
+                <button class="book" style="--bind:#7a2020;--h:170px;--w:36px;--fs:12px" data-img="book-abc-murders" data-kind="book" data-href="https://openlibrary.org/works/OL471509W" data-title="The ABC Murders" aria-label="The ABC Murders"><span class="spine-title">The ABC Murders</span></button>
+                <button class="book" style="--bind:#1f2a3d;--h:160px;--w:44px;--fs:14px" data-img="book-oliver-twist" data-kind="book" data-href="https://openlibrary.org/works/OL8193478W" data-title="Oliver Twist" aria-label="Oliver Twist"><span class="spine-title">Oliver Twist</span></button>
+                <button class="book" style="--bind:#6b5a3a;--h:190px;--w:40px;--fs:17px" data-img="book-malgudi-days" data-kind="book" data-href="https://openlibrary.org/works/OL1057177W" data-title="Malgudi Days" aria-label="Malgudi Days"><span class="spine-title">Malgudi Days</span></button>
+                <button class="book" style="--bind:#2e5a52;--h:180px;--w:36px;--fs:11px" data-img="book-grandmother-to-read" data-kind="book" data-href="https://openlibrary.org/works/OL5764476W" data-title="How I Taught My Grandmother to Read" aria-label="How I Taught My Grandmother to Read"><span class="spine-title">Grandmother to Read</span></button>
+                <button class="book" style="--bind:#3a5a7a;--h:170px;--w:44px;--fs:14px" data-img="book-grandmas-bag" data-kind="book" data-href="https://openlibrary.org/works/OL25790438W" data-title="Grandma's Bag of Stories" aria-label="Grandma's Bag of Stories"><span class="spine-title">Grandma's Bag</span></button>
+                <button class="book" style="--bind:#7a4a32;--h:160px;--w:40px;--fs:17px" data-img="book-tom-sawyer" data-kind="book" data-href="https://openlibrary.org/works/OL53919W" data-title="The Adventures of Tom Sawyer" aria-label="The Adventures of Tom Sawyer"><span class="spine-title">Tom Sawyer</span></button>
+                <button class="book" style="--bind:#3a3a24;--h:190px;--w:36px;--fs:14px" data-img="book-huckleberry-finn" data-kind="book" data-href="https://openlibrary.org/works/OL53908W" data-title="Adventures of Huckleberry Finn" aria-label="Adventures of Huckleberry Finn"><span class="spine-title">Huckleberry Finn</span></button>
+                <button class="book" style="--bind:#2e2e2e;--h:180px;--w:44px;--fs:17px" data-img="book-the-husband" data-kind="book" data-href="https://openlibrary.org/works/OL263251W" data-title="The Husband" aria-label="The Husband"><span class="spine-title">The Husband</span></button>
+                <button class="book" style="--bind:#5a3a1a;--h:170px;--w:40px;--fs:11px" data-img="book-war-of-the-worlds" data-kind="book" data-href="https://openlibrary.org/works/OL52114W" data-title="The War of the Worlds" aria-label="The War of the Worlds"><span class="spine-title">War of the Worlds</span></button>
+            </div>
+        </section>
+
+        <section class="ask" data-topic="The Stories" data-prompt="What should I read or watch next? Or ask me about anything on these shelves."></section>
+
+        <nav class="chapter-nav">
+            <a href="../games/" class="btn">&lt; The Games</a>
+            <a href="../more/" class="btn">Back to the flame &gt;</a>
+        </nav>
+    </main>
+
+    <footer>© 2026 AUMRITASH MAITRA · Cover art via AniList, TVmaze and Wikipedia, © its respective owners</footer>
+
+    <div class="peek" id="peek" aria-hidden="true">
+        <img alt="">
+        <p class="kind"></p>
+        <p class="title"></p>
+        <p class="fav-note" hidden>🔥 All-time favourite</p>
+        <p class="tap-note">Tap again to open it</p>
+    </div>
+
+    <script>
+        // Hovering a spine slides the book out and floats its cover above it
+        const peek = document.getElementById('peek');
+        const touch = matchMedia('(hover: none)').matches;
+        let current = null, lastTap = false;
+
+        function show(book) {
+            if (current && current !== book) current.classList.remove('out');
+            current = book;
+            book.classList.add('out');
+            const { id, img, kind, title, fav } = book.dataset;
+            peek.querySelector('img').src = `../assets/covers/${img || id}.jpg`;
+            peek.querySelector('.kind').textContent = kind;
+            peek.querySelector('.title').textContent = title;
+            peek.querySelector('.fav-note').hidden = !fav;
+            peek.classList.toggle('touch', lastTap);
+            // Sit above the spine, nudged inside the screen edges; drop below if there's no room on top
+            const r = book.getBoundingClientRect();
+            const w = peek.offsetWidth, h = peek.offsetHeight || 320;
+            const x = Math.min(innerWidth - w - 8, Math.max(8, r.left + r.width / 2 - w / 2));
+            const y = r.top - h - 12 > 8 ? r.top - h - 12 : Math.min(innerHeight - h - 8, r.bottom + 12);
+            peek.style.left = x + 'px';
+            peek.style.top = y + 'px';
+            peek.classList.add('show');
+        }
+
+        function hide() {
+            if (current) current.classList.remove('out');
+            current = null;
+            peek.classList.remove('show');
+        }
+
+        const open = book => window.open(book.dataset.href, '_blank', 'noopener');
+
+        document.querySelectorAll('.book').forEach(book => {
+            book.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') show(book); });
+            book.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hide(); });
+            book.addEventListener('focus', () => show(book));
+            book.addEventListener('blur', hide);
+            book.addEventListener('pointerdown', e => { lastTap = e.pointerType !== 'mouse'; });
+            book.addEventListener('click', () => {
+                // Phones: first tap peeks, second tap opens it. Desktop: clicking opens it.
+                if (lastTap && current !== book) { show(book); return; }
+                open(book);
+            });
+        });
+
+        document.addEventListener('click', e => { if (lastTap && !e.target.closest('.book')) hide(); });
+        addEventListener('scroll', hide, { passive: true });
+    </script>
+    <script src="../assets/ask.js"></script>
+</body>
+</html>
