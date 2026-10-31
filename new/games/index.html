@@ -200,7 +200,7 @@
         // Hovering a case pulls it forward and floats its box art above it
         const peek = document.getElementById('peek');
         const touch = matchMedia('(hover: none)').matches;
-        let current = null;
+        let current = null, lastTap = false;
 
         function show(c) {
             if (current && current !== c) current.classList.remove('out');
@@ -208,7 +208,7 @@
             c.classList.add('out');
             peek.querySelector('img').src = '../assets/games/' + c.dataset.id + '.jpg';
             peek.querySelector('.title').textContent = c.dataset.title;
-            peek.classList.toggle('touch', touch);
+            peek.classList.toggle('touch', lastTap);
             const r = c.getBoundingClientRect();
             const w = peek.offsetWidth, h = peek.offsetHeight || 320;
             const x = Math.min(innerWidth - w - 8, Math.max(8, r.left + r.width / 2 - w / 2));
@@ -227,20 +227,19 @@
         const open = c => window.open('https://store.steampowered.com/app/' + c.dataset.id + '/', '_blank', 'noopener');
 
         document.querySelectorAll('.gcase').forEach(c => {
-            if (!touch) {
-                c.addEventListener('mouseenter', () => show(c));
-                c.addEventListener('mouseleave', hide);
-                c.addEventListener('focus', () => show(c));
-                c.addEventListener('blur', hide);
-            }
+            c.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') show(c); });
+            c.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hide(); });
+            c.addEventListener('focus', () => show(c));
+            c.addEventListener('blur', hide);
+            c.addEventListener('pointerdown', e => { lastTap = e.pointerType !== 'mouse'; });
             c.addEventListener('click', () => {
                 // Phones: first tap shows the art, second tap opens it. Desktop: clicking opens it.
-                if (touch && current !== c) { show(c); return; }
+                if (lastTap && current !== c) { show(c); return; }
                 open(c);
             });
         });
 
-        if (touch) document.addEventListener('click', e => { if (!e.target.closest('.gcase')) hide(); });
+        document.addEventListener('click', e => { if (lastTap && !e.target.closest('.gcase')) hide(); });
         addEventListener('scroll', hide, { passive: true });
     </script>
 </body>
