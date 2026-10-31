@@ -155,6 +155,7 @@
         .line blockquote { font-family: var(--pixel); font-size: clamp(1.4rem, 3.4vw, 1.9rem); line-height: 1.25; letter-spacing: 0.03em; }
         .line blockquote::before { content: '“'; color: var(--red); }
         .line blockquote::after { content: '”'; color: var(--red); }
+        .line.long blockquote { font-size: clamp(1.15rem, 2.6vw, 1.45rem); line-height: 1.35; }
         .line .more { position: absolute; right: 0.8rem; bottom: 0.4rem; font-size: 0.8rem; color: var(--red); animation: nudge 1s steps(2) infinite; }
         @keyframes nudge { 50% { transform: translateY(3px); } }
         @media (max-width: 760px) {
@@ -262,6 +263,46 @@
                         <span class="more" aria-hidden="true">▼</span>
                     </div>
                 </figure>
+                <figure class="line long">
+                    <img src="../assets/covers/line-ubw.jpg" alt="Fate/stay night: Unlimited Blade Works cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Shirou · Unlimited Blade Works</figcaption>
+                        <blockquote>I can't lose against myself. There's no element that would make me lose if we are equal. To admit defeat against such an enemy is to declare that I'm wrong.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line long">
+                    <img src="../assets/covers/line-ubw.jpg" alt="Fate/stay night: Unlimited Blade Works cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Archer · Unlimited Blade Works</figcaption>
+                        <blockquote>Do not think about other things, there is only one thing you can do. So master that one thing. Do not forget. What you must imagine is always that you, yourself, are the strongest. You do not need outside enemies. For you, the one you have to fight is none other than your own image.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line">
+                    <img src="../assets/covers/tv-82.jpg" alt="Game of Thrones cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Tyrion · Game of Thrones</figcaption>
+                        <blockquote>Never forget what you are. The rest of the world will not. Wear it like armor, and it can never be used to hurt you.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line">
+                    <img src="../assets/covers/tv-50603.jpg" alt="Peacemaker cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Peacemaker · Peacemaker</figcaption>
+                        <blockquote>You don't wanna believe in miracles, that's on you.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line">
+                    <img src="../assets/covers/tv-50603.jpg" alt="Peacemaker cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Adebayo · Peacemaker</figcaption>
+                        <blockquote>I know inside my mind I'm not supposed to be giving a speech, but sometimes my mouth just does what it wants.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
             </div>
         </section>
 
@@ -282,6 +323,8 @@
                 <button class="book" style="--bind:#5a3a1a;--h:170px;--w:40px;--fs:11px" data-img="book-war-of-the-worlds" data-kind="book" data-href="https://openlibrary.org/works/OL52114W" data-title="The War of the Worlds" aria-label="The War of the Worlds"><span class="spine-title">War of the Worlds</span></button>
             </div>
         </section>
+
+        <section class="ask" data-topic="The Stories" data-prompt="What should I read or watch next? Or ask me about anything on these shelves."></section>
 
         <nav class="chapter-nav">
             <a href="../games/" class="btn">&lt; The Games</a>
@@ -349,5 +392,6 @@
         document.addEventListener('click', e => { if (lastTap && !e.target.closest('.book')) hide(); });
         addEventListener('scroll', hide, { passive: true });
     </script>
+    <script src="../assets/ask.js"></script>
 </body>
 </html>

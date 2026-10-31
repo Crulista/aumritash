@@ -358,7 +358,9 @@ footer {
     transition: opacity 1.4s ease;
 }
 
-.arrive p {
+.arrive > div { text-align: center; padding: 0 1.5rem; }
+
+.arrive .arrive-name {
     font-family: var(--pixel);
     font-size: clamp(2.4rem, 8vw, 4.5rem);
     letter-spacing: 0.25em;
@@ -367,9 +369,39 @@ footer {
     animation: arrive-in 1.1s ease both;
 }
 
+.arrive .arrive-line {
+    margin-top: 1rem;
+    font-family: var(--pixel);
+    font-size: clamp(1.2rem, 3.2vw, 1.6rem);
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    animation: fade-up 1s ease 0.9s both;
+}
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
 .arrive.out { opacity: 0; pointer-events: none; }
 
 @keyframes arrive-in { from { opacity: 0; letter-spacing: 0.45em; } to { opacity: 1; letter-spacing: 0.25em; } }
+
+/* ── Leave a note ── */
+.ask-form { display: flex; flex-direction: column; gap: 0.8rem; }
+.ask-prompt { font-family: var(--pixel); font-size: 1.5rem; letter-spacing: 0.05em; }
+.ask-kind { display: flex; gap: 1.2rem; flex-wrap: wrap; color: var(--dim); font-size: 0.95rem; }
+.ask-kind input { accent-color: var(--red); margin-right: 0.35rem; }
+.ask-form textarea, .ask-form input[type="text"] {
+    width: 100%;
+    background: #070505;
+    color: var(--text);
+    border: 1px solid var(--line-2);
+    padding: 0.7rem 0.8rem;
+    font: inherit;
+    font-size: 0.98rem;
+    resize: vertical;
+}
+.ask-form textarea:focus, .ask-form input[type="text"]:focus { outline: none; border-color: var(--text); }
+.ask-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.ask-hint { color: var(--muted); font-size: 0.82rem; }
 
 /* ── Phones ── */
 @media (max-width: 760px) {

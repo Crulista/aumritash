@@ -239,6 +239,11 @@
         .path:hover, .path:focus-visible, .path.current { background: var(--text); color: #000; }
         .path:hover .d, .path:focus-visible .d, .path.current .d { color: #3a3330; }
 
+        /* The tower's top: sealed, and restless once you've seen everything else */
+        .path.sealed { border-style: dashed; color: var(--dim); }
+        .path.sealed.stirring { border-color: #ff3a3a; color: #ff6a6a; }
+        .path.sealed:hover, .path.sealed:focus-visible, .path.sealed.current { background: rgba(0, 0, 0, 0.8); color: var(--text); }
+
         .change { position: fixed; right: 1.5rem; bottom: 1.2rem; z-index: 10; }
         .sound { position: fixed; left: 1.5rem; bottom: 1.8rem; z-index: 10; }
 
@@ -313,6 +318,7 @@
     <a class="path" id="pathWork" href="../work/" hidden><span class="t">The Work</span><span class="d">Career, case studies and results</span></a>
     <a class="path" id="pathGames" href="../games/" hidden><span class="t">The Games</span><span class="d">What I play, and what nearly broke me</span></a>
     <a class="path" id="pathStories" href="../stories/" hidden><span class="t">The Stories</span><span class="d">The fiction that shaped me</span></a>
+    <a class="path sealed" id="pathTower" href="#" hidden><span class="t">???</span><span class="d">Sealed</span></a>
 
     <button class="btn small change" id="change" hidden>Change origin</button>
     <button class="btn small sound" id="sound" hidden aria-pressed="true">♪ Sound on</button>
@@ -567,6 +573,24 @@
         world.add(post);
     }
 
+    // North-east, past the wall: a ruined tower. Its top is sealed until the visitor has seen all three paths.
+    const TOWER = new THREE.Vector3(9.4, 0, -9.4);
+    const towerBody = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.4, 14, 10), STONE);
+    towerBody.position.set(TOWER.x, 7, TOWER.z);
+    world.add(towerBody);
+    for (let i = 0; i < 10; i++) {
+        if (i === 3 || i === 7) continue;                                   // a couple of teeth missing
+        const a = (i / 10) * Math.PI * 2;
+        const merlon = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.9 + rand() * 0.5, 0.6), STONE);
+        merlon.position.set(TOWER.x + Math.cos(a) * 1.75, 14.4, TOWER.z + Math.sin(a) * 1.75);
+        merlon.rotation.y = -a;
+        world.add(merlon);
+    }
+    const slit = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 1.4), DARK);
+    slit.position.set(TOWER.x - 1.72, 9.5, TOWER.z + 1.72);
+    slit.rotation.y = -Math.PI / 4;
+    world.add(slit);
+
     // Far silhouettes so the fog has depth
     for (let i = 0; i < 10; i++) {
         const a = rand() * Math.PI * 2, d = 26 + rand() * 18, h = 6 + rand() * 14;
@@ -669,17 +693,19 @@
         // A spot is used only when no stone cuts across the pair, and they shut if stone slides in front later.
         const look = camera.getWorldDirection(new THREE.Vector3()).setY(0).normalize();
         const right = new THREE.Vector3(-look.z, 0, look.x);
+        // On the road, half of them watch from the roadsides instead: nearer, at the edges of your view
+        const side = mode === 'walk' && Math.random() < 0.5;
         let placed = false;
         for (let tries = 0; tries < 30 && !placed; tries++) {
             const half = Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.aspect);   // half the visible width
-            const turn = (Math.random() < 0.5 ? -1 : 1) * half * (0.35 + Math.random() * 0.55);         // on screen, off to the sides
+            const turn = (Math.random() < 0.5 ? -1 : 1) * half * (side ? 0.78 + Math.random() * 0.18 : 0.35 + Math.random() * 0.55);
             const dir = look.clone().applyAxisAngle(UP, turn);
-            const dist = 52 + Math.random() * 14;
+            const dist = side ? 8 + Math.random() * 10 : 52 + Math.random() * 14;
             const scale = dist / 9 * (0.85 + Math.random() * 0.3);
-            g.position.copy(camera.position).addScaledVector(dir, dist).setY(1 + Math.random() * mix(8, 18, dread));   // higher up near the walls
+            g.position.copy(camera.position).addScaledVector(dir, dist).setY(side ? 0.6 + Math.random() * 2 : 1 + Math.random() * mix(8, 18, dread));
             g.scale.setScalar(scale);
             // Check a box well around the pair (glow included), so none sit on a wall top or a pillar edge
-            placed = CLEAR.every(([x, y]) => inTheDark(tmpEye.copy(g.position).addScaledVector(right, x * scale).setY(g.position.y + y * scale), 1.5, dist + 18));
+            placed = CLEAR.every(([x, y]) => inTheDark(tmpEye.copy(g.position).addScaledVector(right, x * scale).setY(g.position.y + y * scale), 1.5, dist + (side ? 10 : 18)));
         }
         if (!placed) return;
         g.userData = { born: performance.now(), life: mix(1800, 3200, dread) + Math.random() * 2400 };
@@ -850,8 +876,14 @@
     const PATHS = [
         { el: $('pathWork'), at: new THREE.Vector3(-R + 0.4, 3.9, 0), go: new THREE.Vector3(-R - 1, 0, 0), via: [new THREE.Vector3(0, 0, 3.3), new THREE.Vector3(-3.4, 0, 1.6)] },
         { el: $('pathGames'), at: new THREE.Vector3(0, 4.2, -R - 2), go: new THREE.Vector3(0, 0, -R - 1), via: [new THREE.Vector3(3.3, 0, 0), new THREE.Vector3(1.6, 0, -3.4)] },
-        { el: $('pathStories'), at: new THREE.Vector3(R + 2.2, 2.4, 0), go: new THREE.Vector3(R + 2, 0, 0) }
+        { el: $('pathStories'), at: new THREE.Vector3(R + 2.2, 2.4, 0), go: new THREE.Vector3(R + 2, 0, 0) },
+        { el: $('pathTower'), at: new THREE.Vector3(TOWER.x, 15.6, TOWER.z), sealed: true }
     ];
+    // Which paths this visitor has walked (set on each chapter page); all three wakes the tower
+    let seen = [];
+    try { seen = JSON.parse(localStorage.getItem('aumritash-seen') || '[]'); } catch (e) {}
+    const allSeen = ['work', 'games', 'stories'].every(p => seen.includes(p));
+    if (allSeen) { $('pathTower').classList.add('stirring'); $('pathTower').querySelector('.d').textContent = 'Something stirs at the top'; }
     let pathIdx = 0;
     function showPaths() {
         if (mode !== 'resting') return;
@@ -880,6 +912,14 @@
     let leaveTo = null, route = [];
     function travel(i) {
         if (mode !== 'resting') return;
+        if (PATHS[i].sealed) {
+            $('caption').textContent = allSeen ? 'It knows you have seen everything. Not yet.' : 'The way up is sealed. Walk the other paths first.';
+            $('caption').hidden = false;
+            $('caption').style.opacity = 1;
+            clearTimeout(travel.t);
+            travel.t = setTimeout(() => { $('caption').style.opacity = 0; }, 2600);
+            return;
+        }
         mode = 'leaving';
         const p = PATHS[i];
         const [place, line] = GOING[p.el.id];
