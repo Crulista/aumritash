@@ -626,7 +626,38 @@
     // Red eyes in the dark, until the flame is lit
     const lurkers = [];
     const eyeMat = new THREE.SpriteMaterial({ map: GLOW, color: '#ff2020', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
-    function spawnLurker(near) {
+    const mix = (a, b, t) => a + (b - a) * t;
+    const CLEAR = [[-0.5, -0.3], [0, -0.3], [0.5, -0.3], [-0.5, 0], [0, 0], [0.5, 0], [-0.5, 0.3], [0, 0.3], [0.5, 0.3]];
+    const UP = new THREE.Vector3(0, 1, 0), tmpEye = new THREE.Vector3();
+    let solids = null;
+    const eyeLine = new THREE.Ray(), eyeHit = new THREE.Vector3();
+    // True when no stone crosses the line from the camera through this point between `from` and `to`:
+    // nothing in front cutting the eyes off, and nothing close behind them for them to hang against.
+    // Each ruin piece is a box (a little bigger than the stone), which keeps this cheap enough to run every frame.
+    function inTheDark(p, from, to) {
+        if (!solids) {
+            solids = [];
+            world.traverse(o => { if (o.isMesh && !o.isSkinnedMesh && o !== ground && o !== courtyard && o !== road) solids.push(new THREE.Box3().setFromObject(o)); });
+        }
+        eyeLine.origin.copy(camera.position);
+        eyeLine.direction.copy(tmpRay.copy(p).sub(camera.position).normalize());
+        for (const box of solids) {
+            if (box.containsPoint(camera.position)) continue;
+            if (!eyeLine.intersectBox(box, eyeHit)) continue;
+            const d = eyeHit.distanceTo(camera.position);
+            if (d > from && d < to) return false;
+        }
+        return true;
+    }
+    const tmpRay = new THREE.Vector3(), tmpLook = new THREE.Vector3(), tmpRight = new THREE.Vector3();
+    let eyeFrame = 0;
+    function stillDark(g) {
+        const s = g.scale.x, dist = g.position.distanceTo(camera.position);
+        camera.getWorldDirection(tmpLook).setY(0).normalize();
+        tmpRight.set(-tmpLook.z, 0, tmpLook.x);
+        return CLEAR.every(([x, y]) => inTheDark(tmpEye.copy(g.position).addScaledVector(tmpRight, x * s).setY(g.position.y + y * s), 1.5, dist + 18));
+    }
+    function spawnLurker(near, dread = 0) {
         const g = new THREE.Group();
         for (const s of [-1, 1]) {
             const sp = new THREE.Sprite(eyeMat.clone());
@@ -634,9 +665,24 @@
             sp.position.x = s * 0.17;
             g.add(sp);
         }
-        const side = Math.random() < 0.5 ? -1 : 1;
-        g.position.set(side * (5 + Math.random() * 7), 1 + Math.random() * 1.6, near - 4 - Math.random() * 10);
-        g.userData = { born: performance.now(), life: 1600 + Math.random() * 2200 };
+        // They watch from the void past every ruin, so stone can only ever be in front of them, never behind.
+        // A spot is used only when no stone cuts across the pair, and they shut if stone slides in front later.
+        const look = camera.getWorldDirection(new THREE.Vector3()).setY(0).normalize();
+        const right = new THREE.Vector3(-look.z, 0, look.x);
+        let placed = false;
+        for (let tries = 0; tries < 30 && !placed; tries++) {
+            const half = Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.aspect);   // half the visible width
+            const turn = (Math.random() < 0.5 ? -1 : 1) * half * (0.35 + Math.random() * 0.55);         // on screen, off to the sides
+            const dir = look.clone().applyAxisAngle(UP, turn);
+            const dist = 52 + Math.random() * 14;
+            const scale = dist / 9 * (0.85 + Math.random() * 0.3);
+            g.position.copy(camera.position).addScaledVector(dir, dist).setY(1 + Math.random() * mix(8, 18, dread));   // higher up near the walls
+            g.scale.setScalar(scale);
+            // Check a box well around the pair (glow included), so none sit on a wall top or a pillar edge
+            placed = CLEAR.every(([x, y]) => inTheDark(tmpEye.copy(g.position).addScaledVector(right, x * scale).setY(g.position.y + y * scale), 1.5, dist + 18));
+        }
+        if (!placed) return;
+        g.userData = { born: performance.now(), life: mix(1800, 3200, dread) + Math.random() * 2400 };
         world.add(g);
         lurkers.push(g);
     }
@@ -1012,13 +1058,28 @@
             if (mode === 'walk' && !reduce && held.size) camera.position.y += Math.sin(t * 9) * 0.008;
             camera.lookAt(camLook);
 
-            // Lurkers stay out of the light
-            if (!lit && !reduce && performance.now() > nextLurker) { spawnLurker(hp.z); nextLurker = performance.now() + 1400 + Math.random() * 2600; }
+            // Lurkers stay out of the light, but crowd in as you near it
+            const dread = lit ? 0 : mode === 'walk' ? Math.min(1, Math.max(0, 1 - (hp.z - STOP_Z) / (START_Z - STOP_Z))) : mode === 'arrived' || mode === 'kindling' ? 1 : 0;
+            if (!lit && !reduce && performance.now() > nextLurker && lurkers.length < mix(3, 14, dread)) {
+                const pack = 1 + Math.floor(dread * dread * 3 + Math.random() * dread * 1.5);
+                for (let n = 0; n < pack; n++) spawnLurker(hp.z, dread);
+                nextLurker = performance.now() + mix(2200, 260, dread * dread) + Math.random() * mix(2400, 320, dread);
+            }
+
         }
+        // Eyes keep checking they're still in the dark: as the camera moves and stone slides behind
+        // or in front of them, they shut quickly instead of hanging on a pillar
+        eyeFrame++;
+        const now = performance.now();
         for (let i = lurkers.length - 1; i >= 0; i--) {
-            const g = lurkers[i], u = (performance.now() - g.userData.born) / g.userData.life;
+            const g = lurkers[i], u = (now - g.userData.born) / g.userData.life;
             if (u > 1 || lit) { world.remove(g); lurkers.splice(i, 1); continue; }
-            const open = Math.min(1, u * 6, (1 - u) * 6);
+            if (!g.userData.shutAt && (eyeFrame + i) % 3 === 0 && !stillDark(g)) g.userData.shutAt = now;
+            let open = Math.min(1, u * 6, (1 - u) * 6);
+            if (g.userData.shutAt) {
+                open = Math.min(open, 1 - (now - g.userData.shutAt) / 140);
+                if (open <= 0) { world.remove(g); lurkers.splice(i, 1); continue; }
+            }
             g.children.forEach(s => { s.scale.y = 0.12 * Math.max(0.05, open); });
         }
 
@@ -1088,7 +1149,7 @@
     if (location.search.includes('debug')) {
         window.__scene = {
             music: () => ({ playing: !music.paused, volume: +music.volume.toFixed(2), ready: music.readyState, err: music.error && music.error.code, allowed: musicAllowed, on: musicOn }),
-            state: () => ({ mode, lit, z: hero && +hero.root.position.z.toFixed(2), cls: heroCls?.id }),
+            state: () => ({ mode, lit, z: hero && +hero.root.position.z.toFixed(2), cls: heroCls?.id, eyes: lurkers.length }),
             hold: on => (on ? held.add('debug') : held.delete('debug')),
             step(seconds, fps = 30) {
                 const real = clock.getDelta;

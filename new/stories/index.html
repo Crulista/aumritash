@@ -135,6 +135,32 @@
             .spine-title { font-size: calc(var(--fs, 17px) * 0.82); inset: 18px 0; }
             .peek { width: 150px; }
         }
+        /* Favourite lines, as game dialogue boxes */
+        .lines { display: flex; flex-direction: column; gap: 1.25rem; }
+        .line { display: grid; grid-template-columns: 72px 1fr; gap: 1rem; align-items: center; margin: 0; }
+        .line img { width: 72px; aspect-ratio: 2 / 3; object-fit: cover; border: 2px solid var(--line-2); }
+        .line .box { position: relative; padding: 1.6rem 1.4rem 1.2rem; background: rgba(0, 0, 0, 0.7); border: 2px solid var(--text); }
+        .line .speaker {
+            position: absolute;
+            top: -0.85rem;
+            left: 1rem;
+            padding: 0.1rem 0.6rem 0;
+            background: var(--bg);
+            border: 2px solid var(--text);
+            font-family: var(--pixel);
+            font-size: 1.05rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+        .line blockquote { font-family: var(--pixel); font-size: clamp(1.4rem, 3.4vw, 1.9rem); line-height: 1.25; letter-spacing: 0.03em; }
+        .line blockquote::before { content: '“'; color: var(--red); }
+        .line blockquote::after { content: '”'; color: var(--red); }
+        .line .more { position: absolute; right: 0.8rem; bottom: 0.4rem; font-size: 0.8rem; color: var(--red); animation: nudge 1s steps(2) infinite; }
+        @keyframes nudge { 50% { transform: translateY(3px); } }
+        @media (max-width: 760px) {
+            .line { grid-template-columns: 52px 1fr; gap: 0.75rem; }
+            .line img { width: 52px; }
+        }
     </style>
 </head>
 <body>
@@ -212,6 +238,28 @@
                 <button class="book" style="--bind:#4a2a38;--h:190px;--w:40px;--fs:14px" data-img="tv-184" data-kind="show" data-href="https://www.tvmaze.com/shows/184" data-title="BoJack Horseman" aria-label="BoJack Horseman"><span class="spine-title">BoJack Horseman</span></button>
                 <button class="book" style="--bind:#1e2430;--h:170px;--w:44px;--fs:12px" data-img="film-the-dark-knight" data-kind="film" data-href="https://en.wikipedia.org/wiki/The_Dark_Knight" data-title="The Dark Knight" aria-label="The Dark Knight"><span class="spine-title">The Dark Knight</span></button>
                 <button class="book" style="--bind:#5a3a1e;--h:160px;--w:40px;--fs:17px" data-img="film-gladiator-2000-film" data-kind="film" data-href="https://en.wikipedia.org/wiki/Gladiator_(2000_film)" data-title="Gladiator" aria-label="Gladiator"><span class="spine-title">Gladiator</span></button>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">Lines that stayed</h2>
+            <div class="lines">
+                <figure class="line">
+                    <img src="../assets/covers/tv-184.jpg" alt="BoJack Horseman cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">BoJack Horseman</figcaption>
+                        <blockquote>You are all the things that are wrong with you.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
+                <figure class="line">
+                    <img src="../assets/covers/30656.jpg" alt="Vagabond cover" loading="lazy">
+                    <div class="box">
+                        <figcaption class="speaker">Vagabond</figcaption>
+                        <blockquote>The sky has no limits.</blockquote>
+                        <span class="more" aria-hidden="true">▼</span>
+                    </div>
+                </figure>
             </div>
         </section>
 
