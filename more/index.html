@@ -328,6 +328,8 @@
     <script type="module">
     import * as THREE from 'three';
     import { CLASSES, loadCharacter } from '../assets/characters.js';
+    import { createSfx } from '../assets/sfx.js';
+    const sfx = createSfx();
 
     const $ = id => document.getElementById(id);
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -707,6 +709,8 @@
             placed = CLEAR.every(([x, y]) => inTheDark(tmpEye.copy(g.position).addScaledVector(right, x * scale).setY(g.position.y + y * scale), 1.5, dist + (side ? 10 : 18)));
         }
         if (!placed) return;
+        tmpEye.copy(g.position).project(camera);
+        sfx.eye(dread, tmpEye.x);
         g.userData = { born: performance.now(), life: mix(1800, 3200, dread) + Math.random() * 2400 };
         world.add(g);
         lurkers.push(g);
@@ -788,6 +792,7 @@
     async function begin() {
         // Browsers only allow sound from inside a click, so unlock the music now and let the walk start it
         if (musicOn) music.play().then(() => { if (!musicAllowed) music.pause(); }).catch(() => {});
+        sfx.unlock();
         heroCls = pickClass();
         store.set(STORE_ORIGIN, heroCls.id);
         fadeTo(true);
@@ -815,6 +820,7 @@
         $('caption').textContent = 'A flame flickers in the distance';
         musicAllowed = true;
         startMusic();
+        sfx.setWind(true);
         $('hint').hidden = false;
         $('hint').textContent = touch ? 'HOLD THE SCREEN TO WALK' : 'HOLD CLICK · W · ↑ · OR SCROLL TO WALK';
         $('skip').hidden = false;
@@ -856,7 +862,7 @@
         hero.play(heroCls.kindle, { fade: 0.4, once: true });
         store.set(STORE_KINDLED, '1');
         // The flame catches a beat after the hand reaches it
-        setTimeout(() => { lit = true; litAt = performance.now(); $('banner').classList.add('show'); }, reduce ? 0 : 1300);
+        setTimeout(() => { lit = true; litAt = performance.now(); $('banner').classList.add('show'); sfx.kindle(); sfx.setFire(true); }, reduce ? 0 : 1300);
         setTimeout(sitDown, reduce ? 400 : 3400);
     }
 
@@ -892,6 +898,7 @@
         selectPath(0);
     }
     function selectPath(i) {
+        if (mode === 'resting' && pathIdx !== (i + PATHS.length) % PATHS.length) sfx.tick();
         pathIdx = (i + PATHS.length) % PATHS.length;
         PATHS.forEach((p, n) => p.el.classList.toggle('current', n === pathIdx));
     }
@@ -912,6 +919,7 @@
     function travel(i) {
         if (mode !== 'resting') return;
         if (PATHS[i].sealed) {
+            sfx.thud();
             $('caption').textContent = allSeen ? 'It knows you have seen everything. Not yet.' : 'The way up is sealed. Walk the other paths first.';
             $('caption').hidden = false;
             $('caption').style.opacity = 1;
@@ -934,7 +942,7 @@
         hero.play(heroCls.walk, { fade: 0.5 });
         try { sessionStorage.setItem('aumritash-arrive', place); } catch (e) {}
         const wait = reduce ? 0 : 1;
-        setTimeout(() => { $('fade').classList.add('slow'); fadeTo(true); }, 2600 * wait);
+        setTimeout(() => { $('fade').classList.add('slow'); fadeTo(true); sfx.whoosh(); }, 2600 * wait);
         setTimeout(() => { location.href = p.el.href; }, 4000 * wait + 50);
     }
 
@@ -944,6 +952,7 @@
         location.reload();
     };
 
+    // ── Sound: music and effects share one toggle ──
     // ── Music: starts with the walk ("A flame flickers in the distance") and loops; muting is remembered ──
     const STORE_MUSIC = 'aumritash-music', VOLUME = 0.45;
     const music = new Audio('../assets/audio/theme.weba');
@@ -968,14 +977,19 @@
         $('sound').textContent = musicOn ? '♪ Sound on' : '♪ Sound off';
         $('sound').setAttribute('aria-pressed', String(musicOn));
     }
-    music.addEventListener('canplay', () => { $('sound').hidden = false; renderSound(); startMusic(); }, { once: true });
-    addEventListener('pointerdown', startMusic);
-    addEventListener('keydown', startMusic);
+    music.addEventListener('canplay', startMusic, { once: true });
+    sfx.setMuted(!musicOn);
+    // Any click or key unlocks sound (returning visitors land straight at the fire, with no Begin click)
+    const unlockSound = () => { sfx.unlock(); startMusic(); };
+    addEventListener('pointerdown', unlockSound);
+    addEventListener('keydown', unlockSound);
     $('sound').onclick = e => {
         e.stopPropagation();
         musicOn = !musicOn;
         store.set(STORE_MUSIC, musicOn ? 'on' : 'off');
         renderSound();
+        sfx.setMuted(!musicOn);
+        if (musicOn) sfx.unlock();
         if (musicOn) { musicStarted = false; startMusic(); } else { musicStarted = false; fadeMusic(0, 600); }
     };
 
@@ -987,7 +1001,9 @@
     const clock = new THREE.Clock();
     const camTarget = new THREE.Vector3(), camLook = new THREE.Vector3(0, 1, 0), tmp = new THREE.Vector3();
     const REST_CAM = new THREE.Vector3(0.5, 7.2, 13.5), REST_LOOK = new THREE.Vector3(0, 0.8, -1.5);
-    let nextLurker = 0;
+    let nextLurker = 0, stride = 0;
+    const STRIDE = 0.8;
+    const lastPos = new THREE.Vector3();
 
     function updateFire(dt, t) {
         const strength = lit ? Math.min(1, (performance.now() - litAt) / 600) : 0;
@@ -1073,6 +1089,11 @@
                 }
             }
             hero.mixer.update(dt);
+            if (mode === 'walk' || mode === 'leaving') {
+                stride += hero.root.position.distanceTo(lastPos);
+                if (stride > STRIDE) { stride %= STRIDE; sfx.step(); }
+            }
+            lastPos.copy(hero.root.position);
 
             // Camera: follow from behind while walking, swing wide over the courtyard once resting
             const hp = hero.root.position;
@@ -1165,6 +1186,8 @@
                 camera.position.copy(REST_CAM);
                 camLook.copy(REST_LOOK);
                 musicAllowed = true;
+                sfx.setWind(true);
+                sfx.setFire(true);
             } else {
                 mode = 'select';
                 $('origin').hidden = false;
@@ -1179,6 +1202,8 @@
             return;
         }
         $('loading').hidden = true;
+        $('sound').hidden = false;
+        renderSound();
         fadeTo(false);
         requestAnimationFrame(frame);
         if (kindled) setTimeout(showPaths, reduce ? 0 : 1600);
@@ -1187,6 +1212,7 @@
     // ?debug: drive the scene by hand when the tab can't animate (background testing)
     if (location.search.includes('debug')) {
         window.__scene = {
+            sfx: () => sfx.state(),
             music: () => ({ playing: !music.paused, volume: +music.volume.toFixed(2), ready: music.readyState, err: music.error && music.error.code, allowed: musicAllowed, on: musicOn }),
             state: () => ({ mode, lit, z: hero && +hero.root.position.z.toFixed(2), cls: heroCls?.id, eyes: lurkers.length }),
             hold: on => (on ? held.add('debug') : held.delete('debug')),
