@@ -10,12 +10,15 @@
         id = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
         try { localStorage.setItem('aumritash-id', id); } catch (e) {}
     }
+    // The browser's time zone and language stand in for a rough location (no lookup service involved)
+    let tz = '';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
     window.track = (event, detail = '') => {
         if (!ENDPOINT || local) return;
         const body = JSON.stringify({
             id, event, detail: String(detail),
             name: get('aumritash-name') || '', origin: get('aumritash-origin') || '',
-            path: location.pathname, from: document.referrer
+            path: location.pathname, from: document.referrer, tz, lang: navigator.language || ''
         });
         // Sent as plain text so the browser doesn't hold it back for a permission check; survives leaving the page
         try {
