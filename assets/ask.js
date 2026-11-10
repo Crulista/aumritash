@@ -22,6 +22,7 @@
                 </div>
             </form>`;
         const form = box.querySelector('form'), hint = box.querySelector('.ask-hint'), btn = form.querySelector('button');
+        try { form.from.value = localStorage.getItem('aumritash-name') || ''; } catch (e) {}
         form.addEventListener('submit', async e => {
             e.preventDefault();
             const kind = form.kind.value, note = form.note.value.trim(), from = form.from.value.trim();

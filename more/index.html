@@ -150,6 +150,28 @@
         .begin { font-size: 1.7rem; padding: 0.5rem 2rem 0.4rem; border-color: #ffcf8a; color: #ffe2b8; }
         .begin:hover, .begin:focus-visible { background: #ffcf8a; color: #1a0a00; }
 
+        /* "What are you called?": asked once, after the origin is chosen */
+        .naming { position: fixed; inset: 0; z-index: 22; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: #000; }
+        .naming[hidden] { display: none; }
+        .naming form { display: flex; flex-direction: column; align-items: center; gap: 1.2rem; width: min(420px, 100%); text-align: center; }
+        .naming label { font-family: var(--pixel); font-size: clamp(1.8rem, 6vw, 2.6rem); letter-spacing: 0.18em; color: #ffd9a0; text-shadow: 0 0 18px rgba(255, 150, 60, 0.45); }
+        .naming input {
+            width: 100%;
+            font-family: var(--pixel);
+            font-size: 2rem;
+            letter-spacing: 0.12em;
+            text-align: center;
+            text-transform: uppercase;
+            color: var(--text);
+            background: none;
+            border: none;
+            border-bottom: 2px solid var(--dim);
+            padding: 0.3rem 0;
+            caret-color: #ffcf8a;
+        }
+        .naming input:focus { outline: none; border-bottom-color: #ffcf8a; }
+        .naming small { color: var(--dim); font-size: 0.9rem; }
+
         .loading {
             position: fixed;
             inset: 0;
@@ -290,6 +312,7 @@
     </style>
 </head>
 <body>
+    <script src="../assets/track.js"></script>
     <canvas id="view" aria-hidden="true"></canvas>
 
     <div class="loading" id="loading">LOADING…</div>
@@ -315,6 +338,15 @@
             <p class="lore" id="lore"></p>
             <button class="btn begin" id="begin">Begin</button>
         </div>
+    </section>
+
+    <section class="naming" id="naming" hidden>
+        <form id="nameForm">
+            <label for="nameInput">WHAT ARE YOU CALLED?</label>
+            <input id="nameInput" type="text" maxlength="16" required autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button class="btn begin" type="submit">Continue</button>
+            <small>Your name is shared with Aumritash.</small>
+        </form>
     </section>
 
     <p class="caption" id="caption" hidden></p>
@@ -367,7 +399,8 @@
     const $ = id => document.getElementById(id);
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const touch = matchMedia('(hover: none)').matches;
-    const STORE_ORIGIN = 'aumritash-origin', STORE_KINDLED = 'aumritash-kindled';
+    const STORE_ORIGIN = 'aumritash-origin', STORE_KINDLED = 'aumritash-kindled', STORE_NAME = 'aumritash-name';
+    const track = (...a) => window.track && window.track(...a);
     const store = {
         get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
         set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
@@ -817,19 +850,41 @@
     $('sexM').onclick = () => { selSex = 'm'; updateOriginUI(); };
     $('sexF').onclick = () => { selSex = 'f'; updateOriginUI(); };
     $('begin').onclick = () => begin();
+    const naming = () => !$('naming').hidden;
+    // Everyone gives a name once, right after choosing an origin (or on their next visit, if they came before names)
+    function askName() {
+        return new Promise(done => {
+            if (store.get(STORE_NAME)) return done();
+            $('naming').hidden = false;
+            $('nameInput').focus();
+            $('nameForm').onsubmit = ev => {
+                ev.preventDefault();
+                const name = $('nameInput').value.trim().replace(/\s+/g, ' ');
+                if (!name) return;
+                store.set(STORE_NAME, name);
+                $('naming').hidden = true;
+                done();
+            };
+        });
+    }
     addEventListener('keydown', e => {
-        if (mode !== 'select') return;
+        if (mode !== 'select' || naming()) return;
         if (e.key === 'ArrowLeft') $('prev').click();
         else if (e.key === 'ArrowRight') $('next').click();
         else if (e.key === 'Enter' && document.activeElement === document.body) begin();
     });
 
+    let beginning = false;
     async function begin() {
+        if (beginning) return;
+        beginning = true;
+        heroCls = pickClass();
+        store.set(STORE_ORIGIN, heroCls.id);
+        await askName();
+        track('begin');
         // Browsers only allow sound from inside a click, so unlock the music now and let the walk start it
         if (musicOn) music.play().then(() => { if (!musicAllowed) music.pause(); }).catch(() => {});
         sfx.unlock();
-        heroCls = pickClass();
-        store.set(STORE_ORIGIN, heroCls.id);
         fadeTo(true);
         await sleep(450);
         await spawnHero(heroCls);
@@ -862,7 +917,7 @@
         camera.position.set(0.8, 2.1, START_Z + 4.4);
     }
 
-    const isUI = t => t.closest && t.closest('button, a, .origin');
+    const isUI = t => t.closest && t.closest('button, a, .origin, .naming');
     addEventListener('pointerdown', e => { if (!isUI(e.target)) held.add('pointer'); });
     addEventListener('pointerup', () => held.delete('pointer'));
     addEventListener('pointercancel', () => held.delete('pointer'));
@@ -896,6 +951,7 @@
         $('caption').style.opacity = 0;
         hero.play(heroCls.kindle, { fade: 0.4, once: true });
         store.set(STORE_KINDLED, '1');
+        track('kindle');
         // The flame catches a beat after the hand reaches it
         setTimeout(() => { lit = true; litAt = performance.now(); $('banner').classList.add('show'); sfx.kindle(); sfx.setFire(true); }, reduce ? 0 : 1300);
         setTimeout(sitDown, reduce ? 400 : 3400);
@@ -927,6 +983,8 @@
     let pathIdx = 0;
     function showPaths() {
         if (mode !== 'resting') return;
+        const who = store.get(STORE_NAME);
+        $('pathsTitle').textContent = who ? `CHOOSE A PATH, ${who.toUpperCase()}` : 'CHOOSE A PATH';
         $('pathsTitle').hidden = false;
         $('change').hidden = false;
         PATHS.forEach((p, n) => { p.el.style.animationDelay = (reduce ? 0 : 0.7 + n * 0.45) + 's'; p.el.hidden = false; });
@@ -943,7 +1001,7 @@
         p.el.addEventListener('click', e => { e.preventDefault(); travel(i); });
     });
     addEventListener('keydown', e => {
-        if (mode !== 'resting') return;
+        if (mode !== 'resting' || naming()) return;
         if (['ArrowRight', 'ArrowDown'].includes(e.key)) { selectPath(pathIdx + 1); PATHS[pathIdx].el.focus(); e.preventDefault(); }
         else if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { selectPath(pathIdx - 1); PATHS[pathIdx].el.focus(); e.preventDefault(); }
         else if (e.key === 'Enter' && document.activeElement === document.body) travel(pathIdx);
@@ -954,6 +1012,7 @@
     function travel(i) {
         if (mode !== 'resting') return;
         if (PATHS[i].sealed) {
+            track('tower', allSeen ? 'stirring' : 'sealed');
             sfx.thud();
             $('caption').textContent = allSeen ? 'It knows you have seen everything. Not yet.' : 'The way up is sealed. Walk the other paths first.';
             $('caption').hidden = false;
@@ -984,6 +1043,7 @@
     $('change').onclick = () => {
         store.del(STORE_KINDLED);
         store.del(STORE_ORIGIN);
+        store.del(STORE_NAME);
         location.reload();
     };
 
@@ -1263,7 +1323,7 @@
         renderSound();
         fadeTo(false);
         requestAnimationFrame(frame);
-        if (kindled) { askToWake(); setTimeout(showPaths, reduce ? 0 : 1600); }
+        if (kindled) { askToWake(); await askName(); setTimeout(showPaths, reduce ? 0 : 1600); }
     })();
 
     // ?debug: drive the scene by hand when the tab can't animate (background testing)

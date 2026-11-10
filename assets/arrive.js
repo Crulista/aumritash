@@ -19,7 +19,10 @@
     const [name, line] = PLACES[place];
     const veil = document.createElement('div');
     veil.className = 'arrive';
-    veil.innerHTML = `<div><p class="arrive-name">${name}</p><p class="arrive-line">${line}</p></div>`;
+    veil.innerHTML = `<div><p class="arrive-name">${name}</p><p class="arrive-line"></p></div>`;
+    let who = '';
+    try { who = localStorage.getItem('aumritash-name') || ''; } catch (e) {}
+    veil.querySelector('.arrive-line').textContent = who ? line.replace(/\.$/, `, ${who}.`) : line;
     document.body.prepend(veil);
     const quick = matchMedia('(prefers-reduced-motion: reduce)').matches;
     setTimeout(() => veil.classList.add('out'), quick ? 0 : 2400);
