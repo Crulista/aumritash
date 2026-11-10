@@ -199,10 +199,16 @@ export function createSfx() {
         o.stop(t + 0.08);
     }
 
+    // Hidden tab: stop everything, and pick up again when the visitor comes back
+    function pause(on) {
+        if (!ctx) return;
+        if (on) ctx.suspend(); else ctx.resume();
+    }
+
     function setMuted(m) {
         muted = m;
         if (out) out.gain.setTargetAtTime(m ? 0 : 1, ctx.currentTime, 0.1);
     }
 
-    return { unlock, setWind, setFire, step, eye, kindle, whoosh, thud, tick, setMuted, state: () => ctx && ctx.state };
+    return { unlock, setWind, setFire, step, eye, kindle, whoosh, thud, tick, setMuted, pause, state: () => ctx && ctx.state };
 }

@@ -245,6 +245,16 @@
 
         .change { position: fixed; right: 1.5rem; bottom: 1.2rem; z-index: 10; }
         .sound { position: fixed; left: 1.5rem; bottom: 1.8rem; z-index: 10; }
+        /* Muted is easy to miss, so the button stands out until sound is back on */
+        .sound.asking { border-color: var(--red); animation: ask-blink 1.2s steps(2) infinite; }
+        @keyframes ask-blink { 50% { color: var(--red); } }
+        @media (prefers-reduced-motion: reduce) { .sound.asking { animation: none; } }
+        .sound[aria-pressed="false"] { border-style: dashed; border-color: var(--red); color: var(--red); }
+
+        /* Shown when the 3D scene can't run: the paths as plain links */
+        .fallback { position: fixed; inset: 0; z-index: 25; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 1.5rem; text-align: center; background: #050406; }
+        .fallback[hidden] { display: none; }
+        .fallback p { color: var(--dim); max-width: 26rem; }
 
         .credit {
             position: fixed;
@@ -325,6 +335,29 @@
 
     <div class="fade on" id="fade"></div>
 
+    <nav class="fallback" id="fallback" hidden aria-label="Paths">
+        <p>The flame won't light on this device. The paths are still open:</p>
+        <a class="btn" href="../work/">The Work</a>
+        <a class="btn" href="../games/">The Games</a>
+        <a class="btn" href="../stories/">The Stories</a>
+        <a class="btn small" href="../">&lt; Title</a>
+    </nav>
+    <noscript>
+        <p style="position:fixed;inset:0;z-index:30;display:grid;place-content:center;gap:1rem;text-align:center;background:#050406"><a href="../work/">The Work</a><a href="../games/">The Games</a><a href="../stories/">The Stories</a></p>
+    </noscript>
+    <script>
+        // If the scene never gets past loading (no WebGL, blocked scripts, dead network), offer the plain links
+        window.__fallback = function (on) {
+            document.getElementById('fallback').hidden = on === false;
+            if (on !== false) document.getElementById('loading').hidden = true;
+        };
+        window.__fallbackTimer = setTimeout(function () {
+            if (!document.getElementById('loading').hidden) window.__fallback();
+        }, 20000);
+        // Coming back with the Back button can restore this page mid-fade and frozen; start it fresh instead
+        addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); });
+    </script>
+
     <script type="module">
     import * as THREE from 'three';
     import { CLASSES, loadCharacter } from '../assets/characters.js';
@@ -343,7 +376,9 @@
 
     // ── Renderer at PS1-ish resolution ──
     const canvas = $('view');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'low-power' });
+    let renderer;
+    try { renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'low-power' }); }
+    catch (e) { window.__fallback(); throw e; }
     renderer.setPixelRatio(1);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 120);
@@ -974,17 +1009,37 @@
         music.play().then(() => { musicStarted = true; fadeMusic(VOLUME, 2500); }).catch(() => {});
     }
     function renderSound() {
-        $('sound').textContent = musicOn ? '♪ Sound on' : '♪ Sound off';
+        $('sound').textContent = asking ? (touch ? '♪ Tap for sound' : '♪ Click for sound') : musicOn ? '♪ Sound on' : '♪ Sound off';
+        $('sound').classList.toggle('asking', asking);
         $('sound').setAttribute('aria-pressed', String(musicOn));
     }
     music.addEventListener('canplay', startMusic, { once: true });
     sfx.setMuted(!musicOn);
     // Any click or key unlocks sound (returning visitors land straight at the fire, with no Begin click)
-    const unlockSound = () => { sfx.unlock(); startMusic(); };
+    let woke = false, asking = false;
+    const unlockSound = e => {
+        sfx.unlock();
+        startMusic();
+        woke = true;
+        // A click on the button while it's asking only wakes the sound; it mustn't also mute it
+        if (asking && !(e.target.closest && e.target.closest('#sound'))) { asking = false; renderSound(); }
+    };
+    // Browsers keep a page silent until the first click, so say so instead of leaving the fire mute
+    function askToWake() {
+        if (woke || !musicOn) return;
+        asking = true;
+        renderSound();
+    }
+    document.addEventListener('visibilitychange', () => {
+        sfx.pause(document.hidden);
+        if (document.hidden) music.pause();
+        else if (musicStarted && musicOn) music.play().catch(() => {});
+    });
     addEventListener('pointerdown', unlockSound);
     addEventListener('keydown', unlockSound);
     $('sound').onclick = e => {
         e.stopPropagation();
+        if (asking) { asking = false; renderSound(); return; }
         musicOn = !musicOn;
         store.set(STORE_MUSIC, musicOn ? 'on' : 'off');
         renderSound();
@@ -1197,16 +1252,18 @@
                 CLASSES.forEach(c => loadCharacter(c).catch(() => {}));
             }
         } catch (e) {
-            $('loading').textContent = 'SOMETHING WENT WRONG · RELOAD';
+            window.__fallback();
             console.error(e);
             return;
         }
         $('loading').hidden = true;
+        clearTimeout(window.__fallbackTimer);
+        window.__fallback(false);
         $('sound').hidden = false;
         renderSound();
         fadeTo(false);
         requestAnimationFrame(frame);
-        if (kindled) setTimeout(showPaths, reduce ? 0 : 1600);
+        if (kindled) { askToWake(); setTimeout(showPaths, reduce ? 0 : 1600); }
     })();
 
     // ?debug: drive the scene by hand when the tab can't animate (background testing)
