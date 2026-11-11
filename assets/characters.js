@@ -161,7 +161,9 @@ export async function loadCharacter(cls) {
         current = next;
         return next;
     }
-    return { root, mixer, actions, play, cls };
+    // Stops everything, for callers that want to drive the action weights themselves for a while
+    function stopAll() { mixer.stopAllAction(); current = null; }
+    return { root, mixer, actions, play, stopAll, cls };
 }
 
 // Footsteps that follow the animation: calls onStep each time a foot comes back down.
