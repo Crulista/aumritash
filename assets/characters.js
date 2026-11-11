@@ -163,3 +163,19 @@ export async function loadCharacter(cls) {
     }
     return { root, mixer, actions, play, cls };
 }
+
+// Footsteps that follow the animation: calls onStep each time a foot comes back down.
+// Call the returned function once a frame, after the mixer has updated, while the character is walking.
+export function footfalls(ch, onStep) {
+    const feet = [];
+    ch.root.traverse(o => { if (o.isBone && /^ball_[lr]$/.test(o.name)) feet.push({ bone: o, up: false }); });
+    const v = new THREE.Vector3();
+    return () => {
+        for (const f of feet) {
+            f.bone.getWorldPosition(v);
+            const y = (v.y - ch.root.position.y) / ch.root.scale.y;
+            if (y > 0.08) f.up = true;
+            else if (y < 0.035 && f.up) { f.up = false; onStep(); }
+        }
+    };
+}

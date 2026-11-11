@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>The Tower - Aumritash Maitra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/chapter.css">
+    <script type="importmap">
+        { "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        } }
+    </script>
+    <style>
+        html, body { height: 100%; overflow: hidden; }
+        body::before { display: none; }
+        body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; background: #000; }
+
+        /* Same PS1-ish view as the flame: rendered small, blown up with hard pixels */
+        #view { position: fixed; inset: 0; width: 100% !important; height: 100% !important; image-rendering: pixelated; image-rendering: crisp-edges; }
+
+        [hidden] { display: none !important; }
+
+        .top { position: fixed; top: 0; left: 0; right: 0; z-index: 10; }
+
+        .caption {
+            position: fixed;
+            top: 13%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: var(--pixel);
+            font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+            letter-spacing: 0.2em;
+            color: rgba(232, 226, 218, 0.8);
+            text-shadow: 0 2px 0 #000;
+            z-index: 5;
+            pointer-events: none;
+            transition: opacity 0.6s;
+            padding: 0 1rem;
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 7%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: var(--pixel);
+            font-size: 1.3rem;
+            letter-spacing: 0.2em;
+            color: var(--dim);
+            text-shadow: 0 2px 0 #000;
+            z-index: 5;
+            pointer-events: none;
+            animation: breathe 2.4s ease-in-out infinite;
+        }
+        @keyframes breathe { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+        /* The Watcher's words: big, red, typed out one letter at a time */
+        .say {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 16%;
+            text-align: center;
+            font-family: var(--pixel);
+            font-size: clamp(2.4rem, 8vw, 5rem);
+            line-height: 1;
+            letter-spacing: 0.16em;
+            color: var(--red);
+            text-shadow: 0 0 24px rgba(255, 26, 26, 0.6), 0 3px 0 #000;
+            z-index: 6;
+            pointer-events: none;
+            padding: 0 1rem;
+            overflow-wrap: anywhere;
+        }
+
+        /* Its name and health, once it has taken its true shape */
+        .boss { position: fixed; left: 50%; bottom: 8%; transform: translateX(-50%); width: min(760px, 88vw); z-index: 6; pointer-events: none; }
+        .boss-name { font-family: var(--pixel); font-size: clamp(1.5rem, 4.5vw, 2.2rem); letter-spacing: 0.22em; color: var(--text); text-shadow: 0 2px 0 #000; margin-bottom: 0.3rem; }
+        .boss-bar { height: 14px; border: 2px solid rgba(232, 226, 218, 0.75); background: rgba(0, 0, 0, 0.6); }
+        .boss-bar i { display: block; height: 100%; width: 0; background: linear-gradient(to bottom, #ff3a2a, #a00d0d); }
+
+        /* ── The fight ── */
+        body.fighting .say { bottom: auto; top: 30%; font-size: clamp(1.6rem, 5vw, 3rem); }
+        body.fighting .sound { bottom: auto; top: 1.35rem; left: 50%; transform: translateX(-50%); }
+        body.fighting .hint { display: none; }
+
+        /* The visitor's own bars, top left: health, stamina, and how many embers they have left to heal with */
+        .me { position: fixed; left: 1.5rem; top: 4.4rem; width: min(300px, 46vw); z-index: 6; pointer-events: none; }
+        .bar { height: 12px; border: 2px solid rgba(232, 226, 218, 0.75); background: rgba(0, 0, 0, 0.6); margin-bottom: 4px; }
+        .bar i { display: block; height: 100%; width: 100%; }
+        .bar.hp i { background: linear-gradient(to bottom, #d8402c, #8a1410); }
+        .bar.st { height: 8px; width: 82%; }
+        .bar.st i { background: linear-gradient(to bottom, #7fbf5a, #3f7a2c); }
+        .me p { font-family: var(--pixel); font-size: 1.2rem; letter-spacing: 0.12em; color: #ffcf8a; text-shadow: 0 2px 0 #000; }
+
+        .phase { position: fixed; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.7rem; padding: 1.5rem; text-align: center; background: rgba(0, 0, 0, 0.72); pointer-events: none; }
+        .phase-title { font-family: var(--pixel); font-size: clamp(1.9rem, 6.5vw, 3.2rem); letter-spacing: 0.2em; color: #ffd9a0; text-shadow: 0 0 18px rgba(255, 150, 60, 0.45); }
+        .phase-hint { color: var(--text); max-width: 30rem; line-height: 1.8; }
+        .phase-hint b { font-family: var(--pixel); font-size: 1.15rem; letter-spacing: 0.1em; color: #ffcf8a; border: 1px solid rgba(255, 207, 138, 0.6); padding: 0 0.4rem; }
+
+        /* Touch controls: a stick wherever the left thumb lands, three buttons under the right */
+        .pad { position: fixed; inset: 0; z-index: 9; pointer-events: none; }
+        .stick { position: absolute; width: 110px; height: 110px; margin: -55px 0 0 -55px; border: 2px solid rgba(232, 226, 218, 0.35); border-radius: 50%; display: none; }
+        .stick i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: rgba(232, 226, 218, 0.4); }
+        .pad button { position: absolute; pointer-events: auto; font-family: var(--pixel); letter-spacing: 0.08em; color: var(--text); background: rgba(0, 0, 0, 0.55); border: 2px solid rgba(232, 226, 218, 0.7); border-radius: 50%; touch-action: none; }
+        .pad button:active { background: var(--text); color: #000; }
+        #btnAtk { right: 1.1rem; bottom: 1.6rem; width: 92px; height: 92px; font-size: 1.25rem; border-color: #ffcf8a; color: #ffe2b8; }
+        #btnRoll { right: 7.4rem; bottom: 1.1rem; width: 72px; height: 72px; font-size: 1.1rem; }
+        #btnHeal { right: 1.6rem; bottom: 8rem; width: 62px; height: 62px; font-size: 1.3rem; color: #ffcf8a; }
+
+        .fell { position: fixed; left: 0; right: 0; top: 42%; z-index: 9; text-align: center; font-family: var(--pixel); font-size: clamp(3rem, 12vw, 6rem); letter-spacing: 0.25em; color: var(--red); text-shadow: 0 0 30px rgba(255, 26, 26, 0.6), 0 4px 0 #000; background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.8) 25%, rgba(0, 0, 0, 0.8) 75%, transparent); padding: 1rem 0; pointer-events: none; }
+
+        .hurt { position: fixed; inset: 0; z-index: 7; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, transparent 35%, rgba(255, 20, 20, 0.55)); }
+        .hurt.on { animation: hurt 0.5s steps(5); }
+        @keyframes hurt { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+        .rank { font-family: var(--pixel); font-size: clamp(5rem, 22vw, 9rem); line-height: 0.9; color: #ffd9a0; text-shadow: 0 0 30px rgba(255, 150, 60, 0.5); }
+
+        .gate {
+            position: fixed;
+            inset: 0;
+            z-index: 22;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.1rem;
+            padding: 1.5rem;
+            text-align: center;
+            background: #000;
+        }
+        .gate-title { font-family: var(--pixel); font-size: clamp(2rem, 7vw, 3.4rem); letter-spacing: 0.2em; color: var(--red); text-shadow: 0 0 22px rgba(255, 26, 26, 0.5); }
+        .gate-line { color: var(--dim); max-width: 26rem; }
+        .gate .btn { font-size: 1.7rem; padding: 0.5rem 2rem 0.4rem; }
+        .gate.end { background: rgba(0, 0, 0, 0.8); z-index: 12; gap: 0.7rem; }
+        .gate.end .gate-title { color: #ffd9a0; text-shadow: none; font-size: clamp(1.5rem, 5vw, 2.2rem); }
+        .gate.end .btn { font-size: 1.3rem; padding: 0.4rem 1.2rem 0.3rem; }
+
+        .loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--pixel); font-size: 1.6rem; letter-spacing: 0.3em; color: var(--dim); z-index: 23; background: #000; }
+
+        .sound { position: fixed; left: 1.5rem; bottom: 1.8rem; z-index: 10; }
+        .sound[aria-pressed="false"] { border-style: dashed; border-color: var(--red); color: var(--red); }
+
+        .fade { position: fixed; inset: 0; background: #000; z-index: 20; opacity: 0; pointer-events: none; transition: opacity 0.6s steps(5); }
+        .fade.on { opacity: 1; }
+
+        @media (max-width: 760px) {
+            .caption { top: 11%; }
+            .hint { font-size: 1.05rem; bottom: 11%; }
+            .sound { left: 1rem; bottom: 1rem; }
+            .boss { bottom: 12%; }
+            .say { bottom: 21%; }
+            /* On a phone the boss bar goes up top too, out from under the thumbs */
+            body.fighting .boss { bottom: auto; top: 8.2rem; }
+            body.fighting .boss-name { font-size: 1.3rem; margin-bottom: 0.15rem; }
+            body.fighting .sound { left: auto; right: 1rem; top: 4.3rem; transform: none; font-size: 0.9rem; padding: 0.15rem 0.5rem 0.1rem; }
+            .me { left: 1rem; top: 4.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <script src="../assets/track.js"></script>
+    <canvas id="view" aria-hidden="true"></canvas>
+
+    <div class="loading" id="loading">LOADING…</div>
+
+    <header class="top">
+        <a href="../more/" class="btn small">&lt; The flame</a>
+        <button class="btn small" id="skip" hidden>Skip &gt;</button>
+    </header>
+
+    <!-- A click is needed before sound can play, so the climb starts from a button -->
+    <section class="gate" id="start" hidden>
+        <p class="gate-title">THE SEAL IS WEAK</p>
+        <p class="gate-line">You have seen everything there was to see. Something at the top of the tower knows it.</p>
+        <button class="btn" id="climb">Approach</button>
+    </section>
+
+    <p class="caption" id="caption" aria-live="polite"></p>
+    <p class="hint" id="hint" hidden></p>
+    <p class="say" id="say" aria-live="polite"></p>
+
+    <div class="boss" id="boss" hidden>
+        <p class="boss-name" id="bossName"></p>
+        <div class="boss-bar"><i id="bossFill"></i></div>
+    </div>
+
+    <div class="me" id="me" hidden>
+        <div class="bar hp"><i id="meHp"></i></div>
+        <div class="bar st"><i id="meSt"></i></div>
+        <p id="meHeals"></p>
+    </div>
+    <div class="phase" id="phase" hidden>
+        <p class="phase-title" id="phaseTitle"></p>
+        <p class="phase-hint" id="phaseHint"></p>
+    </div>
+    <div class="pad" id="pad" hidden>
+        <div class="stick" id="stick"><i id="knob"></i></div>
+        <button type="button" id="btnHeal" aria-label="Heal">✚</button>
+        <button type="button" id="btnRoll">ROLL</button>
+        <button type="button" id="btnAtk">HIT</button>
+    </div>
+    <p class="fell" id="fell" hidden>YOU FELL</p>
+    <div class="hurt" id="hurt"></div>
+
+    <section class="gate end" id="end" hidden>
+        <p class="gate-title" id="endTitle">THE WATCHER FALLS</p>
+        <p class="rank" id="rank"></p>
+        <p class="gate-line" id="endLine"></p>
+        <p class="gate-line">What you do with it comes next.</p>
+        <button class="btn" id="again">Play again</button>
+        <a class="btn" href="../more/">&lt; Back to the flame</a>
+    </section>
+
+    <button class="btn small sound" id="sound" hidden aria-pressed="true">♪ Sound on</button>
+
+    <div class="fade on" id="fade"></div>
+
+    <script type="module">
+    import * as THREE from 'three';
+    import { CLASSES, loadCharacter, footfalls } from '../assets/characters.js';
+    import { createSfx } from '../assets/sfx.js';
+    const sfx = createSfx();
+
+    const $ = id => document.getElementById(id);
+    const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+    const track = (...a) => window.track && window.track(...a);
+    const touch = matchMedia('(hover: none)').matches;
+    const mix = (a, b, t) => a + (b - a) * t;
+    const clamp01 = x => Math.min(1, Math.max(0, x));
+    const ease = x => { x = clamp01(x); return x * x * (3 - 2 * x); };
+    // 0 → 1 as t goes from a to b, eased
+    const ramp = (t, a, b) => ease((t - a) / (b - a));
+
+    // The tower only opens for someone who has walked all three paths (?preview is for looking at it early)
+    let seen = [];
+    try { seen = JSON.parse(store.get('aumritash-seen') || '[]'); } catch (e) {}
+    const preview = /[?&](preview|debug)\b/.test(location.search);
+    if (!preview && !['work', 'games', 'stories'].every(p => seen.includes(p))) location.replace('../more/');
+
+    const heroCls = CLASSES.find(c => c.id === store.get('aumritash-origin')) || CLASSES[0];
+    const who = (store.get('aumritash-name') || heroCls.name).toUpperCase();
+    const BOSS = 'THE WATCHER';     // what the visitor's name turns into
+
+    // ── Renderer ──
+    const canvas = $('view');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'low-power' });
+    renderer.setPixelRatio(1);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.localClippingEnabled = true;
+    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 160);
+    function resize() {
+        const scale = Math.max(2, innerHeight / 300);
+        renderer.setSize(Math.ceil(innerWidth / scale), Math.ceil(innerHeight / scale), false);
+        camera.aspect = innerWidth / innerHeight;
+        // Phones are tall and narrow: widen the lens so the scene isn't cropped to a sliver
+        camera.fov = camera.aspect < 0.8 ? 72 : 55;
+        camera.updateProjectionMatrix();
+    }
+    resize();
+    addEventListener('resize', resize);
+
+    // ── Procedural textures, as at the flame ──
+    function noiseTexture(base, spread, size = 64, blocks = false) {
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const g = c.getContext('2d');
+        const img = g.createImageData(size, size);
+        for (let i = 0; i < size * size; i++) {
+            const n = (Math.random() - 0.5) * spread;
+            img.data[i * 4] = base[0] + n; img.data[i * 4 + 1] = base[1] + n * 0.9; img.data[i * 4 + 2] = base[2] + n * 0.8; img.data[i * 4 + 3] = 255;
+        }
+        g.putImageData(img, 0, 0);
+        if (blocks) {
+            g.strokeStyle = 'rgba(0,0,0,0.45)';
+            g.lineWidth = 1;
+            for (let y = 0; y < size; y += 16) {
+                g.beginPath(); g.moveTo(0, y + 0.5); g.lineTo(size, y + 0.5); g.stroke();
+                const off = (y / 16) % 2 ? 0 : 16;
+                for (let x = off; x < size; x += 32) { g.beginPath(); g.moveTo(x + 0.5, y); g.lineTo(x + 0.5, y + 16); g.stroke(); }
+            }
+        }
+        const t = new THREE.CanvasTexture(c);
+        t.magFilter = THREE.NearestFilter;
+        t.minFilter = THREE.NearestMipmapNearestFilter;
+        t.wrapS = t.wrapT = THREE.RepeatWrapping;
+        t.colorSpace = THREE.SRGBColorSpace;
+        return t;
+    }
+    function glowTexture() {
+        const c = document.createElement('canvas');
+        c.width = c.height = 32;
+        const g = c.getContext('2d');
+        const grd = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+        grd.addColorStop(0, 'rgba(255,255,255,1)');
+        grd.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+        grd.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = grd;
+        g.fillRect(0, 0, 32, 32);
+        return new THREE.CanvasTexture(c);
+    }
+    // The seal on the door: a dashed ring around three question marks
+    function sealTexture() {
+        const c = document.createElement('canvas');
+        c.width = c.height = 64;
+        const g = c.getContext('2d');
+        g.strokeStyle = '#fff';
+        g.lineWidth = 2;
+        g.setLineDash([5, 4]);
+        g.beginPath(); g.arc(32, 32, 27, 0, Math.PI * 2); g.stroke();
+        g.setLineDash([]);
+        g.fillStyle = '#fff';
+        g.font = 'bold 22px monospace';
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillText('???', 32, 34);
+        const t = new THREE.CanvasTexture(c);
+        t.magFilter = THREE.NearestFilter;
+        return t;
+    }
+    const GLOW = glowTexture();
+    const stoneTex = noiseTexture([92, 84, 76], 40, 64, true);
+    const roughTex = noiseTexture([70, 62, 56], 50, 64);
+    const mat = (tex, rx = 1, ry = rx, color = '#ffffff', side = THREE.FrontSide) => {
+        const t = tex.clone(); t.needsUpdate = true; t.repeat.set(rx, ry);
+        return new THREE.MeshLambertMaterial({ map: t, color, side });
+    };
+    const STONE = mat(stoneTex), ROUGH = mat(roughTex), DARK = new THREE.MeshBasicMaterial({ color: '#020203' });
+    const VOID = new THREE.MeshBasicMaterial({ color: '#030204', fog: false });
+    const eyeMat = new THREE.SpriteMaterial({ map: GLOW, color: '#ff2020', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+
+    const world = new THREE.Scene();
+    world.background = new THREE.Color('#050409');
+    world.fog = new THREE.FogExp2('#0d0a12', 0.05);
+    world.add(new THREE.HemisphereLight('#6a7a9a', '#1f1612', 0.9));
+    const moon = new THREE.DirectionalLight('#9aaed4', 0.8);
+    moon.position.set(-12, 20, 10);
+    world.add(moon);
+    const heroLight = new THREE.PointLight('#a8bce0', 2.4, 8, 1.6);
+    world.add(heroLight);
+
+    // A pair of red eyes; `open` 0..1 is how far the lids are apart
+    function eyePair(size = 1) {
+        const g = new THREE.Group();
+        for (const s of [-1, 1]) {
+            const sp = new THREE.Sprite(eyeMat.clone());
+            sp.scale.set(0.22, 0.12, 1);
+            sp.position.x = s * 0.17;
+            g.add(sp);
+        }
+        g.scale.setScalar(size);
+        setOpen(g, 0);
+        return g;
+    }
+    function setOpen(g, open) {
+        g.userData.open = open;
+        g.visible = open > 0.01;
+        g.children.forEach(s => { s.scale.y = 0.12 * Math.max(0.05, open); });
+    }
+
+    // Three sets, far apart in the same world; the camera cuts between them
+    const SETS = { door: new THREE.Group(), stair: new THREE.Group(), top: new THREE.Group() };
+    SETS.stair.position.x = 200;
+    SETS.top.position.x = 400;
+    Object.values(SETS).forEach(s => world.add(s));
+    const rand = (() => { let s = 11; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+
+    // ═════════════ Set 1: the sealed door at the foot of the tower ═════════════
+    const door = {};
+    {
+        const S = SETS.door;
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), mat(roughTex, 26, 26, '#6a5f58'));
+        ground.rotation.x = -Math.PI / 2;
+        S.add(ground);
+        // The tower's curved foot, with a dark doorway cut into it
+        const wall = new THREE.Mesh(new THREE.CylinderGeometry(7, 7.6, 30, 20, 1, true), mat(stoneTex, 12, 10));
+        wall.position.set(0, 15, -8.3);
+        S.add(wall);
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(3.4, 4.6, 0.9), ROUGH);
+        frame.position.set(0, 2.3, -0.35);
+        S.add(frame);
+        const hole = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.8), DARK);
+        hole.position.set(0, 1.9, 0.11);
+        S.add(hole);
+        door.slabs = [-1, 1].map(s => {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(1.2, 3.8, 0.3), mat(stoneTex, 0.6, 1.9, '#b0a59c'));
+            m.userData.side = s;
+            S.add(m);
+            return m;
+        });
+        door.seal = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.9), new THREE.MeshBasicMaterial({ map: sealTexture(), color: '#ff2020', transparent: true, depthWrite: false, fog: false }));
+        door.seal.position.set(0, 2.1, 0.45);
+        S.add(door.seal);
+        door.light = new THREE.PointLight('#ff3020', 0, 9, 1.5);
+        door.light.position.set(0, 2.1, 1.4);
+        S.add(door.light);
+        // Dust shaken loose when the slabs move
+        const N = 60, pos = new Float32Array(N * 3);
+        door.dustGeo = new THREE.BufferGeometry();
+        door.dustGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        door.dust = Array.from({ length: N }, () => ({ x: (rand() - 0.5) * 2.6, y: 3.8 * rand(), z: 0.5 + rand() * 0.6, v: 0.6 + rand() * 1.4, d: (rand() - 0.5) * 0.8 }));
+        door.dustPts = new THREE.Points(door.dustGeo, new THREE.PointsMaterial({ color: '#b8a898', size: 0.09, transparent: true, opacity: 0, depthWrite: false }));
+        S.add(door.dustPts);
+    }
+
+    // ═════════════ Set 2: the stair that winds up inside ═════════════
+    const RISE = 0.9, STAIR_R = 2.6;      // metres climbed per radian, and how far the steps sit from the middle
+    const SHELL_R = 3.5, BAND = 0.8;      // the outer wall is built in rings this tall, so real gaps can be left in it
+    const TURN = 9.4;
+    const stairAt = (a, out = new THREE.Vector3()) => out.set(Math.cos(a) * STAIR_R, a * RISE, Math.sin(a) * STAIR_R);
+    const stair = { eyes: [] };
+    {
+        const S = SETS.stair;
+        for (let a = -0.4; a < TURN; a += 0.2) {
+            const step = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.2, 0.62), a * 5 % 2 < 1 ? STONE : ROUGH);
+            stairAt(a, step.position);
+            step.position.y -= 0.1;
+            step.rotation.y = -a;
+            S.add(step);
+        }
+        const H = TURN * RISE + 6, Y0 = -2;
+        const core = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.75, H, 12), mat(stoneTex, 6, 8, '#8a8078'));
+        core.position.y = H / 2 + Y0;
+        S.add(core);
+
+        // Where the gaps go: beside the stair, a little above head height, two rings tall
+        const TAU = Math.PI * 2, GAP_W = 0.27;      // radians, about 0.95 m of wall
+        const gaps = [];
+        for (let a = 1.3; a < TURN - 0.6; a += 0.6 + rand() * 0.35) {
+            const band = Math.round((a * RISE + 1.0 - Y0) / BAND);
+            gaps.push({ a, ang: ((a % TAU) + TAU) % TAU, band });
+        }
+        // The wall itself, ring by ring, leaving each gap truly open to the dark outside
+        const bands = Math.ceil(H / BAND);
+        for (let b = 0; b < bands; b++) {
+            const cuts = gaps.filter(g => b === g.band || b === g.band + 1).map(g => [g.ang - GAP_W / 2, g.ang + GAP_W / 2]).sort((p, q) => p[0] - q[0]);
+            const arcs = [];
+            let from = 0;
+            for (const [c0, c1] of cuts) { if (c0 > from) arcs.push([from, c0]); from = Math.max(from, c1); }
+            if (from < TAU) arcs.push([from, TAU]);
+            for (const [a0, a1] of arcs) {
+                const len = a1 - a0;
+                // three's cylinder measures its angle from +z towards +x; the stair measures from +x towards +z
+                const geo = new THREE.CylinderGeometry(SHELL_R, SHELL_R, BAND, Math.max(2, Math.ceil(len / 0.4)), 1, true, Math.PI / 2 - a1, len);
+                const m = new THREE.Mesh(geo, mat(stoneTex, len / TAU * 10, 0.5, b % 2 ? '#9a8f86' : '#90857c', THREE.BackSide));
+                m.material.map.offset.x = a0 / TAU * 10;
+                m.position.y = Y0 + b * BAND + BAND / 2;
+                S.add(m);
+            }
+        }
+        for (const g of gaps) {
+            const y0 = Y0 + g.band * BAND, yc = y0 + BAND, c = Math.cos(g.a), s = Math.sin(g.a);
+            // A stone surround gives the gap some depth
+            for (const [dy, dw, w, h] of [[BAND + 0.07, 0, 1.25, 0.16], [-BAND - 0.07, 0, 1.25, 0.16], [0, 0.56, 0.16, BAND * 2], [0, -0.56, 0.16, BAND * 2]]) {
+                const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.3), ROUGH);
+                m.position.set(c * (SHELL_R + 0.1) - s * dw, yc + dy, s * (SHELL_R + 0.1) + c * dw);
+                m.rotation.y = Math.PI / 2 - g.a;
+                S.add(m);
+            }
+            // Something stands outside each one, looking in
+            const pair = eyePair(1);
+            pair.userData.a = g.a;
+            pair.userData.gap = new THREE.Vector3(c * SHELL_R, yc + 0.15, s * SHELL_R);
+            S.add(pair);
+            stair.eyes.push(pair);
+        }
+    }
+
+    // ═════════════ Set 3: the top of the tower ═════════════
+    const top = { void: [], spikes: [] };
+    // Mostly chest and back, some on the shoulders and arms; none below the waist
+    const EYE_BONES = ['spine_01', 'spine_02', 'spine_02', 'spine_03', 'spine_03', 'spine_03', 'neck_01', 'clavicle_l', 'clavicle_r', 'upperarm_l', 'upperarm_r', 'lowerarm_l', 'lowerarm_r'];
+    const WATCH = new THREE.Vector3(0, 0, -4.2);      // where the Watcher stands, across the cold brazier
+    const BODY = 2.3, BEAST = 3.5;                    // how tall it is when it first stands up, and after it changes
+    const GRIP = 1.05;
+    {
+        const S = SETS.top;
+        const floor = new THREE.Mesh(new THREE.CircleGeometry(13, 28), mat(stoneTex, 10, 10, '#9a8f86'));
+        floor.rotation.x = -Math.PI / 2;
+        S.add(floor);
+        for (let i = 0; i < 36; i++) {
+            if ([6, 7, 20, 29].includes(i)) continue;                // the wall has teeth missing
+            const a = (i / 36) * Math.PI * 2;
+            const m = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.9 + rand() * 0.7, 0.7), i % 2 ? STONE : ROUGH);
+            m.position.set(Math.cos(a) * 12.7, m.geometry.parameters.height / 2, Math.sin(a) * 12.7);
+            m.rotation.y = -a + Math.PI / 2;
+            S.add(m);
+        }
+        const dais = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 0.3, 10), ROUGH);
+        dais.position.y = 0.15;
+        S.add(dais);
+        const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.35, 0.5, 8), new THREE.MeshLambertMaterial({ color: '#2a2422' }));
+        bowl.position.y = 0.55;
+        S.add(bowl);
+        // Eyes out in the open dark past the wall, well above its top, shut until the visitor walks out
+        for (let i = 0; i < 44; i++) {
+            const ang = -Math.PI / 2 + (rand() - 0.5) * Math.PI * 1.5;
+            const r = 18 + rand() * 12;
+            const pair = eyePair(r / 8 * (0.8 + rand() * 0.5));
+            pair.position.set(Math.cos(ang) * r, 2.6 + rand() * 9, Math.sin(ang) * r);
+            const u = pair.userData;
+            u.from = pair.position.clone();
+            u.size = pair.scale.x;
+            u.openP = 0.12 + rand() * 0.8;         // how far across the roof the visitor is when this pair opens
+            u.goAt = 0.6 + rand() * 3.2;
+            u.shutAt = 6.7 + rand() * 1.5;
+            u.wakeAt = 14.2 + rand() * 2.6;        // when it opens again on the changed body
+            // Where on the body this pair ends up: a bone of the upper body, and a small offset from it (in the body's own units)
+            u.bone = EYE_BONES[Math.floor(rand() * EYE_BONES.length)];
+            u.on = new THREE.Vector3((rand() - 0.5) * 0.24, (rand() - 0.5) * 0.16, 0.13 + rand() * 0.05);
+            u.via = new THREE.Vector3((rand() - 0.5) * 6, 4 + rand() * 4, 0);
+            S.add(pair);
+            top.void.push(pair);
+        }
+        // The two that stay: the Watcher's own
+        top.gaze = eyePair(2);
+        S.add(top.gaze);
+        top.glow = new THREE.PointLight('#ff2a1a', 0, 14, 1.4);
+        S.add(top.glow);
+        // A dull red haze behind it, so the hollow shape reads against a black sky
+        top.aura = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: '#5a0a0c', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+        S.add(top.aura);
+        // Reveals the Watcher's body from the ground up
+        top.clip = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
+
+        // What it becomes: a fan of long spines behind its shoulders...
+        top.crown = new THREE.Group();
+        for (let i = 0; i < 9; i++) {
+            const a = (i / 8 - 0.5) * 2.5;                       // fanned from one shoulder, over the head, to the other
+            const len = 0.5 + 0.34 * Math.cos(a * 0.8) + (i % 2) * 0.16;
+            const spike = new THREE.Mesh(new THREE.ConeGeometry(0.035, len, 4), VOID);
+            spike.geometry.translate(0, len / 2, 0);
+            spike.rotation.z = -a;
+            top.crown.add(spike);
+        }
+        S.add(top.crown);
+        // ...and a scythe, called up out of nothing. GRIP is how far up the shaft its hand closes.
+        top.scythe = new THREE.Group();
+        const WOOD = new THREE.MeshLambertMaterial({ color: '#4a3c38', fog: false }), STEEL = new THREE.MeshLambertMaterial({ color: '#8d8890', fog: false, side: THREE.DoubleSide });
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.024, 2.3, 5), WOOD);
+        shaft.position.y = 1.15;
+        top.scythe.add(shaft);
+        // Blade outline: from the top of the shaft it runs out sideways, then hooks down to a point
+        const outline = new THREE.Shape();
+        outline.moveTo(0.05, 0.16);
+        outline.quadraticCurveTo(-0.75, 0.3, -1.3, -0.5);
+        outline.quadraticCurveTo(-0.72, 0.0, 0.05, -0.06);
+        outline.closePath();
+        const blade = new THREE.Mesh(new THREE.ExtrudeGeometry(outline, { depth: 0.02, bevelEnabled: false }), STEEL);
+        blade.position.set(0, 2.2, -0.01);
+        top.scythe.add(blade);
+        // The cutting edge glows
+        const cut = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-1.3, -0.5, 0), new THREE.Vector3(-0.72, 0, 0), new THREE.Vector3(0.05, -0.06, 0));
+        const edge = new THREE.Mesh(new THREE.TubeGeometry(cut, 12, 0.014, 4), new THREE.MeshBasicMaterial({ color: '#ff2a1a', fog: false }));
+        edge.position.set(0, 2.2, 0);
+        top.scythe.add(edge);
+        top.edge = edge;
+        // Leaning a little, the way a tall thing is carried
+        top.lean = new THREE.Vector3(0.16, 1, 0.1).normalize();
+        top.scythe.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), top.lean);
+        top.scythe.visible = false;
+        S.add(top.scythe);
+    }
+
+    // ── Cast ──
+    let hero = null, watcher = null, heroSteps = null;
+    const bones = {};
+    async function loadCast() {
+        hero = await loadCharacter(heroCls);
+        world.add(hero.root);
+        heroSteps = footfalls(hero, () => sfx.step());
+        // The Watcher wears the visitor's own shape, hollowed out: the same figure, taller, with nothing in it but the dark
+        watcher = await loadCharacter(heroCls);
+        const hollow = new THREE.MeshLambertMaterial({ color: '#191013', clippingPlanes: [top.clip], fog: false });
+        watcher.root.traverse(o => {
+            if (o.isMesh) o.material = hollow;
+            if (o.isBone && /^(Head|neck_01|spine_0[123]|clavicle_[lr]|hand_[lr]|upperarm_[lr]|lowerarm_[lr])$/.test(o.name)) bones[o.name] = o;
+        });
+        watcher.root.position.copy(WATCH);
+        SETS.top.add(watcher.root);
+    }
+
+    // ── Words on screen ──
+    function caption(text) {
+        const el = $('caption');
+        if (el.dataset.text === text) return;
+        el.dataset.text = text;
+        el.style.opacity = 0;
+        setTimeout(() => { if (el.dataset.text !== text) return; el.textContent = text; el.style.opacity = text ? 1 : 0; }, el.textContent ? 350 : 0);
+    }
+    function hint(on) {
+        $('hint').textContent = touch ? 'HOLD THE SCREEN TO WALK' : 'HOLD CLICK · W · ↑ TO WALK';
+        $('hint').hidden = !on;
+    }
+    function fadeTo(on) { $('fade').classList.toggle('on', on); }
+    // The visitor's name coming apart and settling into another: `k` 0..1 is how far along it is
+    const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&?/\\<>*';
+    function jumble(from, to, k) {
+        const len = Math.round(mix(from.length, to.length, k));
+        let out = '';
+        for (let i = 0; i < len; i++) {
+            const locked = i / to.length < k * 1.25 - 0.25;          // letters settle left to right
+            out += locked ? (to[i] || '') : k < 0.08 ? (from[i] || '') : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+        }
+        return out;
+    }
+
+    // ── Walking: the visitor moves only while they hold ──
+    const held = new Set();
+    const isUI = t => t.closest && t.closest('button, a, .gate');
+    addEventListener('pointerdown', e => { if (!isUI(e.target)) held.add('pointer'); });
+    addEventListener('pointerup', () => held.delete('pointer'));
+    addEventListener('pointercancel', () => held.delete('pointer'));
+    addEventListener('blur', () => held.clear());
+    addEventListener('contextmenu', e => { if (!isUI(e.target)) e.preventDefault(); });
+    addEventListener('keydown', e => { if (['w', 'W', 'ArrowUp', ' '].includes(e.key)) { held.add(e.key); e.preventDefault(); } });
+    addEventListener('keyup', e => held.delete(e.key));
+    const SPEED = 1.7;
+    let canWalk = false, walking = false;
+    let armReach = 1;           // how far the Watcher's arms are stretched; reapplied every frame after the animation
+    // Sets whether the visitor may walk right now, and returns true on frames where they are
+    function walk(allowed) {
+        if (allowed !== canWalk) { canWalk = allowed; hint(allowed); }
+        const now = allowed && held.size > 0;
+        if (now !== walking) { walking = now; hero.play(now ? heroCls.walk : heroCls.walkIdle, { fade: 0.25 }); }
+        return now;
+    }
+
+    // ═════════════ The shots ═════════════
+    // Each shot is a small state machine: enter() sets it up, update(dt) runs it and returns true when it is over.
+    // Shots aim the camera by setting camTo and look; the frame loop eases towards them.
+    const camTo = new THREE.Vector3(), look = new THREE.Vector3(), lookNow = new THREE.Vector3(), tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
+    let fired = new Set(), clockT = 0, camSnap = true;
+    const once = (key, cond) => { if (cond && !fired.has(key)) { fired.add(key); return true; } return false; };
+
+    const SHOTS = [
+        {   // 1. Walk up to the sealed door; it breaks; walk in
+            name: 'seal',
+            enter() {
+                this.z = 11; this.t = 0; this.phase = 'approach';
+                hero.root.position.set(0, 0, this.z);
+                hero.root.rotation.y = Math.PI;
+                door.slabs.forEach(m => m.position.set(m.userData.side * 0.6, 1.9, 0.28));
+                door.seal.material.opacity = 1;
+                door.seal.material.color.set('#ff2020');
+                door.seal.scale.setScalar(1);
+                door.dustPts.material.opacity = 0;
+                world.fog.density = 0.05;
+                heroLight.intensity = 2.4;
+                sfx.setWind(true);
+                caption('The way up was sealed.');
+            },
+            update(dt) {
+                let shake = 0;
+                door.light.intensity = 1.2 + Math.sin(clockT * 5) * 0.4;
+                door.seal.scale.setScalar(1 + Math.sin(clockT * 5) * 0.02);
+                if (this.phase === 'approach') {
+                    if (walk(true)) this.z -= SPEED * dt;
+                    if (this.z <= 5.4) { this.phase = 'break'; this.t = 0; walk(false); }
+                } else if (this.phase === 'break') {
+                    const t = this.t += dt;
+                    // The seal flares white and is gone
+                    const flare = ramp(t, 0.3, 1.5);
+                    door.seal.material.color.setRGB(1, 0.13 + flare * 0.87, 0.13 + flare * 0.87);
+                    door.seal.scale.setScalar(1 + flare * 0.25);
+                    door.seal.material.opacity = t < 1.5 ? 1 : Math.max(0, 1 - (t - 1.5) * 4);
+                    door.light.intensity = 1.2 + flare * 14 - ramp(t, 1.5, 2.1) * 15.2;
+                    if (once('thud', t > 1.5)) { sfx.thud(); caption('Not any more.'); }
+                    if (once('rumble', t > 1.8)) sfx.rumble(3.2);
+                    // The slabs grind apart
+                    const open = ramp(t, 1.9, 4.9);
+                    shake = t > 1.8 && t < 5 ? Math.sin(t * 60) * 0.012 : 0;
+                    door.slabs.forEach(m => { m.position.x = m.userData.side * (0.6 + open * 1.25) + shake; });
+                    door.dustPts.material.opacity = Math.min(ramp(t, 1.8, 2.3), 1 - ramp(t, 4.7, 6.7)) * 0.7;
+                    const p = door.dustGeo.attributes.position.array;
+                    door.dust.forEach((d, i) => { const life = (Math.max(0, t - 1.8) * d.v * 0.35 + i * 0.137) % 1; p[i * 3] = d.x + d.d * life; p[i * 3 + 1] = d.y * (1 - life); p[i * 3 + 2] = d.z + life * 0.6; });
+                    door.dustGeo.attributes.position.needsUpdate = true;
+                    if (t > 5.2) { this.phase = 'enter'; caption(''); }
+                } else {
+                    door.light.intensity = 0;
+                    door.dustPts.material.opacity = Math.max(0, door.dustPts.material.opacity - dt * 0.4);
+                    if (walk(true)) this.z -= SPEED * dt;
+                    if (this.z <= -1.3) { walk(false); return true; }
+                }
+                hero.root.position.z = this.z;
+                camTo.set(1.3, 2.3, this.z + 5.2 + shake * 3);
+                look.set(0, 2, Math.min(0, this.z - 6));
+            }
+        },
+        {   // 2. The climb: gaps in the wall, and something outside each one
+            name: 'climb',
+            enter() {
+                this.a = 0.5;
+                world.fog.density = 0.06;
+                heroLight.intensity = 3.4;
+                caption('');
+            },
+            update(dt) {
+                if (walk(true)) this.a += SPEED / Math.hypot(STAIR_R, RISE) * dt;
+                const a = this.a, O = SETS.stair.position;
+                stairAt(a, hero.root.position).add(O);
+                hero.root.rotation.y = -a;
+                if (once('c1', a > 1.6)) caption('Every gap in the wall is watching.');
+                if (once('c2', a > 6)) caption('');
+                // Each pair stands just outside its gap, on the line from the visitor through it, so it is only ever
+                // seen through the opening, and it is always looking at them
+                tmp.copy(hero.root.position).sub(O).setY(hero.root.position.y + 1.5);
+                for (const e of stair.eyes) {
+                    const ahead = e.userData.a - a;
+                    const want = ahead < 2.6 && ahead > -1.5 ? 1 : 0;
+                    if (want && e.userData.open < 0.02) sfx.eye(0.6, ahead > 0 ? 0.5 : -0.5);
+                    setOpen(e, mix(e.userData.open, want, 1 - Math.pow(0.002, dt)));
+                    tmp2.copy(e.userData.gap).sub(tmp).normalize();
+                    e.position.copy(e.userData.gap).addScaledVector(tmp2, 0.55);
+                    e.lookAt(tmp.x + O.x, tmp.y, tmp.z);
+                }
+                // The camera trails a few steps below, looking up the stair
+                stairAt(a - 1.35, tmp2);
+                camTo.set(tmp2.x * 1.06 + O.x, tmp2.y + 2.5, tmp2.z * 1.06);
+                stairAt(a + 0.5, look).add(O);
+                look.y += 1.2;
+                if (a >= 7.8) { walk(false); return true; }
+            }
+        },
+        {   // 3. The roof: walk out, the eyes gather into the Watcher, and it changes
+            name: 'watcher', END: 20.5,
+            enter() {
+                this.z = 11; this.t = 0; this.phase = 'walk';
+                const C = SETS.top.position;
+                hero.root.position.set(C.x, 0, this.z);
+                hero.root.rotation.y = Math.PI;
+                top.void.forEach(e => { e.position.copy(e.userData.from); e.scale.setScalar(e.userData.size); e.userData.openedAt = null; setOpen(e, 0); });
+                setOpen(top.gaze, 0);
+                top.clip.constant = 0;
+                top.glow.intensity = 0;
+                top.aura.material.opacity = 0;
+                top.scythe.visible = false;
+                top.crown.scale.setScalar(0.001);
+                armReach = 1;
+                document.body.classList.remove('fighting');
+                watcher.root.scale.setScalar(BODY);
+                watcher.play('Idle_Loop', { fade: 0 });
+                watcher.mixer.timeScale = 0.45;
+                world.fog.density = 0.026;
+                heroLight.intensity = 3;
+                $('say').textContent = '';
+                $('boss').hidden = true;
+                $('bossFill').style.width = '0';
+                caption('The top of the tower.');
+            },
+            update(dt) {
+                const C = SETS.top.position;
+                if (this.phase === 'walk') {
+                    if (walk(true)) this.z -= SPEED * dt;
+                    hero.root.position.z = this.z;
+                    if (once('c2', this.z < 7)) caption('Something has been waiting.');
+                    if (this.z <= 3.6) { this.phase = 'scene'; walk(false); caption(''); sfx.whoosh(); sfx.setDrone(true); }
+                }
+                const p = clamp01((11 - this.z) / 7.4);
+                const t = this.phase === 'scene' ? (this.t += dt) : 0;
+
+                // How big it is: it stands up at one size, then swells into something else
+                const beast = ramp(t, 13.4, 17);
+                const size = mix(BODY, BEAST, beast);
+                watcher.root.scale.setScalar(size);
+                watcher.root.rotation.y = Math.sin(clockT * 0.5) * 0.06;
+
+                for (const e of top.void) {
+                    const u = e.userData;
+                    // They open out in the dark as the visitor crosses the roof...
+                    if (u.openedAt === null && p >= u.openP) { u.openedAt = clockT; sfx.eye(0.4 + rand() * 0.4, e.position.x < 0 ? -0.7 : 0.7); }
+                    let open = u.openedAt === null ? 0 : Math.min(1, (clockT - u.openedAt) * 3);
+                    // ...then leave it, arcing in over the wall to pile into one shape
+                    const k = ease((t - u.goAt) / 1.7);
+                    if (t > 0) {
+                        if (u.openedAt === null) u.openedAt = clockT;
+                        bones[u.bone].getWorldPosition(tmp).sub(C).addScaledVector(u.on, size);
+                        const a = 1 - k, tx = tmp.x, ty = tmp.y, tz = tmp.z;
+                        const vx = (u.from.x + tx) / 2 + u.via.x, vy = (u.from.y + ty) / 2 + u.via.y, vz = (u.from.z + tz) / 2;
+                        e.position.set(a * a * u.from.x + 2 * a * k * vx + k * k * tx, a * a * u.from.y + 2 * a * k * vy + k * k * ty, a * a * u.from.z + 2 * a * k * vz + k * k * tz);
+                        e.scale.setScalar(mix(u.size, 0.2 * size, k));
+                    }
+                    // One by one they close, until only two are left; when it changes, they all open again
+                    if (t > u.shutAt) open = Math.max(0, 1 - (t - u.shutAt) * 5);
+                    if (t > u.wakeAt) open = Math.min(1, (t - u.wakeAt) * 4) * (0.8 + 0.2 * Math.sin(clockT * 7 + u.goAt * 9));
+                    e.quaternion.copy(camera.quaternion);
+                    setOpen(e, open);
+                }
+                // The body rises out of the floor as they arrive
+                top.clip.constant = t > 13 ? 99 : ramp(t, 2, 6.5) * (BODY * 1.95);
+                if (once('rise', t > 2)) sfx.rumble(4);
+                top.aura.scale.set(4.4 * size, 4.2 * size, 1);
+                top.aura.position.set(WATCH.x, 1.15 * size, WATCH.z - 0.8);
+                top.aura.material.opacity = ramp(t, 2, 7.5) * (0.75 + Math.sin(clockT * 2.3) * 0.08) + (t > 8.7 ? 0.2 : 0);
+
+                // Its own eyes open last, wherever its head is
+                if (bones.Head) {
+                    bones.Head.getWorldPosition(tmp).sub(C);
+                    top.gaze.position.set(tmp.x, tmp.y + 0.05 * size, tmp.z + 0.11 * size);
+                    top.gaze.scale.setScalar(0.87 * size);
+                    top.gaze.quaternion.copy(camera.quaternion);
+                    top.glow.position.set(tmp.x, tmp.y - 0.2, tmp.z + 1.4);
+                }
+                if (once('gaze', t > 8.7)) { sfx.thud(); sfx.roar(1.6); }
+                setOpen(top.gaze, t < 8.7 ? 0 : Math.min(1, (t - 8.7) * 2.2) * (0.92 + Math.sin(clockT * 9) * 0.08));
+                top.glow.intensity = ramp(t, 2.5, 6.5) * 2 + (t > 8.7 ? 5 + Math.sin(clockT * 9) * 0.8 : 0) + beast * 4;
+
+                // It speaks
+                const line = `I SEE YOU, ${who}.`;
+                if (once('roar', t > 10.3)) sfx.roar(3.2);
+                if (t > 10.3 && t < 13.4) $('say').textContent = line.slice(0, Math.floor((t - 10.3) * 9));
+
+                // The change: it swells, its arms stretch, spines fan out behind it, and every eye opens again
+                if (once('change', t > 13.4)) { sfx.rumble(3.6); sfx.roar(3.6); watcher.play('Sword_Idle', { fade: 1.6 }); watcher.mixer.timeScale = 0.6; hero.play(heroCls.pose, { fade: 0.6 }); }
+                armReach = 1 + beast * 0.32;
+                if (bones.spine_03) {
+                    bones.spine_03.getWorldPosition(tmp).sub(C);
+                    top.crown.position.set(tmp.x, tmp.y, tmp.z - 0.12 * size);
+                    top.crown.scale.setScalar(Math.max(0.001, ramp(t, 14, 16.6) * size));
+                }
+                // The scythe is called up in its hand: a red line first, then the whole thing
+                if (bones.hand_r && t > 15.2) {
+                    if (once('scythe', true)) { sfx.thud(); sfx.whoosh(); }
+                    bones.hand_r.getWorldPosition(tmp).sub(C);
+                    const grow = ramp(t, 15.2, 16.1);
+                    // The shaft runs through its closed hand
+                    top.scythe.visible = true;
+                    top.scythe.position.copy(tmp).addScaledVector(top.lean, -GRIP * size * grow);
+                    top.scythe.scale.setScalar(Math.max(0.001, grow) * size);
+                    top.edge.material.color.setRGB(1, 0.16 + (1 - ramp(t, 16.1, 17)) * 0.84, 0.1 + (1 - ramp(t, 16.1, 17)) * 0.9);
+                }
+                // The visitor's name comes apart and settles into its name, over a health bar
+                if (t >= 13.4 && t < 17) $('say').textContent = jumble(who, BOSS, (t - 13.6) / 2.4);
+                if (once('named', t > 17)) { $('say').textContent = ''; $('bossName').textContent = BOSS; $('boss').hidden = false; sfx.thud(); }
+                if (t > 17) $('bossFill').style.width = ramp(t, 17.2, 18.8) * 100 + '%';
+                if (once('full', t > 18.8)) sfx.tick();
+
+                // Camera: behind the visitor as they walk; round to their shoulder as the thing takes shape; low and close when
+                // it speaks; then back and up as it outgrows the frame
+                const hz = hero.root.position.z;
+                const turn = ramp(t, 0.3, 4), close = ramp(t, 8, 9.8), wide = ramp(t, 13.4, 16.5);
+                camTo.set(
+                    C.x + mix(mix(mix(1.8, -2.4, turn), 0.95, close), 1.5, wide),
+                    mix(mix(mix(2.8, 2.1, turn), 1.75, close), 1.5, wide),
+                    mix(mix(mix(hz + 4.8, 7.8, turn), 5.6, close), 8.2, wide));
+                look.set(C.x + wide * -0.4, mix(mix(mix(mix(1.6, 3.4, p), 2.5, turn), 2.9, close), 3.7, wide), mix(hz - 8, WATCH.z, turn));
+                if (t > 10.3 && t < 17) camTo.x += Math.sin(clockT * 40) * 0.012;
+
+                if (t >= this.END) return true;
+            },
+            // Skip lands on the last frame instead of leaving the shot
+            finish() { this.phase = 'scene'; this.z = 3.6; hero.root.position.z = 3.6; this.t = this.END - 0.05; walk(false); caption(''); fired = new Set(['c2', 'rise', 'gaze', 'roar', 'change', 'full']); watcher.play('Sword_Idle', { fade: 0 }); hero.play(heroCls.pose, { fade: 0 }); }
+        },
+        {   // 4. The fight
+            name: 'fight', seamless: true,
+            enter() { startFight(); },
+            update(dt) { fightFrame(dt); if (fight.done) { fight.on = false; hero.mixer.timeScale = 1; } return fight.done; },
+            finish() { abortFight(); }
+        }
+    ];
+
+    // ═════════════ The fight ═════════════
+    // A real-time duel on the roof. The visitor moves, rolls (briefly untouchable), strikes and heals; all of it costs
+    // stamina or embers. The Watcher telegraphs each attack, commits to it, then leaves an opening.
+    //   Phase 1  scythe: sweep, overhead slam with a shockwave, lunge
+    //   Phase 2  (below two thirds) adds a volley of eyes, and it comes apart and re-forms behind you
+    //   Phase 3  (below one third) adds beams called down from the eyes in the dark, and everything is faster
+    // Falling sends the visitor back to the start of the phase with one more ember, so nobody is stuck for good.
+    // All fight positions are in the roof's own coordinates (x, z from its centre).
+    const fight = {};
+    const ARENA = 11.4, REACH = 3.5;           // how far from the centre the visitor can go; how close a strike must be
+    const ATTACK = { Wanderer: 'Sword_Attack', Hunter: 'Sword_Attack', Pilgrim: 'Interact', Wretch: 'Spell_Simple_Shoot' }[heroCls.name] || 'Sword_Attack';
+    const RED = () => new THREE.MeshBasicMaterial({ color: '#ff2a1a', transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide });
+    const fx = {};
+    {
+        const S = SETS.top, flat = m => { m.rotation.x = -Math.PI / 2; m.position.y = 0.04; m.visible = false; S.add(m); return m; };
+        // Faint marks on the stone where a blow is about to land
+        fx.sweep = flat(new THREE.Mesh(new THREE.RingGeometry(1.5, 6.6, 24, 1, -1.9, 3.8), RED()));
+        const strip = new THREE.PlaneGeometry(3, 8.4);
+        strip.translate(0, 4.2, 0);
+        fx.slam = flat(new THREE.Mesh(strip, RED()));
+        fx.wave = flat(new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 40), RED()));
+        fx.beams = Array.from({ length: 8 }, () => {
+            const mark = flat(new THREE.Mesh(new THREE.CircleGeometry(2, 18), RED()));
+            const pillar = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: '#ff3a2a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+            pillar.scale.set(3.4, 22, 1);
+            pillar.visible = false;
+            S.add(pillar);
+            return { mark, pillar, t: -1, x: 0, z: 0, hit: false };
+        });
+        fx.orbs = Array.from({ length: 9 }, () => {
+            const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: '#ff2a1a', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+            sp.scale.set(1.1, 1.1, 1);
+            sp.visible = false;
+            S.add(sp);
+            return { sp, live: false, p: new THREE.Vector3(), v: new THREE.Vector3(), age: 0 };
+        });
+        // The visitor's strike landing
+        fx.spark = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: '#ffe6b8', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+        fx.spark.scale.set(2.2, 2.2, 1);
+        S.add(fx.spark);
+    }
+
+    function resetFight() {
+        Object.assign(fight, {
+            on: false, done: false, T: 0, mode: 'intro', modeT: 0, rank: null, deaths: 0, hits: 0, time: 0, bot: fight.bot || false,
+            // the visitor
+            p: { x: 0, z: 3.6, yaw: Math.PI, hp: 100, st: 100, stWait: 0, state: 'idle', t: 0, inv: false, heals: 3, maxHeals: 3, dx: 0, dz: 0, struck: false, healed: false, lie: 0 },
+            want: { attack: -9, roll: -9, heal: -9 },
+            // the Watcher
+            b: { x: WATCH.x, z: WATCH.z, yaw: 0, hp: 100, shown: 100, phase: 1, state: 'idle', t: 0, cool: 1.6, last: '', twist: 0, tilt: 0, flinch: 0, hidden: 0, tx: 0, tz: 0, did: {}, n: 0 },
+            lean: new THREE.Vector3(0.16, 1, 0), leanTo: new THREE.Vector3(0.16, 1, 0), leanRate: 5,
+            size: BEAST, crown: 1, crownTo: 1, scythe: 1, gaze: 1, shake: 0, wave: null, checkpoint: 100, hot: 0
+        });
+        for (const b of fx.beams) { b.t = -1; b.mark.visible = b.pillar.visible = false; }
+        for (const o of fx.orbs) { o.live = false; o.sp.visible = false; }
+        fx.sweep.visible = fx.slam.visible = fx.wave.visible = false;
+        for (const id of ['phase', 'me', 'pad', 'fell']) $(id).hidden = true;
+        $('say').textContent = '';
+    }
+    resetFight();
+
+    // ── Input: keys and mouse on a computer, a stick and three buttons on a phone ──
+    const keys = new Set(), stick = { id: null, ox: 0, oy: 0, x: 0, y: 0 };
+    const press = what => { if (fight.on) fight.want[what] = fight.T; };
+    addEventListener('keydown', e => {
+        const k = e.key.toLowerCase();
+        keys.add(k);
+        if (!fight.on || e.repeat) return;
+        if (k === ' ' || k === 'k' || k === 'shift') { e.preventDefault(); press('roll'); }
+        else if (k === 'j' || k === 'enter') press('attack');
+        else if (k === 'e' || k === 'r') press('heal');
+    });
+    addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+    addEventListener('blur', () => { keys.clear(); stick.id = null; stick.x = stick.y = 0; });
+    addEventListener('pointerdown', e => {
+        if (!fight.on || isUI(e.target)) return;
+        if (e.pointerType === 'mouse') { press(e.button === 2 ? 'roll' : 'attack'); return; }
+        if (stick.id === null) {
+            stick.id = e.pointerId; stick.ox = e.clientX; stick.oy = e.clientY; stick.x = stick.y = 0;
+            $('stick').style.display = 'block';
+            $('stick').style.left = e.clientX + 'px';
+            $('stick').style.top = e.clientY + 'px';
+            $('knob').style.transform = '';
+        }
+    });
+    addEventListener('pointermove', e => {
+        if (e.pointerId !== stick.id) return;
+        const dx = e.clientX - stick.ox, dy = e.clientY - stick.oy, len = Math.hypot(dx, dy), k = Math.min(1, len / 50) / (len || 1);
+        stick.x = dx * k; stick.y = dy * k;
+        $('knob').style.transform = `translate(${stick.x * 34}px, ${stick.y * 34}px)`;
+    });
+    const dropStick = e => { if (e.pointerId === stick.id) { stick.id = null; stick.x = stick.y = 0; $('stick').style.display = 'none'; } };
+    addEventListener('pointerup', dropStick);
+    addEventListener('pointercancel', dropStick);
+    for (const [id, what] of [['btnAtk', 'attack'], ['btnRoll', 'roll'], ['btnHeal', 'heal']]) $(id).addEventListener('pointerdown', e => { e.preventDefault(); press(what); });
+
+    const angDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+    const toward = (v, to, rate, dt) => v + (to - v) * (1 - Math.exp(-rate * dt));
+    function heroAnim(name, once = false, speed = 1, restart = false) {
+        const a = hero.play(name, { fade: 0.12, once });
+        if (a && restart) a.reset().play();
+        hero.mixer.timeScale = speed;
+    }
+    function setMode(mode) { fight.mode = mode; fight.modeT = 0; }
+    function line(text, seconds = 2.2) {
+        $('say').textContent = text;
+        clearTimeout(line.t);
+        line.t = setTimeout(() => { if ($('say').textContent === text) $('say').textContent = ''; }, seconds * 1000);
+    }
+
+    function hitPlayer(dmg, fromX, fromZ) {
+        const P = fight.p;
+        if (P.inv || P.state === 'dead' || fight.mode !== 'play') return false;
+        P.hp -= dmg;
+        fight.hits++;
+        fight.shake = 1;
+        sfx.thud();
+        $('hurt').classList.remove('on');
+        void $('hurt').offsetWidth;
+        $('hurt').classList.add('on');
+        const d = Math.hypot(P.x - fromX, P.z - fromZ) || 1;
+        P.dx = (P.x - fromX) / d; P.dz = (P.z - fromZ) / d;
+        if (P.hp <= 0) {
+            P.hp = 0; P.state = 'dead'; P.t = 0;
+            fight.deaths++;
+            setMode('dead');
+            sfx.roar(2.4);
+        } else { P.state = 'hurt'; P.t = 0; }
+        return true;
+    }
+    function hitBoss(dmg) {
+        const B = fight.b;
+        if (B.hidden > 0.3 || B.state === 'roar' || fight.mode !== 'play') return;
+        B.hp = Math.max(0, B.hp - dmg);
+        B.flinch = 1;
+        fight.shake = Math.max(fight.shake, 0.35);
+        fx.spark.material.opacity = 1;
+        fx.spark.position.set(mix(fight.p.x, B.x, 0.75), 1.6, mix(fight.p.z, B.z, 0.75));
+        sfx.thud();
+        if (B.hp <= 0) { setMode('won'); B.state = 'down'; B.t = 0; sfx.roar(3.5); sfx.setDrone(false); watcher.play('Fixing_Kneeling', { fade: 0.8 }); watcher.mixer.timeScale = 0.35; return; }
+        const next = B.hp <= 33 ? 3 : B.hp <= 66 ? 2 : 1;
+        if (next > B.phase) { B.phase = next; fight.checkpoint = next === 2 ? 66 : 33; B.state = 'roar'; B.t = 0; }
+    }
+
+    // ── The visitor ──
+    function updatePlayer(dt) {
+        const P = fight.p, B = fight.b, T = fight.T;
+        // Movement is relative to the Watcher: forward is towards it, sideways circles it
+        let ix = 0, iy = 0;
+        if (keys.has('w') || keys.has('arrowup')) iy += 1;
+        if (keys.has('s') || keys.has('arrowdown')) iy -= 1;
+        if (keys.has('d') || keys.has('arrowright')) ix += 1;
+        if (keys.has('a') || keys.has('arrowleft')) ix -= 1;
+        ix += stick.x; iy -= stick.y;
+        if (fight.bot) [ix, iy] = botThink(ix, iy);
+        const il = Math.hypot(ix, iy);
+        if (il > 1) { ix /= il; iy /= il; }
+        let fxd = B.x - P.x, fzd = B.z - P.z;
+        const dist = Math.hypot(fxd, fzd) || 1;
+        fxd /= dist; fzd /= dist;
+        const mx = fxd * iy - fzd * ix, mz = fzd * iy + fxd * ix;
+        const moving = il > 0.15;
+        const fresh = what => T - fight.want[what] < 0.3;
+        const can = fight.mode === 'play';
+
+        P.t += dt;
+        P.inv = false;
+        P.stWait -= dt;
+        if (P.state === 'idle' || P.state === 'run') {
+            if (can && fresh('roll') && P.st > 8) {
+                fight.want.roll = -9;
+                P.state = 'roll'; P.t = 0; P.st -= 22; P.stWait = 0.7;
+                // Rolls go where the stick points, or straight back if it is at rest
+                P.dx = moving ? mx / il : -fxd; P.dz = moving ? mz / il : -fzd;
+                P.yaw = Math.atan2(P.dx, P.dz);
+                heroAnim('Roll', true, 1.7, true);
+                sfx.whoosh();
+            } else if (can && fresh('attack') && P.st > 6) {
+                fight.want.attack = -9;
+                P.state = 'attack'; P.t = 0; P.st -= 15; P.stWait = 0.8; P.struck = false;
+                P.yaw = Math.atan2(fxd, fzd);
+                heroAnim(ATTACK, true, 1.5, true);
+            } else if (can && fresh('heal') && P.heals > 0 && P.hp < 100) {
+                fight.want.heal = -9;
+                P.state = 'heal'; P.t = 0; P.healed = false;
+                heroAnim('Interact', true, 1.3, true);
+            } else if (moving && fight.mode !== 'dead') {
+                P.state = 'run';
+                P.x += mx * 4.7 * dt; P.z += mz * 4.7 * dt;
+                P.yaw = Math.atan2(mx, mz);
+                heroAnim(heroCls.walk, false, 1.75);
+                heroSteps();
+            } else {
+                P.state = 'idle';
+                P.yaw += angDiff(Math.atan2(fxd, fzd), P.yaw) * Math.min(1, dt * 8);
+                heroAnim(heroCls.pose);
+            }
+        } else if (P.state === 'roll') {
+            P.inv = P.t > 0.02 && P.t < 0.4;
+            const v = P.t < 0.42 ? 9.4 : 2.5;
+            P.x += P.dx * v * dt; P.z += P.dz * v * dt;
+            if (P.t >= 0.56) P.state = 'idle';
+        } else if (P.state === 'attack') {
+            if (!P.struck && P.t >= 0.24) {
+                P.struck = true;
+                if (dist < REACH) hitBoss(4); else sfx.tick();
+            }
+            if (P.t >= 0.5) P.state = 'idle';
+        } else if (P.state === 'heal') {
+            if (!P.healed && P.t >= 0.65) { P.healed = true; P.heals--; P.hp = Math.min(100, P.hp + 45); sfx.kindle(); }
+            if (P.t >= 0.95) P.state = 'idle';
+        } else if (P.state === 'hurt') {
+            const v = Math.max(0, 7 * (1 - P.t / 0.3));
+            P.x += P.dx * v * dt; P.z += P.dz * v * dt;
+            if (P.t >= 0.34) P.state = 'idle';
+        }
+        if (P.stWait <= 0) P.st = Math.min(100, P.st + 42 * dt);
+        P.lie = toward(P.lie, P.state === 'dead' ? 1 : 0, 6, dt);
+
+        // Stay on the roof, and out of the brazier and the Watcher itself
+        const r = Math.hypot(P.x, P.z);
+        if (r > ARENA) { P.x *= ARENA / r; P.z *= ARENA / r; }
+        if (r < 1.6) { const k = 1.6 / (r || 1); P.x = (P.x || 0.01) * k; P.z *= k; }
+        const d2 = Math.hypot(P.x - B.x, P.z - B.z);
+        if (d2 < 1.7 && B.hidden < 0.5) { P.x = B.x + (P.x - B.x) / d2 * 1.7; P.z = B.z + (P.z - B.z) / d2 * 1.7; }
+    }
+
+    // ── The Watcher ──
+    const LEAN = {      // where the scythe points, in the Watcher's own frame (x across, y up, z ahead)
+        rest: [0.16, 1, 0], back: [-0.85, 0.55, -0.35], flat: [0.25, 0.12, 1], high: [0, 0.75, -0.65], down: [0, -0.05, 1], low: [0.35, 0.3, 1], up: [0, 1, 0.1]
+    };
+    function pose(name, rate = 6) { fight.leanTo.fromArray(LEAN[name]).normalize(); fight.leanRate = rate; }
+    function pick(B, dist) {
+        const opts = [];
+        const add = (name, w) => { if (name !== B.last) opts.push([name, w]); };
+        if (dist < 7.6) { add('sweep', 3); add('slam', 2); if (B.phase >= 2) add('scatter', 1.3); }
+        if (dist >= 5) { add('lunge', 3); add('slam', 1); if (B.phase >= 2) add('volley', 3); }
+        if (B.phase >= 3) add('beams', 2.2);
+        let roll = Math.random() * opts.reduce((s, o) => s + o[1], 0);
+        for (const [name, w] of opts) { roll -= w; if (roll <= 0) return name; }
+        return 'sweep';
+    }
+    function updateBoss(dt) {
+        const B = fight.b, P = fight.p;
+        const sp = 1 + (B.phase - 1) * 0.14;                    // everything it does gets quicker each phase
+        const dx = P.x - B.x, dz = P.z - B.z, dist = Math.hypot(dx, dz) || 1, aim = Math.atan2(dx, dz);
+        const face = rate => { B.yaw += angDiff(aim, B.yaw) * Math.min(1, dt * rate); };
+        const fwdX = Math.sin(B.yaw), fwdZ = Math.cos(B.yaw);
+        const first = key => { if (B.did[key]) return false; B.did[key] = true; return true; };
+        const begin = state => { B.state = state; B.t = 0; B.did = {}; B.last = state; };
+        const rest = seconds => { if (B.t >= seconds) { B.state = 'idle'; B.t = 0; B.cool = (0.5 + Math.random() * 0.7) / sp; pose('rest', 4); B.twist = 0; B.tilt = 0; } };
+        B.t += dt;
+        B.flinch = toward(B.flinch, 0, 5, dt);
+        fight.hot = 0;
+
+        if (fight.mode !== 'play') {
+            if (B.state !== 'down') { face(2); pose('rest', 3); B.twist = toward(B.twist, 0, 4, dt); B.tilt = toward(B.tilt, 0, 4, dt); }
+            return;
+        }
+        if (B.state === 'idle') {
+            face(3.2);
+            B.twist = toward(B.twist, 0, 5, dt); B.tilt = toward(B.tilt, 0, 5, dt);
+            if (dist > 6.5) { const v = 2.5 * sp; B.x += dx / dist * v * dt; B.z += dz / dist * v * dt; }
+            B.cool -= dt;
+            if (B.cool <= 0) begin(pick(B, dist));
+        } else if (B.state === 'sweep') {
+            // Draws the scythe back across its body, then cuts flat through everything in front of it
+            const wind = (B.did.again ? 0.45 : 0.85) / sp, dir = B.did.again ? -1 : 1;
+            if (B.t < wind) {
+                if (B.t < wind * 0.65) face(4);
+                pose('back', 7); B.twist = toward(B.twist, -0.8 * dir, 6, dt); fight.hot = B.t / wind;
+                fx.sweep.visible = true; fx.sweep.material.opacity = 0.05 + 0.2 * B.t / wind;
+                fx.sweep.position.set(B.x, 0.04, B.z); fx.sweep.rotation.z = B.yaw - Math.PI / 2;
+            } else if (B.t < wind + 0.24) {
+                pose('flat', 30); B.twist = toward(B.twist, 1.15 * dir, 22, dt); fight.hot = 1;
+                if (first('cut' + dir)) { sfx.whoosh(); watcher.play('Sword_Attack', { fade: 0.08, once: true }); }
+                if (B.t > wind + 0.08 && first('hit' + dir) && dist < 6.7 && Math.abs(angDiff(aim, B.yaw)) < 1.95) hitPlayer(28, B.x, B.z);
+            } else {
+                fx.sweep.visible = false;
+                // In later phases it sometimes cuts straight back the other way
+                if (B.phase >= 2 && !B.did.again && first('decide') && Math.random() < 0.45) { B.did = { again: true }; B.t = 0; return; }
+                if (first('settle')) watcher.play('Sword_Idle', { fade: 0.5 });
+                rest(wind + 0.24 + 1.05 / sp);
+            }
+        } else if (B.state === 'slam') {
+            // Lifts the scythe overhead and brings it straight down; the stone answers with a ring that spreads outwards
+            const wind = 0.95 / sp;
+            if (B.t < wind) {
+                if (B.t < wind * 0.7) face(5);
+                pose('high', 6); B.tilt = toward(B.tilt, -0.18, 5, dt); fight.hot = B.t / wind;
+                fx.slam.visible = true; fx.slam.material.opacity = 0.05 + 0.2 * B.t / wind;
+                fx.slam.position.set(B.x, 0.04, B.z); fx.slam.rotation.z = B.yaw + Math.PI;
+            } else if (B.t < wind + 0.2) {
+                pose('down', 34); B.tilt = toward(B.tilt, 0.3, 20, dt); fight.hot = 1;
+                if (B.t > wind + 0.1 && first('hit')) {
+                    sfx.thud(); sfx.rumble(1.2); fight.shake = Math.max(fight.shake, 0.7);
+                    const along = dx * fwdX + dz * fwdZ, across = Math.abs(dx * fwdZ - dz * fwdX);
+                    if (along > 0 && along < 8.6 && across < 1.6) hitPlayer(34, B.x, B.z);
+                    fight.wave = { x: B.x + fwdX * 5.6, z: B.z + fwdZ * 5.6, r: 0.5, hit: false };
+                }
+            } else { fx.slam.visible = false; rest(wind + 0.2 + 1.3 / sp); }
+        } else if (B.state === 'lunge') {
+            // Drops low, then crosses the roof in one stride
+            const wind = 0.62 / sp;
+            if (B.t < wind) { face(6); pose('low', 6); B.tilt = toward(B.tilt, 0.25, 6, dt); fight.hot = B.t / wind; B.tx = P.x; B.tz = P.z; }
+            else if (B.t < wind + 0.38) {
+                if (first('go')) { sfx.whoosh(); const d = Math.hypot(B.tx - B.x, B.tz - B.z) || 1, go = Math.max(0, d - 2.2); B.vx = (B.tx - B.x) / d * go / 0.38; B.vz = (B.tz - B.z) / d * go / 0.38; }
+                B.x += B.vx * dt; B.z += B.vz * dt; fight.hot = 1; pose('flat', 20); B.twist = toward(B.twist, 0.9, 14, dt);
+                if (first('hit') ? false : !B.did.landed && dist < 2.9) { B.did.landed = true; hitPlayer(24, B.x, B.z); }
+            } else rest(wind + 0.38 + 0.95 / sp);
+        } else if (B.state === 'volley') {
+            // Some of its eyes leave its body and come looking
+            const wind = 0.7 / sp, count = B.phase >= 3 ? 7 : 5;
+            face(3); pose('up', 5);
+            if (B.t >= wind) {
+                const n = Math.min(count, Math.floor((B.t - wind) / 0.22) + 1);
+                while (B.n < n) {
+                    B.n++;
+                    const o = fx.orbs.find(q => !q.live);
+                    if (!o) break;
+                    o.live = true; o.age = 0;
+                    o.p.set(B.x + (Math.random() - 0.5) * 2, 0.9 * fight.size + Math.random() * 1.5, B.z);
+                    o.v.set(P.x - o.p.x, 1.2 - o.p.y, P.z - o.p.z).normalize().multiplyScalar(11.5 * sp);
+                    sfx.eye(1, 0);
+                }
+                if (B.t >= wind + count * 0.22) { B.n = 0; rest(wind + count * 0.22 + 1 / sp); }
+            } else B.n = 0;
+        } else if (B.state === 'scatter') {
+            // Comes apart into the dark, and pulls itself together behind the visitor
+            if (B.t < 0.5) B.hidden = B.t / 0.5;
+            else if (B.t < 0.95) {
+                B.hidden = 1;
+                if (first('move')) {
+                    sfx.whoosh();
+                    // Behind them, as seen from where it was; pulled in if that would be off the roof
+                    let nx = P.x + dx / dist * 5.5, nz = P.z + dz / dist * 5.5;
+                    const r = Math.hypot(nx, nz);
+                    if (r > ARENA - 1.5) { nx *= (ARENA - 1.5) / r; nz *= (ARENA - 1.5) / r; }
+                    if (Math.hypot(nx, nz) < 3) { nx = P.x - dx / dist * 5.5; nz = P.z - dz / dist * 5.5; }
+                    B.x = nx; B.z = nz; B.yaw = Math.atan2(P.x - nx, P.z - nz);
+                }
+            } else if (B.t < 1.4) B.hidden = 1 - (B.t - 0.95) / 0.45;
+            else { B.hidden = 0; begin('sweep'); B.did = { again: true }; B.last = 'scatter'; }
+        } else if (B.state === 'beams') {
+            // Calls on the eyes still out in the dark; where they look, the stone burns
+            const wind = 0.8 / sp, count = 6;
+            face(2); pose('up', 5); B.tilt = toward(B.tilt, -0.15, 4, dt);
+            if (B.t >= wind) {
+                const n = Math.min(count, Math.floor((B.t - wind) / 0.42) + 1);
+                while (B.n < n) {
+                    B.n++;
+                    const b = fx.beams.find(q => q.t < 0);
+                    if (!b) break;
+                    // Mostly where the visitor is; sometimes where they are heading
+                    const lead = Math.random() < 0.4 ? 1.6 : 0;
+                    b.x = P.x + (P.state === 'run' ? Math.sin(P.yaw) * lead : 0); b.z = P.z + (P.state === 'run' ? Math.cos(P.yaw) * lead : 0);
+                    b.t = 0; b.hit = false;
+                    sfx.eye(1, 0);
+                }
+                if (B.t >= wind + count * 0.42) { B.n = 0; rest(wind + count * 0.42 + 1.5 / sp); }
+            } else B.n = 0;
+        } else if (B.state === 'roar') {
+            // Losing a third of itself: it throws the visitor back, and comes on harder
+            pose('up', 6); B.tilt = toward(B.tilt, -0.25, 5, dt); B.twist = toward(B.twist, 0, 5, dt); B.hidden = 0;
+            fx.sweep.visible = fx.slam.visible = false;
+            if (first('roar')) {
+                sfx.roar(2.6); sfx.rumble(2.4); fight.shake = 1;
+                line(B.phase === 2 ? 'LOOK AT ME.' : 'DO NOT LOOK AWAY.', 2.4);
+                fight.crownTo = B.phase === 2 ? 1.35 : 1.7;
+                for (const o of fx.orbs) { o.live = false; }
+                for (const b of fx.beams) b.t = -1;
+            }
+            if (B.t < 0.5 && dist < 8) { P.x += dx / dist * 16 * dt; P.z += dz / dist * 16 * dt; }
+            rest(2.4);
+        }
+        // Keep it on the roof and off the brazier
+        const r = Math.hypot(B.x, B.z);
+        if (r > ARENA - 1) { B.x *= (ARENA - 1) / r; B.z *= (ARENA - 1) / r; }
+        if (r < 2.4) { const k = 2.4 / (r || 1); B.x = (B.x || 0.01) * k; B.z *= k; }
+    }
+
+    // ── Things in the air and on the ground ──
+    function updateHazards(dt) {
+        const P = fight.p, B = fight.b;
+        if (fight.wave) {
+            const w = fight.wave;
+            w.r += 9.5 * dt;
+            fx.wave.visible = true;
+            fx.wave.position.set(w.x, 0.05, w.z);
+            fx.wave.scale.setScalar(w.r);
+            fx.wave.material.opacity = 0.75 * (1 - w.r / 11);
+            if (!w.hit && Math.abs(Math.hypot(P.x - w.x, P.z - w.z) - w.r) < 0.75) w.hit = hitPlayer(16, w.x, w.z) || P.inv;
+            if (w.r > 11) { fight.wave = null; fx.wave.visible = false; }
+        }
+        for (const o of fx.orbs) {
+            o.sp.visible = o.live;
+            if (!o.live) continue;
+            o.age += dt;
+            // They bend towards the visitor for a moment, then fly straight
+            if (o.age < 0.9) {
+                tmp.set(P.x - o.p.x, 1.2 - o.p.y, P.z - o.p.z).normalize().multiplyScalar(o.v.length());
+                o.v.lerp(tmp, Math.min(1, dt * 2.2));
+            }
+            o.p.addScaledVector(o.v, dt);
+            o.sp.position.copy(o.p);
+            if (Math.hypot(o.p.x - P.x, o.p.z - P.z) < 0.85 && o.p.y < 2.6) { if (hitPlayer(11, o.p.x, o.p.z) || !P.inv) o.live = false; }
+            if (o.age > 3 || o.p.y < 0.1) o.live = false;
+        }
+        for (const b of fx.beams) {
+            if (b.t < 0) { b.mark.visible = b.pillar.visible = false; continue; }
+            b.t += dt;
+            b.mark.visible = true;
+            b.mark.position.set(b.x, 0.045, b.z);
+            b.pillar.position.set(b.x, 10, b.z);
+            if (b.t < 0.85) { b.mark.material.opacity = 0.1 + 0.3 * b.t / 0.85; b.pillar.visible = false; }
+            else {
+                b.pillar.visible = true;
+                const k = 1 - (b.t - 0.85) / 0.4;
+                b.pillar.material.opacity = Math.max(0, k);
+                b.mark.material.opacity = Math.max(0, k) * 0.8;
+                if (!b.hit) { b.hit = true; sfx.thud(); if (Math.hypot(P.x - b.x, P.z - b.z) < 2.1) hitPlayer(22, b.x, b.z); }
+                if (k <= 0) b.t = -1;
+            }
+        }
+        fx.spark.material.opacity = Math.max(0, fx.spark.material.opacity - dt * 6);
+    }
+
+    // ── A stand-in player for testing: circles, strikes in the openings, rolls through what it can ──
+    function botThink() {
+        const P = fight.p, B = fight.b, dist = Math.hypot(P.x - B.x, P.z - B.z);
+        const danger = (['sweep', 'slam', 'lunge'].includes(B.state) && fight.hot > 0.82) || (fight.wave && Math.abs(Math.hypot(P.x - fight.wave.x, P.z - fight.wave.z) - fight.wave.r) < 1.6)
+            || fx.orbs.some(o => o.live && Math.hypot(o.p.x - P.x, o.p.z - P.z) < 2.2) || fx.beams.some(b => b.t > 0.55 && b.t < 0.85 && Math.hypot(P.x - b.x, P.z - b.z) < 2.3);
+        if (danger && fight.botSkill > Math.random() * 0.999) press('roll');
+        else if (P.hp < 45 && P.heals > 0 && fight.hot < 0.2) press('heal');
+        else if (dist < REACH - 0.3 && fight.hot < 0.3 && P.st > 30) press('attack');
+        return [B.state === 'beams' ? 1 : 0.35, dist > REACH - 0.8 ? 1 : 0];
+    }
+
+    function startFight() {
+        resetFight();
+        fight.on = true;
+        document.body.classList.add('fighting');
+        $('phaseTitle').textContent = 'THE WATCHER';
+        $('phaseHint').innerHTML = touch
+            ? 'Left thumb to move. <b>HIT</b> to strike, <b>ROLL</b> to dodge through an attack, <b>✚</b> to heal.'
+            : '<b>W A S D</b> move &nbsp; <b>J</b> or <b>CLICK</b> strike<br><b>SPACE</b> roll through an attack &nbsp; <b>E</b> heal';
+        $('phase').hidden = false;
+        $('me').hidden = false;
+        $('pad').hidden = !touch;
+        sfx.thud();
+    }
+    function abortFight() { fight.rank = '—'; fight.done = true; }
+
+    // Everything the fight moves, every frame
+    function fightFrame(dt) {
+        const C = SETS.top.position, P = fight.p, B = fight.b;
+        fight.T += dt;
+        fight.modeT += dt;
+        if (fight.mode === 'intro') {
+            // The controls stay up for a moment, or until the visitor does something
+            if (fight.modeT > 4 || (fight.modeT > 1 && (keys.size || stick.id !== null || fight.T - Math.max(fight.want.attack, fight.want.roll) < 0.3 || fight.bot))) { $('phase').hidden = true; setMode('play'); }
+        } else if (fight.mode === 'play') fight.time += dt;
+        else if (fight.mode === 'dead') {
+            if (fight.modeT > 0.9) $('fell').hidden = false;
+            if (fight.modeT > 2.4) fadeTo(true);
+            if (fight.modeT > 3.2) {
+                // Back to the start of this phase, with one more ember than last time
+                const deaths = fight.deaths, hits = fight.hits, time = fight.time, phase = B.phase, cp = fight.checkpoint, bot = fight.bot, skill = fight.botSkill;
+                resetFight();
+                Object.assign(fight, { on: true, deaths, hits, time, checkpoint: cp, bot, botSkill: skill, crownTo: phase === 1 ? 1 : phase === 2 ? 1.35 : 1.7 });
+                fight.b.hp = fight.b.shown = cp; fight.b.phase = phase;
+                fight.p.heals = fight.p.maxHeals = Math.min(6, 3 + deaths);
+                $('me').hidden = false; $('pad').hidden = !touch;
+                watcher.play('Sword_Idle', { fade: 0 });
+                setMode('play');
+                camSnap = true;
+                fadeTo(false);
+                return;
+            }
+        } else if (fight.mode === 'won') {
+            if (fight.modeT > 1 && fight.modeT < 4) line('...', 1);
+            if (fight.modeT > 5 && !fight.done) {
+                const d = fight.deaths, hh = fight.hits;
+                fight.rank = d === 0 && hh <= 2 ? 'S' : d === 0 ? 'A' : d <= 1 ? 'B' : d <= 3 ? 'C' : 'D';
+                fight.done = true;
+            }
+        }
+
+        updatePlayer(dt);
+        updateBoss(dt);
+        updateHazards(dt);
+
+        // ── The Watcher's body ──
+        const won = fight.mode === 'won';
+        fight.size = toward(fight.size, won ? BODY + 0.4 : BEAST + (B.phase - 1) * 0.2, 1.2, dt);
+        const size = fight.size;
+        watcher.root.position.set(B.x, 0, B.z);
+        watcher.root.scale.setScalar(size);
+        watcher.root.rotation.set(B.tilt - B.flinch * 0.1, B.yaw + B.twist, 0);
+        // Coming apart: the body sinks out of sight and only the eyes are left, flung wide
+        top.clip.constant = B.hidden > 0 ? (1 - B.hidden) * size * 2 : 99;
+        armReach = toward(armReach, won ? 1 : 1.32, 1.5, dt);
+        fight.crown = toward(fight.crown, won ? 0 : fight.crownTo, 1.6, dt);
+        if (bones.spine_03) {
+            bones.spine_03.getWorldPosition(tmp).sub(C);
+            const back = 0.12 * size;
+            top.crown.position.set(tmp.x - Math.sin(B.yaw) * back, tmp.y, tmp.z - Math.cos(B.yaw) * back);
+            top.crown.rotation.y = B.yaw;
+            top.crown.scale.setScalar(Math.max(0.001, fight.crown * size * (1 - B.hidden)));
+        }
+        // Its eyes are its health: they shut as it loses
+        B.shown = toward(B.shown, B.hp, 6, dt);
+        $('bossFill').style.width = B.shown + '%';
+        const sy = Math.sin(B.yaw + B.twist), cy = Math.cos(B.yaw + B.twist);
+        top.void.forEach((e, i) => {
+            const u = e.userData;
+            bones[u.bone].getWorldPosition(tmp).sub(C);
+            // The offset turns with the body, and flies outwards while it is scattered
+            const ox = u.on.x * size, oz = u.on.z * size, spread = B.hidden * (2 + (i % 5));
+            e.position.set(tmp.x + ox * cy + oz * sy + Math.cos(i * 2.4) * spread, tmp.y + u.on.y * size + B.hidden * (1.5 + Math.sin(i) * 2), tmp.z - ox * sy + oz * cy + Math.sin(i * 2.4) * spread);
+            e.scale.setScalar(0.2 * size);
+            e.quaternion.copy(camera.quaternion);
+            const want = i / top.void.length < B.hp / 100 - 0.02 ? 0.8 + 0.2 * Math.sin(clockT * 7 + u.goAt * 9) : 0;
+            setOpen(e, toward(u.open, want * (1 - B.flinch * 0.7), 8, dt));
+        });
+        if (bones.Head) {
+            bones.Head.getWorldPosition(tmp).sub(C);
+            top.gaze.position.set(tmp.x + sy * 0.11 * size, tmp.y + 0.05 * size, tmp.z + cy * 0.11 * size);
+            top.gaze.scale.setScalar(0.87 * size);
+            top.gaze.quaternion.copy(camera.quaternion);
+            top.glow.position.set(tmp.x + sy * 1.4, tmp.y - 0.2, tmp.z + cy * 1.4);
+        }
+        fight.gaze = toward(fight.gaze, won ? 0.35 : 1 - B.hidden, 3, dt);
+        setOpen(top.gaze, fight.gaze * (0.92 + Math.sin(clockT * 9) * 0.08));
+        top.glow.intensity = (4 + B.phase * 2.5) * fight.gaze + B.flinch * 6 + fight.hot * 5;
+        top.aura.scale.set(4.4 * size, 4.2 * size, 1);
+        top.aura.position.set(B.x - sy * 0.8, 1.15 * size, B.z - cy * 0.8);
+        top.aura.material.opacity = (0.4 + B.phase * 0.17) * fight.gaze;
+
+        // The scythe: its edge runs white while a blow is coming
+        fight.scythe = toward(fight.scythe, won ? 0 : 1 - B.hidden, 6, dt);
+        fight.lean.lerp(fight.leanTo, 1 - Math.exp(-fight.leanRate * dt)).normalize();
+        top.scythe.visible = fight.scythe > 0.02;
+        if (top.scythe.visible && bones.hand_r) {
+            const L = fight.lean;
+            top.lean.set(L.x * cy + L.z * sy, L.y, -L.x * sy + L.z * cy);
+            bones.hand_r.getWorldPosition(tmp).sub(C);
+            top.scythe.quaternion.setFromUnitVectors(tmp2.set(0, 1, 0), top.lean);
+            top.scythe.position.copy(tmp).addScaledVector(top.lean, -GRIP * size);
+            top.scythe.scale.setScalar(fight.scythe * size);
+            const heat = Math.max(fight.hot, B.phase === 3 ? 0.35 : 0);
+            top.edge.material.color.setRGB(1, 0.16 + heat * 0.84, 0.1 + heat * 0.9);
+        }
+
+        // ── The visitor ──
+        hero.root.position.set(C.x + P.x, 0.02 + P.lie * 0.12, P.z);
+        hero.root.rotation.set(-P.lie * 1.45, P.yaw, 0);
+        $('meHp').style.width = P.hp + '%';
+        $('meSt').style.width = P.st + '%';
+        $('meHeals').textContent = '✚'.repeat(P.heals) + '·'.repeat(Math.max(0, P.maxHeals - P.heals));
+        $('btnHeal').style.opacity = P.heals ? 1 : 0.35;
+
+        // ── Camera: locked on. It sits behind the visitor on the line from the Watcher, and backs off when they are close ──
+        fight.shake = toward(fight.shake, 0, 5, dt);
+        let bx = P.x - B.x, bz = P.z - B.z;
+        const d = Math.hypot(bx, bz) || 1;
+        bx /= d; bz /= d;
+        const back = 5.4 + Math.max(0, 7 - d) * 0.55, jolt = fight.shake * 0.07;
+        camTo.set(C.x + P.x + bx * back + bz * 1.1 + Math.sin(clockT * 47) * jolt, 2.7 + Math.max(0, 7 - d) * 0.22 + Math.cos(clockT * 53) * jolt, P.z + bz * back - bx * 1.1);
+        look.set(C.x + mix(P.x, B.x, 0.72), mix(1.4, 0.62 * size, 0.72), mix(P.z, B.z, 0.72));
+    }
+
+    // The fight's last word: how it went
+    const RANKS = ['—', 'D', 'C', 'B', 'A', 'S'];
+    function showResult() {
+        const r = fight.rank || '—', s = Math.round(fight.time);
+        $('rank').textContent = r;
+        $('endTitle').textContent = r === '—' ? 'THE WATCHER WAITS' : 'THE WATCHER FALLS';
+        $('endLine').textContent = r === '—' ? 'You stepped past the fight.' : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} · fell ${fight.deaths} time${fight.deaths === 1 ? '' : 's'} · struck ${fight.hits} time${fight.hits === 1 ? '' : 's'}`;
+        for (const id of ['me', 'pad', 'fell', 'phase']) $(id).hidden = true;
+        if (RANKS.indexOf(r) > RANKS.indexOf(store.get('aumritash-rank') || '—')) store.set('aumritash-rank', r);
+        track('fight', `${r} · ${s}s · ${fight.deaths} deaths · ${fight.hits} hits`);
+    }
+
+    // ── Running the shots ──
+    let shot = -1, playing = false, cutting = false;
+    function startShot(i) {
+        shot = i;
+        fired = new Set();
+        cutting = false;
+        canWalk = walking = false;
+        hero.play(heroCls.walkIdle, { fade: 0 });
+        SHOTS[i].enter();
+        camSnap = true;
+        fadeTo(false);
+    }
+    function cut(then) {
+        if (cutting) return;
+        cutting = true;
+        walk(false);
+        fadeTo(true);
+        setTimeout(then, 650);
+    }
+    function finished() {
+        // The fight is over (or was stepped past): show how it went
+        playing = false;
+        fight.on = false;
+        $('skip').hidden = true;
+        showResult();
+        $('end').hidden = false;
+    }
+    function play() {
+        $('start').hidden = true;
+        $('end').hidden = true;
+        $('skip').hidden = false;
+        sfx.setDrone(false);
+        resetFight();
+        hero.mixer.timeScale = 1;
+        hero.root.rotation.set(0, Math.PI, 0);
+        caption('');
+        playing = true;
+        startShot(0);
+    }
+    $('climb').onclick = () => { sfx.unlock(); track('tower', 'climb'); play(); };
+    $('again').onclick = () => { sfx.unlock(); fadeTo(true); setTimeout(play, 500); };
+    $('skip').onclick = () => {
+        if (!playing || cutting) return;
+        const S = SHOTS[shot];
+        if (S.name === 'fight') { S.finish(); return; }
+        cut(() => {
+            if (S.finish) { S.finish(); cutting = false; camSnap = true; fadeTo(false); }
+            else startShot(shot + 1);
+        });
+    };
+
+    const clock = new THREE.Clock();
+    function frame(manual) {
+        if (manual !== true) requestAnimationFrame(frame);
+        const dt = Math.min(0.1, clock.getDelta());
+        clockT += dt;
+        if (playing && shot >= 0 && !cutting) {
+            const done = SHOTS[shot].update(dt);
+            if (done) {
+                const next = SHOTS[shot + 1];
+                if (!next) finished();
+                else if (next.seamless) { shot++; fired = new Set(); next.enter(); }
+                else cut(() => startShot(shot + 1));
+            }
+        }
+        if (hero) {
+            hero.mixer.update(dt);
+            watcher.mixer.update(dt);
+            // Bone tweaks made by a shot have to be redone after the animation has had its say
+            for (const n of ['upperarm_l', 'upperarm_r', 'lowerarm_l', 'lowerarm_r']) if (bones[n]) bones[n].scale.setScalar(armReach);
+            if (walking) heroSteps();
+            heroLight.position.copy(hero.root.position).add(tmp.set(-0.8, 3, 1.6));
+        }
+        // Ease the camera towards where the shot wants it (or jump there on a cut)
+        const k = camSnap ? 1 : 1 - Math.pow(fight.on ? 0.0008 : 0.03, dt);
+        camera.position.lerp(camTo, k);
+        lookNow.lerp(look, k);
+        camera.lookAt(lookNow);
+        camSnap = false;
+        renderer.render(world, camera);
+    }
+
+    // ── Sound toggle (shared with the flame) ──
+    let soundOn = store.get('aumritash-music') !== 'off';
+    function renderSound() {
+        $('sound').textContent = soundOn ? '♪ Sound on' : '♪ Sound off';
+        $('sound').setAttribute('aria-pressed', String(soundOn));
+    }
+    sfx.setMuted(!soundOn);
+    $('sound').onclick = () => { soundOn = !soundOn; store.set('aumritash-music', soundOn ? 'on' : 'off'); sfx.setMuted(!soundOn); if (soundOn) sfx.unlock(); renderSound(); };
+    document.addEventListener('visibilitychange', () => sfx.pause(document.hidden));
+    addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
+
+    // ── Boot ──
+    (async () => {
+        try { await loadCast(); }
+        catch (e) { $('loading').textContent = 'SOMETHING WENT WRONG · RELOAD'; console.error(e); return; }
+        hero.root.position.set(0, 0, 11);
+        camTo.set(1.3, 2.3, 16);
+        look.set(0, 2, 0);
+        $('loading').hidden = true;
+        $('start').hidden = false;
+        $('sound').hidden = false;
+        renderSound();
+        requestAnimationFrame(frame);
+    })();
+
+    // ?debug: drive the scene by hand when the tab can't animate
+    if (location.search.includes('debug')) {
+        window.__scene = {
+            THREE, world, camera,
+            state: () => ({ shot: shot >= 0 ? SHOTS[shot].name : null, phase: shot >= 0 ? SHOTS[shot].phase : null, t: shot >= 0 ? +(SHOTS[shot].t || 0).toFixed(2) : 0, playing, walking, sfx: sfx.state() }),
+            goto(i) { playing = true; $('start').hidden = true; $('end').hidden = true; startShot(i); },
+            hold: on => (on ? held.add('debug') : held.delete('debug')),
+            fight,
+            bot(on = true, skill = 0.9) { fight.bot = on; fight.botSkill = skill; },
+            // Like step, but lets the fight's script run between frames
+            async run(seconds, fps = 30) {
+                const real = clock.getDelta;
+                for (let i = 0; i < seconds * fps; i++) { clock.getDelta = () => 1 / fps; frame(true); clock.getDelta = real; await new Promise(r => setTimeout(r, 0)); }
+            },
+            step(seconds, fps = 30) {
+                const real = clock.getDelta;
+                clock.getDelta = () => 1 / fps;
+                for (let i = 0; i < seconds * fps; i++) frame(true);
+                clock.getDelta = real;
+            }
+        };
+    }
+    </script>
+</body>
+</html>

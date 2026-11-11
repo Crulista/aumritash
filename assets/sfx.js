@@ -107,13 +107,13 @@ export function createSfx() {
         if (!live()) return;
         const t = ctx.currentTime;
         // Grit under the boot, and a soft heel thud
-        const s = noiseSrc(), bp = filter('bandpass', 700 + Math.random() * 500, 1.2);
-        chain(s, bp, env(t, 0.16, 0.004, 0.09), out);
+        const s = noiseSrc(), bp = filter('bandpass', 380 + Math.random() * 220, 0.9);
+        chain(s, bp, env(t, 0.055, 0.006, 0.07), out);
         s.start(t, Math.random() * 1.5, 0.15);
         const o = ctx.createOscillator();
         o.frequency.setValueAtTime(95, t);
         o.frequency.exponentialRampToValueAtTime(45, t + 0.09);
-        chain(o, env(t, 0.18, 0.004, 0.1), out);
+        chain(o, env(t, 0.07, 0.006, 0.09), out);
         o.start(t);
         o.stop(t + 0.15);
     }
@@ -199,6 +199,62 @@ export function createSfx() {
         o.stop(t + 0.08);
     }
 
+    // Stone grinding on stone: the seal giving way
+    function rumble(seconds = 2.5) {
+        if (!live()) return;
+        const t = ctx.currentTime;
+        const s = noiseSrc(true), lp = filter('lowpass', 140, 1.2), g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.5, t + 0.3);
+        g.gain.setValueAtTime(0.5, t + seconds - 0.6);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + seconds);
+        chain(s, lp, g, out);
+        s.start(t);
+        s.stop(t + seconds + 0.1);
+    }
+
+    // The Watcher speaking: a low, torn growl that sags in pitch
+    function roar(seconds = 3) {
+        if (!live()) return;
+        const t = ctx.currentTime;
+        const lp = filter('lowpass', 420, 2), g = env(t, 0.34, 0.35, seconds);
+        lp.frequency.setValueAtTime(620, t);
+        lp.frequency.exponentialRampToValueAtTime(180, t + seconds);
+        chain(lp, g, out);
+        for (const f0 of [43, 44.5, 65, 87.5]) {
+            const o = ctx.createOscillator();
+            o.type = 'sawtooth';
+            o.frequency.setValueAtTime(f0 * 1.25, t);
+            o.frequency.exponentialRampToValueAtTime(f0 * 0.8, t + seconds);
+            o.connect(lp);
+            o.start(t);
+            o.stop(t + seconds + 0.5);
+        }
+        const s = noiseSrc(true), bp = filter('bandpass', 260, 1.5);
+        chain(s, bp, env(t, 0.2, 0.3, seconds * 0.8), out);
+        s.start(t);
+        s.stop(t + seconds + 0.5);
+    }
+
+    // A drone that sits under the tower's top once things start to gather
+    let drone = null;
+    function setDrone(on) {
+        if (!ctx) return;
+        if (on && !drone) {
+            const g = ctx.createGain(), lp = filter('lowpass', 110);
+            g.gain.value = 0.0001;
+            g.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 4);
+            chain(lp, g, out);
+            const oscs = [36, 36.6, 54].map(f0 => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f0; o.connect(lp); o.start(); return o; });
+            drone = { g, oscs };
+        } else if (!on && drone) {
+            const d = drone;
+            drone = null;
+            d.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.6);
+            setTimeout(() => d.oscs.forEach(o => o.stop()), 3000);
+        }
+    }
+
     // Hidden tab: stop everything, and pick up again when the visitor comes back
     function pause(on) {
         if (!ctx) return;
@@ -210,5 +266,5 @@ export function createSfx() {
         if (out) out.gain.setTargetAtTime(m ? 0 : 1, ctx.currentTime, 0.1);
     }
 
-    return { unlock, setWind, setFire, step, eye, kindle, whoosh, thud, tick, setMuted, pause, state: () => ctx && ctx.state };
+    return { unlock, setWind, setFire, step, eye, kindle, whoosh, thud, tick, rumble, roar, setDrone, setMuted, pause, state: () => ctx && ctx.state };
 }

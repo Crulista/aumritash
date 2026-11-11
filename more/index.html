@@ -392,7 +392,7 @@
 
     <script type="module">
     import * as THREE from 'three';
-    import { CLASSES, loadCharacter } from '../assets/characters.js';
+    import { CLASSES, loadCharacter, footfalls } from '../assets/characters.js';
     import { createSfx } from '../assets/sfx.js';
     const sfx = createSfx();
 
@@ -897,6 +897,7 @@
         if (hero) world.remove(hero.root);
         hero = await loadCharacter(c);
         world.add(hero.root);
+        heroSteps = footfalls(hero, () => sfx.step());
     }
 
     // ── Walking ──
@@ -1116,8 +1117,7 @@
     const clock = new THREE.Clock();
     const camTarget = new THREE.Vector3(), camLook = new THREE.Vector3(0, 1, 0), tmp = new THREE.Vector3();
     const REST_CAM = new THREE.Vector3(0.5, 7.2, 13.5), REST_LOOK = new THREE.Vector3(0, 0.8, -1.5);
-    let nextLurker = 0, stride = 0;
-    const STRIDE = 0.8;
+    let nextLurker = 0, heroSteps = null;
     const lastPos = new THREE.Vector3();
 
     function updateFire(dt, t) {
@@ -1204,10 +1204,8 @@
                 }
             }
             hero.mixer.update(dt);
-            if (mode === 'walk' || mode === 'leaving') {
-                stride += hero.root.position.distanceTo(lastPos);
-                if (stride > STRIDE) { stride %= STRIDE; sfx.step(); }
-            }
+            // A step sounds when a foot lands, and only while the character is actually moving
+            if ((mode === 'walk' || mode === 'leaving') && hero.root.position.distanceTo(lastPos) > 0.0005) heroSteps();
             lastPos.copy(hero.root.position);
 
             // Camera: follow from behind while walking, swing wide over the courtyard once resting
