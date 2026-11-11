@@ -216,6 +216,27 @@
         }
 
         /* Path labels floating over the courtyard exits */
+        /* Messages at the fire sit low, above "Choose a path", where no path label can cover them */
+        .notice {
+            position: fixed;
+            left: 50%;
+            bottom: 7rem;
+            transform: translateX(-50%);
+            max-width: min(92vw, 640px);
+            padding: 0.45rem 1.1rem 0.35rem;
+            text-align: center;
+            font-family: var(--pixel);
+            font-size: clamp(1.2rem, 3vw, 1.6rem);
+            letter-spacing: 0.16em;
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(232, 226, 218, 0.3);
+            z-index: 11;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        .notice.red { color: #ff6a6a; border-color: rgba(255, 58, 58, 0.6); }
+
         .paths-title {
             position: fixed;
             bottom: 4.2rem;
@@ -356,6 +377,7 @@
     <div class="banner" id="banner" aria-live="polite">FLAME KINDLED</div>
 
     <p class="paths-title" id="pathsTitle" hidden>CHOOSE A PATH</p>
+    <p class="notice" id="notice" hidden aria-live="polite"></p>
     <a class="path" id="pathWork" href="../work/" hidden><span class="t">The Work</span><span class="d">Career, case studies and results</span></a>
     <a class="path" id="pathGames" href="../games/" hidden><span class="t">The Games</span><span class="d">What I play, and what nearly broke me</span></a>
     <a class="path" id="pathStories" href="../stories/" hidden><span class="t">The Stories</span><span class="d">The fiction that shaped me</span></a>
@@ -980,7 +1002,7 @@
     let seen = [];
     try { seen = JSON.parse(localStorage.getItem('aumritash-seen') || '[]'); } catch (e) {}
     const allSeen = ['work', 'games', 'stories'].every(p => seen.includes(p));
-    if (allSeen) { $('pathTower').classList.add('stirring'); $('pathTower').querySelector('.d').textContent = 'Something stirs at the top'; }
+    if (allSeen) { $('pathTower').classList.add('stirring'); $('pathTower').querySelector('.d').textContent = 'The way up is open'; $('pathTower').href = '../tower/'; }
     let pathIdx = 0;
     function showPaths() {
         if (mode !== 'resting') return;
@@ -1013,13 +1035,32 @@
     function travel(i) {
         if (mode !== 'resting') return;
         if (PATHS[i].sealed) {
-            track('tower', allSeen ? 'stirring' : 'sealed');
+            track('tower', allSeen ? 'opened' : 'sealed');
             sfx.thud();
-            $('caption').textContent = allSeen ? 'It knows you have seen everything. Not yet.' : 'The way up is sealed. Walk the other paths first.';
-            $('caption').hidden = false;
-            $('caption').style.opacity = 1;
             clearTimeout(travel.t);
-            travel.t = setTimeout(() => { $('caption').style.opacity = 0; }, 2600);
+            if (!allSeen) {
+                // Still sealed: say so where the labels can't cover it, and say how far along they are
+                const left = ['work', 'games', 'stories'].filter(p => !seen.includes(p)).length;
+                $('notice').textContent = `The way up is sealed. ${left} path${left === 1 ? '' : 's'} left to walk.`;
+                $('notice').classList.remove('red');
+                $('notice').hidden = false;
+                $('notice').style.opacity = 1;
+                travel.t = setTimeout(() => { $('notice').style.opacity = 0; }, 2800);
+                return;
+            }
+            // Open: the tower takes them
+            mode = 'leaving';
+            PATHS.forEach(q => q.el.classList.add(q === PATHS[i] ? 'going' : 'gone'));
+            $('pathsTitle').hidden = true;
+            $('change').hidden = true;
+            $('notice').textContent = 'Something at the top has been waiting for you.';
+            $('notice').classList.add('red');
+            $('notice').hidden = false;
+            $('notice').style.opacity = 1;
+            sfx.rumble(3);
+            const wait = reduce ? 0 : 1;
+            setTimeout(() => { $('fade').classList.add('slow'); fadeTo(true); sfx.whoosh(); }, 2200 * wait);
+            setTimeout(() => { location.href = '../tower/'; }, 3600 * wait + 50);
             return;
         }
         mode = 'leaving';
