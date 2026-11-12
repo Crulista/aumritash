@@ -266,5 +266,8 @@ export function createSfx() {
         if (out) out.gain.setTargetAtTime(m ? 0 : 1, ctx.currentTime, 0.1);
     }
 
-    return { unlock, setWind, setFire, step, eye, kindle, whoosh, thud, tick, rumble, roar, setDrone, setMuted, pause, state: () => ctx && ctx.state };
+    // For the fight's score (assets/fight/score.js): the shared context, master gain, noise and mute flag, once unlocked
+    const audio = () => ctx && { ctx, out, noise, muted };
+
+    return { unlock, setWind, setFire, step, eye, kindle, whoosh, thud, tick, rumble, roar, setDrone, setMuted, pause, audio, state: () => ctx && ctx.state };
 }

@@ -92,29 +92,58 @@
 
         /* The visitor's own bars, top left: health, stamina, and how many embers they have left to heal with */
         .me { position: fixed; left: 1.5rem; top: 4.4rem; width: min(300px, 46vw); z-index: 6; pointer-events: none; }
-        .bar { height: 12px; border: 2px solid rgba(232, 226, 218, 0.75); background: rgba(0, 0, 0, 0.6); margin-bottom: 4px; }
-        .bar i { display: block; height: 100%; width: 100%; }
+        .bar { position: relative; height: 12px; border: 2px solid rgba(232, 226, 218, 0.75); background: rgba(0, 0, 0, 0.6); margin-bottom: 4px; }
+        .bar i { position: absolute; left: 0; top: 0; display: block; height: 100%; width: 100%; }
         .bar.hp i { background: linear-gradient(to bottom, #d8402c, #8a1410); }
+        .bar.hp i.lag { background: #e8d8b0; opacity: 0.55; }
         .bar.st { height: 8px; width: 82%; }
         .bar.st i { background: linear-gradient(to bottom, #7fbf5a, #3f7a2c); }
+        /* Out of stamina: the bar blinks red */
+        .bar.st.empty { animation: empty 0.3s steps(2) infinite; }
+        @keyframes empty { 0% { border-color: #ff3a2a; background: rgba(120, 0, 0, 0.7); } 100% { border-color: rgba(232, 226, 218, 0.75); } }
+        .me-row { display: flex; align-items: center; gap: 0.7rem; }
         .me p { font-family: var(--pixel); font-size: 1.2rem; letter-spacing: 0.12em; color: #ffcf8a; text-shadow: 0 2px 0 #000; }
+        /* The ember art's meter: a little coal that fills, and burns when it is ready */
+        .art { position: relative; width: 74px; height: 8px; border: 2px solid rgba(255, 170, 90, 0.6); background: rgba(0, 0, 0, 0.6); transform: skewX(-20deg); }
+        .art i { position: absolute; left: 0; top: 0; height: 100%; width: 0; background: linear-gradient(to bottom, #ffb050, #b4400c); }
+        .art.full { border-color: #ffd9a0; box-shadow: 0 0 10px rgba(255, 140, 50, 0.9); animation: coal 0.6s steps(3) infinite alternate; }
+        .art.full::after { content: 'R'; position: absolute; left: 100%; top: -9px; margin-left: 8px; transform: skewX(20deg); font-family: var(--pixel); font-size: 1rem; color: #ffd9a0; text-shadow: 0 0 8px #ff8a30; }
+        @media (hover: none) { .art.full::after { content: ''; } }
+        @keyframes coal { to { box-shadow: 0 0 18px rgba(255, 170, 70, 1); } }
+        /* Low health: the edges of the screen pulse red */
+        .me-low { position: fixed; inset: 0; z-index: -1; opacity: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(140, 0, 0, 0.75)); }
+        /* The ember art's cut-in: a burning band across the screen with the visitor's name */
+        .cutin { position: fixed; left: -5vw; right: -5vw; top: 56%; padding: 0.35rem 0; display: flex; justify-content: center; align-items: baseline; gap: 1.2rem; font-family: var(--pixel); letter-spacing: 0.3em; color: #fff2d8; text-shadow: 0 0 12px #ff7a20, 0 2px 0 #000; background: linear-gradient(90deg, transparent, rgba(150, 40, 0, 0.85) 18%, rgba(255, 120, 40, 0.9) 50%, rgba(150, 40, 0, 0.85) 82%, transparent); transform: skewY(-4deg) scaleY(0); opacity: 0; pointer-events: none; }
+        .cutin b { font-size: clamp(1.6rem, 5vw, 2.6rem); font-weight: normal; }
+        .cutin span { font-size: clamp(1rem, 3vw, 1.4rem); color: #ffd9a0; }
+        .cutin.on { animation: cutin 0.95s steps(10) forwards; }
+        @keyframes cutin { 0% { opacity: 1; transform: skewY(-4deg) scaleY(0) translateX(-30%); } 15% { opacity: 1; transform: skewY(-4deg) scaleY(1) translateX(0); } 75% { opacity: 1; transform: skewY(-4deg) scaleY(1) translateX(3%); } 100% { opacity: 0; transform: skewY(-4deg) scaleY(0.2) translateX(30%); } }
+        /* The boss's posture: a thin bar under its health that fills from the middle out, white-hot when it is about to break */
+        .boss-post { height: 6px; width: 60%; margin: 4px auto 0; border: 1px solid rgba(232, 226, 218, 0.45); background: rgba(0, 0, 0, 0.55); display: flex; justify-content: center; }
+        .boss-post i { display: block; height: 100%; width: 0; background: linear-gradient(to bottom, #f0d890, #b08a3a); }
+        .boss-post.hot i { background: linear-gradient(to bottom, #fffbe8, #ffc860); box-shadow: 0 0 8px #ffd27a; }
+        .boss-post.open { animation: empty 0.25s steps(2) infinite; }
 
         .phase { position: fixed; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.7rem; padding: 1.5rem; text-align: center; background: rgba(0, 0, 0, 0.72); pointer-events: none; }
         .phase-title { font-family: var(--pixel); font-size: clamp(1.9rem, 6.5vw, 3.2rem); letter-spacing: 0.2em; color: #ffd9a0; text-shadow: 0 0 18px rgba(255, 150, 60, 0.45); }
         .phase-hint { color: var(--text); max-width: 30rem; line-height: 1.8; }
         .phase-hint b { font-family: var(--pixel); font-size: 1.15rem; letter-spacing: 0.1em; color: #ffcf8a; border: 1px solid rgba(255, 207, 138, 0.6); padding: 0 0.4rem; }
 
-        /* Touch controls: a stick wherever the left thumb lands, three buttons under the right */
+        /* Touch controls: a stick wherever the left thumb lands (left part of the screen), a fan of buttons under the
+           right thumb: HIT in the corner, ROLL and HEAVY either side of it, GUARD between, the rarer ones above */
         .pad { position: fixed; inset: 0; z-index: 9; pointer-events: none; }
         .stick { position: absolute; width: 110px; height: 110px; margin: -55px 0 0 -55px; border: 2px solid rgba(232, 226, 218, 0.35); border-radius: 50%; display: none; }
         .stick i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: rgba(232, 226, 218, 0.4); }
-        .pad button { position: absolute; pointer-events: auto; font-family: var(--pixel); letter-spacing: 0.08em; color: var(--text); background: rgba(0, 0, 0, 0.55); border: 2px solid rgba(232, 226, 218, 0.7); border-radius: 50%; touch-action: none; }
-        .pad button:active { background: var(--text); color: #000; }
-        #btnAtk { right: 1.1rem; bottom: 1.6rem; width: 92px; height: 92px; font-size: 1.25rem; border-color: #ffcf8a; color: #ffe2b8; }
-        #btnRoll { right: 7.4rem; bottom: 1.1rem; width: 72px; height: 72px; font-size: 1.1rem; }
-        #btnHeal { right: 1.6rem; bottom: 8rem; width: 62px; height: 62px; font-size: 1.3rem; color: #ffcf8a; }
-        #btnGuard { right: 6.6rem; bottom: 6.4rem; width: 72px; height: 72px; font-size: 1rem; }
-        #btnGuard.held { background: var(--text); color: #000; }
+        .pad button { position: absolute; pointer-events: auto; padding: 0; font-family: var(--pixel); letter-spacing: 0.06em; color: var(--text); background: rgba(0, 0, 0, 0.55); border: 2px solid rgba(232, 226, 218, 0.7); border-radius: 50%; touch-action: none; }
+        .pad button:active, .pad button.held { background: var(--text); color: #000; }
+        #btnAtk { right: 14px; bottom: 24px; width: 92px; height: 92px; font-size: 1.3rem; border-color: #ffcf8a; color: #ffe2b8; }
+        #btnRoll { right: 118px; bottom: 12px; width: 74px; height: 74px; font-size: 1.1rem; }
+        #btnHeavy { right: 22px; bottom: 128px; width: 74px; height: 74px; font-size: 1rem; border-color: #ffcf8a; color: #ffe2b8; }
+        #btnGuard { right: 116px; bottom: 100px; width: 70px; height: 70px; font-size: 1rem; }
+        #btnHeal { right: 124px; bottom: 186px; width: 58px; height: 58px; font-size: 1.4rem; color: #ffcf8a; }
+        #btnArt { right: 30px; bottom: 218px; width: 60px; height: 60px; font-size: 1.05rem; color: #fff2d8; border-color: #ffb050; background: rgba(140, 50, 0, 0.7); box-shadow: 0 0 14px rgba(255, 140, 50, 0.9); }
+        #btnLock { right: 26px; bottom: 296px; width: 58px; height: 34px; border-radius: 17px; font-size: 0.9rem; }
+        #btnLock.off { border-style: dashed; color: var(--dim); }
 
         /* Cut-scenes play between black bars */
         .bars::before, .bars::after { content: ''; position: fixed; left: 0; right: 0; height: 11vh; background: #000; z-index: 4; transition: transform 0.7s; pointer-events: none; }
@@ -199,12 +228,18 @@
     <div class="boss" id="boss" hidden>
         <p class="boss-name" id="bossName"></p>
         <div class="boss-bar"><i id="bossFill"></i></div>
+        <div class="boss-post" id="bossPostBar" hidden><i id="bossPost"></i></div>
     </div>
 
     <div class="me" id="me" hidden>
-        <div class="bar hp"><i id="meHp"></i></div>
-        <div class="bar st"><i id="meSt"></i></div>
-        <p id="meHeals"></p>
+        <div class="bar hp"><i class="lag" id="meHpLag"></i><i id="meHp"></i></div>
+        <div class="bar st" id="meStBar"><i id="meSt"></i></div>
+        <div class="me-row">
+            <p id="meHeals"></p>
+            <div class="art" id="meArt" title="Ember art"><i id="meArtFill"></i></div>
+        </div>
+        <div class="me-low" id="meLow"></div>
+        <div class="cutin" id="cutin"><b id="cutinName"></b><span>ASH CRESCENT</span></div>
     </div>
     <div class="phase" id="phase" hidden>
         <p class="phase-title" id="phaseTitle"></p>
@@ -212,7 +247,10 @@
     </div>
     <div class="pad" id="pad" hidden>
         <div class="stick" id="stick"><i id="knob"></i></div>
+        <button type="button" id="btnLock" aria-label="Lock on">LOCK</button>
+        <button type="button" id="btnArt" aria-label="Ember art" hidden>ART</button>
         <button type="button" id="btnHeal" aria-label="Heal">✚</button>
+        <button type="button" id="btnHeavy">HEAVY</button>
         <button type="button" id="btnGuard">GUARD</button>
         <button type="button" id="btnRoll">ROLL</button>
         <button type="button" id="btnAtk">HIT</button>
@@ -238,17 +276,14 @@
     import * as THREE from 'three';
     import { CLASSES, loadCharacter, footfalls } from '../assets/characters.js';
     import { createSfx } from '../assets/sfx.js';
+    import { mix, clamp01, ease, ramp, eyePair, setOpen, glowTexture } from '../assets/fight/kit.js';
+    import { createFight } from '../assets/fight/core.js';
     const sfx = createSfx();
 
     const $ = id => document.getElementById(id);
     const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
     const track = (...a) => window.track && window.track(...a);
     const touch = matchMedia('(hover: none)').matches;
-    const mix = (a, b, t) => a + (b - a) * t;
-    const clamp01 = x => Math.min(1, Math.max(0, x));
-    const ease = x => { x = clamp01(x); return x * x * (3 - 2 * x); };
-    // 0 → 1 as t goes from a to b, eased
-    const ramp = (t, a, b) => ease((t - a) / (b - a));
 
     // The tower only opens for someone who has walked all three paths (?preview is for looking at it early)
     let seen = [];
@@ -305,18 +340,6 @@
         t.colorSpace = THREE.SRGBColorSpace;
         return t;
     }
-    function glowTexture() {
-        const c = document.createElement('canvas');
-        c.width = c.height = 32;
-        const g = c.getContext('2d');
-        const grd = g.createRadialGradient(16, 16, 0, 16, 16, 16);
-        grd.addColorStop(0, 'rgba(255,255,255,1)');
-        grd.addColorStop(0.4, 'rgba(255,255,255,0.6)');
-        grd.addColorStop(1, 'rgba(255,255,255,0)');
-        g.fillStyle = grd;
-        g.fillRect(0, 0, 32, 32);
-        return new THREE.CanvasTexture(c);
-    }
     // The seal on the door: a dashed ring around three question marks
     function sealTexture() {
         const c = document.createElement('canvas');
@@ -345,7 +368,6 @@
     };
     const STONE = mat(stoneTex), ROUGH = mat(roughTex), DARK = new THREE.MeshBasicMaterial({ color: '#020203' });
     const VOID = new THREE.MeshBasicMaterial({ color: '#030204', fog: false });
-    const eyeMat = new THREE.SpriteMaterial({ map: GLOW, color: '#ff2020', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
 
     const world = new THREE.Scene();
     world.background = new THREE.Color('#050409');
@@ -357,24 +379,7 @@
     const heroLight = new THREE.PointLight('#a8bce0', 2.4, 8, 1.6);
     world.add(heroLight);
 
-    // A pair of red eyes; `open` 0..1 is how far the lids are apart
-    function eyePair(size = 1) {
-        const g = new THREE.Group();
-        for (const s of [-1, 1]) {
-            const sp = new THREE.Sprite(eyeMat.clone());
-            sp.scale.set(0.22, 0.12, 1);
-            sp.position.x = s * 0.17;
-            g.add(sp);
-        }
-        g.scale.setScalar(size);
-        setOpen(g, 0);
-        return g;
-    }
-    function setOpen(g, open) {
-        g.userData.open = open;
-        g.visible = open > 0.01;
-        g.children.forEach(s => { s.scale.y = 0.12 * Math.max(0.05, open); });
-    }
+    // (A pair of red eyes, eyePair(size) / setOpen(pair, 0..1), comes from the fight kit)
 
     // Three sets, far apart in the same world; the camera cuts between them
     const SETS = { door: new THREE.Group(), stair: new THREE.Group(), top: new THREE.Group() };
@@ -635,8 +640,7 @@
     addEventListener('keyup', e => held.delete(e.key));
     const SPEED = 1.7;
     let canWalk = false, walking = false;
-    let timeWarp = 1;           // below 1 for a beat of slow motion (a parry landing)
-    let armReach = 1;           // how far the Watcher's arms are stretched; reapplied every frame after the animation
+    let armReach = 1;          // how far the Watcher's arms are stretched; reapplied every frame after the animation
     // Sets whether the visitor may walk right now, and returns true on frames where they are
     function walk(allowed) {
         if (allowed !== canWalk) { canWalk = allowed; hint(allowed); }
@@ -872,938 +876,41 @@
             // Skip lands on the last frame instead of leaving the shot
             finish() { this.phase = 'scene'; this.z = 3.6; hero.root.position.z = 3.6; this.t = this.END - 0.05; walk(false); caption(''); fired = new Set(['c2', 'rise', 'gaze', 'roar', 'change', 'full']); watcher.play('Sword_Idle', { fade: 0 }); hero.play(heroCls.pose, { fade: 0 }); }
         },
-        {   // 4. The fight
+        {   // 4. The fight (assets/fight/): it runs itself, form after form, until it is won or left
             name: 'fight', seamless: true,
-            enter() { startFight(); },
-            update(dt) { fightFrame(dt); if (fight.done) { fight.on = false; hero.mixer.timeScale = 1; } return fight.done; },
-            finish() { abortFight(); }
+            enter(n = 0) { fight.start(n); },
+            update(dt) { fight.frame(dt); if (fight.done) hero.mixer.timeScale = 1; return fight.done; },
+            finish() { fight.abort(); }
         }
     ];
 
     // ═════════════ The fight ═════════════
-    // A real-time duel on the roof. The visitor moves, rolls (briefly untouchable), strikes, guards, parries and heals.
-    // The Watcher's moves are authored as poses over time (where its hand is, where the scythe points, how its body
-    // turns and bends); its arms are solved to hold the scythe, so body and weapon always move as one. A blow lands only
-    // where the blade actually passes, and the mark on the ground is drawn from that same blade path.
-    //   Phase 1  scythe: sweep, overhead slam with a shockwave, lunge into a backhand cut, a burst if the visitor hugs it
-    //   Phase 2  (below two thirds) adds a volley of eyes, and it comes apart and re-forms behind you
-    //   Phase 3  (below one third) adds beams called down from the eyes in the dark, and everything is faster
-    // Falling sends the visitor back to the start of the phase with one more ember, so nobody is stuck for good.
-    // Fight positions are in the roof's own coordinates (x, z from its centre). Pose numbers are in the body's own units
-    // (it stands about 1.5 tall before scaling), in a frame where z is ahead of it and its right hand is on the -x side.
-    const fight = {};
-    const ARENA = 11.4, REACH = 3.4;           // how far from the centre the visitor can go; how close a strike must be
-    const RED = () => new THREE.MeshBasicMaterial({ color: '#ff2a1a', transparent: true, opacity: 0, depthWrite: false, fog: false, side: THREE.DoubleSide });
-    const V = (x, y, z) => new THREE.Vector3(x, y, z);
-    const angDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
-    const toward = (v, to, rate, dt) => v + (to - v) * (1 - Math.exp(-rate * dt));
-
-    // ── Rig helpers: turn a bone in world space, and bend an arm to put its hand on a point ──
-    const _pq = new THREE.Quaternion(), _bq = new THREE.Quaternion(), _q = new THREE.Quaternion();
-    const _a = V(), _b = V(), _c = V(), _n = V(), _p = V(), _e = V(), _t = V();
-    const UPV = V(0, 1, 0);
-    function turnWorld(bone, q) {
-        bone.parent.getWorldQuaternion(_pq);
-        bone.getWorldQuaternion(_bq);
-        bone.quaternion.copy(_pq.invert()).multiply(q).multiply(_bq);
-        bone.updateMatrixWorld(true);
-    }
-    function reachFor(upper, lower, hand, target, pole) {
-        upper.getWorldPosition(_a); lower.getWorldPosition(_b); hand.getWorldPosition(_c);
-        const l1 = _a.distanceTo(_b), l2 = _b.distanceTo(_c);
-        _t.copy(target).sub(_a);
-        const d = Math.min((l1 + l2) * 0.998, Math.max(Math.abs(l1 - l2) + 0.001, _t.length()));
-        _n.copy(_t).normalize();
-        // The elbow sits off the line from shoulder to hand, on the side the pole points to
-        const x = (l1 * l1 - l2 * l2 + d * d) / (2 * d), up = Math.sqrt(Math.max(0, l1 * l1 - x * x));
-        _p.copy(pole).addScaledVector(_n, -pole.dot(_n));
-        if (_p.lengthSq() < 1e-6) _p.set(0, -1, 0);
-        _p.normalize();
-        _e.copy(_a).addScaledVector(_n, x).addScaledVector(_p, up);
-        turnWorld(upper, _q.setFromUnitVectors(_b.sub(_a).normalize(), _e.sub(_a).normalize()));
-        lower.getWorldPosition(_b); hand.getWorldPosition(_c);
-        _t.copy(_a).addScaledVector(_n, d);
-        turnWorld(lower, _q.setFromUnitVectors(_c.sub(_b).normalize(), _t.sub(_b).normalize()));
-    }
-
-    // ── The Watcher's poses ──
-    // hand: where its right hand is. dir: which way the scythe's shaft points (from the hand towards the blade).
-    // edge: which way the blade faces. twist: how far its body is turned (+ to its left). bend: forward lean.
-    // crouch: 0 standing to 1 low. left: where its left hand goes ('shaft' = lower on the scythe, or a point).
-    const POSE = {
-        rest:    { hand: [-0.32, 0.98, 0.22], dir: [0.14, 1, 0.06], edge: [1, 0, 0], twist: 0, bend: 0.05, crouch: 0.15, left: null },
-        cast:    { hand: [-0.3, 1.78, 0.12], dir: [0, 1, 0.05], edge: [1, 0, 0], twist: 0, bend: -0.2, crouch: 0, left: [0.34, 1.5, 0.5] },
-        roar:    { hand: [-0.62, 1.2, -0.08], dir: [-0.9, 0.42, 0], edge: [0, 0, 1], twist: 0, bend: -0.38, crouch: 0.25, left: [0.62, 1.2, -0.08] },
-        gather:  { hand: [-0.2, 1.0, 0.3], dir: [0.3, 0.9, 0.1], edge: [1, 0, 0], twist: 0, bend: 0.45, crouch: 0.95, left: [0.2, 0.95, 0.3] },
-        stagger: { hand: [-0.6, 1.55, -0.3], dir: [-0.5, 0.7, -0.5], edge: [1, 0, 0], twist: -0.5, bend: -0.5, crouch: 0.7, left: null },
-        low:     { hand: [-0.1, 0.92, 0.45], dir: [0.55, 0.2, 0.8], edge: [0, 1, 0], twist: 0.95, bend: 0.4, crouch: 0.9, left: 'shaft' },
-        down:    { hand: [-0.3, 0.6, 0.3], dir: [0.4, -0.2, 0.9], edge: [0, -1, 0], twist: 0.2, bend: 0.7, crouch: 1, left: null }
-    };
-    // A move is a list of [time, pose, ease]; 'in' snaps into the pose (a strike), 'out' settles into it.
-    const MOVE = {
-        // Draws the scythe back to its right, then cuts flat through everything in front of it, right to left
-        sweep: { lock: 0.55, active: [0.86, 1.04], total: 2.15, dmg: 28, keys: [
-            [0, POSE.rest],
-            [0.8, { hand: [-0.5, 1.15, -0.15], dir: [-0.8, 0.35, -0.5], edge: [0.5, 0, -0.85], twist: -1.0, bend: -0.05, crouch: 0.35, left: null }, 'out'],
-            [0.9, { hand: [-0.55, 0.95, 0.35], dir: [-0.75, -0.1, 0.65], edge: [0.65, 0, 0.75], twist: 0.05, bend: 0.15, crouch: 0.5, left: null }, 'in'],
-            [1.02, { hand: [-0.25, 0.9, 0.55], dir: [0.15, -0.1, 1], edge: [1, 0, -0.15], twist: 1.1, bend: 0.2, crouch: 0.5, left: null }],
-            [1.4, { hand: [0.05, 1.0, 0.5], dir: [0.5, 0.05, 0.85], edge: [0.85, 0, -0.5], twist: 1.3, bend: 0.15, crouch: 0.4, left: null }, 'out'],
-            [2.15, POSE.rest]
-        ] },
-        // The same cut coming back the other way: a backhand, left to right
-        sweepBack: { lock: 0.2, active: [0.44, 0.62], total: 1.75, dmg: 26, keys: [
-            [0, { hand: [0.05, 1.0, 0.5], dir: [0.5, 0.05, 0.85], edge: [-0.85, 0, 0.5], twist: 1.3, bend: 0.15, crouch: 0.4, left: null }],
-            [0.4, { hand: [0.08, 1.05, 0.48], dir: [0.6, 0.12, 0.75], edge: [-0.8, 0, 0.6], twist: 1.4, bend: 0.1, crouch: 0.45, left: null }, 'out'],
-            [0.5, { hand: [-0.45, 0.95, 0.45], dir: [-0.55, -0.1, 0.83], edge: [-0.83, 0, -0.55], twist: 0.1, bend: 0.2, crouch: 0.5, left: null }, 'in'],
-            [0.62, { hand: [-0.55, 0.98, 0.05], dir: [-0.85, -0.06, -0.5], edge: [0.5, 0, -0.85], twist: -1.0, bend: 0.12, crouch: 0.45, left: null }],
-            [1.0, { hand: [-0.5, 1.05, -0.1], dir: [-0.8, 0.1, -0.6], edge: [0.6, 0, -0.8], twist: -1.15, bend: 0.05, crouch: 0.35, left: null }, 'out'],
-            [1.75, POSE.rest]
-        ] },
-        // Lifts the scythe overhead in both hands and brings it straight down; it stays buried a moment
-        slam: { lock: 0.62, active: [0.92, 1.12], total: 2.6, dmg: 34, keys: [
-            [0, POSE.rest],
-            [0.9, { hand: [-0.2, 1.85, -0.1], dir: [0, 0.75, -0.65], edge: [0, -0.65, -0.75], twist: -0.15, bend: -0.3, crouch: 0, left: 'shaft' }, 'out'],
-            [1.07, { hand: [-0.1, 0.85, 0.6], dir: [0, -0.22, 1], edge: [0, -1, -0.22], twist: 0, bend: 0.55, crouch: 0.6, left: 'shaft' }, 'in'],
-            [1.7, { hand: [-0.1, 0.85, 0.6], dir: [0, -0.22, 1], edge: [0, -1, -0.22], twist: 0, bend: 0.5, crouch: 0.6, left: 'shaft' }],
-            [2.6, POSE.rest]
-        ] }
-    };
-    const EASE = { in: k => k * k * k, out: k => 1 - Math.pow(1 - k, 3), undefined: ease };
-    const blank = () => ({ hand: V(), dir: V(), edge: V(), twist: 0, bend: 0, crouch: 0, left: null });
-    const _pa = blank(), _pb = blank();
-    function readPose(src, out) {
-        out.hand.fromArray(src.hand); out.dir.fromArray(src.dir).normalize(); out.edge.fromArray(src.edge).normalize();
-        out.twist = src.twist; out.bend = src.bend; out.crouch = src.crouch; out.left = src.left;
-        return out;
-    }
-    function blendPose(a, b, k, out) {
-        out.hand.copy(a.hand).lerp(b.hand, k);
-        out.dir.copy(a.dir).lerp(b.dir, k).normalize();
-        out.edge.copy(a.edge).lerp(b.edge, k).normalize();
-        out.twist = mix(a.twist, b.twist, k); out.bend = mix(a.bend, b.bend, k); out.crouch = mix(a.crouch, b.crouch, k);
-        out.left = k < 0.5 ? a.left : b.left;
-        return out;
-    }
-    function movePose(move, t, out) {
-        const keys = move.keys;
-        let i = 0;
-        while (i < keys.length - 2 && t >= keys[i + 1][0]) i++;
-        const [t0, p0] = keys[i], [t1, p1, e] = keys[i + 1];
-        return blendPose(readPose(p0, _pa), readPose(p1, _pb), EASE[e](clamp01((t - t0) / (t1 - t0))), out);
-    }
-
-    // Puts the Watcher's body into a pose (after its animation has run) and hangs the scythe in its hand.
-    // Returns nothing; leaves the blade's three points in rig.hand / rig.top / rig.tip, in roof coordinates.
-    const rig = { hand: V(), top: V(), tip: V(), q: new THREE.Quaternion(), m: new THREE.Matrix4(), x: V(), z: V(), tw: new THREE.Quaternion(), bd: new THREE.Quaternion(), right: V(), tgt: V(), d: V(), e: V(), lt: V() };
-    const SHAFT = 2.3 - GRIP;                  // from its hand up to the top of the shaft, in body units
-    function poseWatcher(p, B, size, scytheScale) {
-        const C = SETS.top.position, yaw = B.yaw;
-        watcher.root.updateMatrixWorld(true);
-        // Body: turn at the waist and chest, bend at the waist
-        rig.right.set(Math.cos(yaw), 0, -Math.sin(yaw));
-        turnWorld(bones.spine_01, rig.tw.setFromAxisAngle(UPV, p.twist * 0.5));
-        turnWorld(bones.spine_01, rig.bd.setFromAxisAngle(rig.right, p.bend));
-        turnWorld(bones.spine_03, rig.tw);
-        // A point given in the turned-and-bent body's frame, moved out into the roof's
-        const place = (v, out, isDir) => {
-            out.copy(v);
-            if (!isDir) out.y -= 0.85;
-            out.applyAxisAngle(rig.x.set(1, 0, 0), p.bend).applyAxisAngle(UPV, p.twist);
-            if (!isDir) { out.y += 0.85; out.multiplyScalar(size); }
-            out.applyAxisAngle(UPV, yaw);
-            if (!isDir) { out.x += B.x + C.x; out.z += B.z; }
-            return out;
-        };
-        place(p.hand, rig.tgt);
-        place(p.dir, rig.d, true).normalize();
-        place(p.edge, rig.e, true);
-        reachFor(bones.upperarm_r, bones.lowerarm_r, bones.hand_r, rig.tgt, _p.set(0, -1, 0).addScaledVector(rig.right, -0.5).clone());
-        // The scythe hangs from where the hand actually got to
-        bones.hand_r.getWorldPosition(rig.hand);
-        rig.e.addScaledVector(rig.d, -rig.e.dot(rig.d)).normalize();            // blade square to the shaft
-        rig.x.copy(rig.e).negate();                                             // the blade is modelled along -x
-        rig.z.crossVectors(rig.x, rig.d);
-        top.scythe.quaternion.setFromRotationMatrix(rig.m.makeBasis(rig.x, rig.d, rig.z));
-        top.scythe.position.copy(rig.hand).addScaledVector(rig.d, -GRIP * size);
-        top.scythe.position.x -= C.x;
-        top.scythe.scale.setScalar(Math.max(0.001, scytheScale * size));
-        if (p.left) {
-            if (p.left === 'shaft') rig.lt.copy(rig.hand).addScaledVector(rig.d, -0.42 * size);
-            else place(rig.x.fromArray(p.left), rig.lt);
-            reachFor(bones.upperarm_l, bones.lowerarm_l, bones.hand_l, rig.lt, _p.set(0, -1, 0).addScaledVector(rig.right, 0.5).clone());
-        }
-        rig.top.copy(rig.hand).addScaledVector(rig.d, SHAFT * size);
-        rig.tip.copy(rig.top).addScaledVector(rig.e, 1.3 * size).addScaledVector(rig.d, -0.5 * size);
-        for (const v of [rig.hand, rig.top, rig.tip]) v.x -= C.x;
-    }
-    const _s = V();
-    function nearSeg(px, pz, a, b) {        // how far a point on the ground is from a line, both seen from above
-        const dx = b.x - a.x, dz = b.z - a.z, k = clamp01(((px - a.x) * dx + (pz - a.z) * dz) / (dx * dx + dz * dz || 1));
-        return Math.hypot(px - a.x - dx * k, pz - a.z - dz * k);
-    }
-    const BLADE = 0.95;                         // how near the blade (seen from above) has to pass to count
-
-    // ── Ground marks ──
-    const fx = {};
-    {
-        const S = SETS.top, flat = m => { m.rotation.x = -Math.PI / 2; m.position.y = 0.04; m.visible = false; S.add(m); return m; };
-        fx.wave = flat(new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 40), RED()));
-        fx.beams = Array.from({ length: 8 }, () => {
-            const mark = flat(new THREE.Mesh(new THREE.CircleGeometry(2, 18), RED()));
-            const pillar = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: '#ff3a2a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
-            pillar.scale.set(3.4, 22, 1);
-            pillar.visible = false;
-            S.add(pillar);
-            return { mark, pillar, t: -1, x: 0, z: 0, hit: false };
-        });
-        fx.orbs = Array.from({ length: 9 }, () => {
-            const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: '#ff2a1a', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
-            sp.scale.set(1.1, 1.1, 1);
-            sp.visible = false;
-            S.add(sp);
-            return { sp, live: false, p: V(), v: V(), age: 0 };
-        });
-        fx.spark = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: '#ffe6b8', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
-        fx.spark.scale.set(2.2, 2.2, 1);
-        S.add(fx.spark);
-        fx.marks = {};
-        fx.flat = flat;
-    }
-    // For each scythe move: run it once on the real body, trace where the blade goes over the ground, and keep that
-    // as a picture. The same blade test decides hits, so what is marked is exactly what is dangerous.
-    const MARK_EXTENT = 3.4;                    // half the width of the picture, in body units
-    function buildMarks() {
-        const B = { x: 0, z: 0, yaw: 0 }, N = 128, pose = blank();
-        watcher.root.position.set(0, 0, 0);
-        watcher.root.rotation.set(0, 0, 0);
-        watcher.root.scale.setScalar(BEAST);
-        for (const [name, move] of Object.entries(MOVE)) {
-            const c = document.createElement('canvas');
-            c.width = c.height = N;
-            const g = c.getContext('2d');
-            g.fillStyle = '#000';
-            g.fillRect(0, 0, N, N);
-            g.strokeStyle = '#fff';
-            g.lineCap = g.lineJoin = 'round';
-            g.lineWidth = BLADE / BEAST / (2 * MARK_EXTENT) * N * 2;
-            const px = v => (v / BEAST / (2 * MARK_EXTENT) + 0.5) * N;
-            for (let i = 0; i <= 16; i++) {
-                watcher.mixer.update(0);
-                poseWatcher(movePose(move, mix(move.active[0], move.active[1], i / 16), pose), B, BEAST, 1);
-                _s.copy(rig.hand).lerp(rig.top, 0.45);
-                g.beginPath(); g.moveTo(px(_s.x), px(_s.z)); g.lineTo(px(rig.top.x), px(rig.top.z)); g.lineTo(px(rig.tip.x), px(rig.tip.z)); g.stroke();
-            }
-            const tex = new THREE.CanvasTexture(c);
-            const m = RED();
-            m.alphaMap = tex;
-            fx.marks[name] = fx.flat(new THREE.Mesh(new THREE.PlaneGeometry(2 * MARK_EXTENT, 2 * MARK_EXTENT), m));
-        }
-    }
-
-    // ── The visitor's blade, and the bones the fight poses on them ──
-    const hb = {};
-    let blade = null;
-    function armHero() {
-        hero.root.traverse(o => { if (o.isBone && /^(upperarm_r|lowerarm_r|hand_r)$/.test(o.name)) hb[o.name] = o; });
-        if (blade) return;
-        // In this rig a hand's fingers run along its y axis and its grip runs along z
-        blade = new THREE.Group();
-        const steel = new THREE.MeshLambertMaterial({ color: '#c9c4cc', emissive: '#2a2830' });
-        const edge = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.05, 0.78), steel);
-        edge.position.z = 0.47;
-        const guard = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.2, 0.03), new THREE.MeshLambertMaterial({ color: '#6a5a3a' }));
-        guard.position.z = 0.08;
-        const grip = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.026, 0.16), new THREE.MeshLambertMaterial({ color: '#2a1c14' }));
-        blade.add(edge, guard, grip);
-        blade.position.set(-0.02, 0.085, 0);
-        hb.hand_r.add(blade);
-    }
-
-    function resetFight() {
-        Object.assign(fight, {
-            on: false, done: false, T: 0, mode: 'intro', modeT: 0, rank: null, deaths: 0, hits: 0, parries: 0, time: 0, bot: fight.bot || false, roared: false, carded: false,
-            // the visitor
-            p: { x: 0, z: 3.6, yaw: Math.PI, hp: 100, st: 100, stWait: 0, state: 'idle', t: 0, inv: false, heals: 3, maxHeals: 3, dx: 0, dz: 0, struck: false, healed: false, guardAt: -9, flick: 0 },
-            want: { attack: -9, roll: -9, heal: -9 }, guard: false,
-            // the Watcher
-            b: { x: WATCH.x, z: WATCH.z, yaw: 0, hp: 100, shown: 100, phase: 1, state: 'idle', move: null, t: 0, cool: 1.8, last: '', flinch: 0, hidden: 0, tx: 0, tz: 0, did: {}, n: 0, walk: 0, run: 0, open: 0 },
-            pose: readPose(POSE.rest, blank()), poseTo: readPose(POSE.rest, blank()), poseRate: 8,
-            size: BEAST, crown: 1, crownTo: 1, scythe: 1, gaze: 1, shake: 0, wave: null, checkpoint: 100, hot: 0, mark: null, cut: 0
-        });
-        for (const b of fx.beams) { b.t = -1; b.mark.visible = b.pillar.visible = false; }
-        for (const o of fx.orbs) { o.live = false; o.sp.visible = false; }
-        fx.wave.visible = false;
-        for (const m of Object.values(fx.marks)) m.visible = false;
-        for (const id of ['phase', 'me', 'pad', 'fell']) $(id).hidden = true;
-        $('say').textContent = '';
-        timeWarp = 1;
-    }
-    resetFight();
-
-    // ── Input: keys and mouse on a computer, a stick and four buttons on a phone ──
-    const keys = new Set(), stick = { id: null, ox: 0, oy: 0, x: 0, y: 0 };
-    const press = what => { if (fight.on) fight.want[what] = fight.T; };
-    const guard = on => { if (on && !fight.guard) fight.p.guardAt = fight.T; fight.guard = on; $('btnGuard').classList.toggle('held', on); };
-    addEventListener('keydown', e => {
-        const k = e.key.toLowerCase();
-        keys.add(k);
-        if (!fight.on || e.repeat) return;
-        if (k === ' ' || k === 'k') { e.preventDefault(); press('roll'); }
-        else if (k === 'j' || k === 'enter') press('attack');
-        else if (k === 'e' || k === 'r') press('heal');
-        else if (k === 'shift' || k === 'l' || k === 'f') guard(true);
-    });
-    addEventListener('keyup', e => { const k = e.key.toLowerCase(); keys.delete(k); if (k === 'shift' || k === 'l' || k === 'f') guard(false); });
-    addEventListener('blur', () => { keys.clear(); stick.id = null; stick.x = stick.y = 0; guard(false); });
-    addEventListener('pointerdown', e => {
-        if (!fight.on || isUI(e.target)) return;
-        if (e.pointerType === 'mouse') { if (e.button === 2) guard(true); else press('attack'); return; }
-        if (stick.id === null) {
-            stick.id = e.pointerId; stick.ox = e.clientX; stick.oy = e.clientY; stick.x = stick.y = 0;
-            $('stick').style.display = 'block';
-            $('stick').style.left = e.clientX + 'px';
-            $('stick').style.top = e.clientY + 'px';
-            $('knob').style.transform = '';
-        }
-    });
-    addEventListener('pointermove', e => {
-        if (e.pointerId !== stick.id) return;
-        const dx = e.clientX - stick.ox, dy = e.clientY - stick.oy, len = Math.hypot(dx, dy), k = Math.min(1, len / 50) / (len || 1);
-        stick.x = dx * k; stick.y = dy * k;
-        $('knob').style.transform = `translate(${stick.x * 34}px, ${stick.y * 34}px)`;
-    });
-    const dropStick = e => {
-        if (e.pointerType === 'mouse' && e.button === 2) guard(false);
-        if (e.pointerId === stick.id) { stick.id = null; stick.x = stick.y = 0; $('stick').style.display = 'none'; }
-    };
-    addEventListener('pointerup', dropStick);
-    addEventListener('pointercancel', dropStick);
-    for (const [id, what] of [['btnAtk', 'attack'], ['btnRoll', 'roll'], ['btnHeal', 'heal']]) $(id).addEventListener('pointerdown', e => { e.preventDefault(); press(what); });
-    $('btnGuard').addEventListener('pointerdown', e => { e.preventDefault(); $('btnGuard').setPointerCapture(e.pointerId); guard(true); });
-    for (const ev of ['pointerup', 'pointercancel']) $('btnGuard').addEventListener(ev, () => guard(false));
-
-    function heroAnim(name, once = false, speed = 1, restart = false, from = 0) {
-        const a = hero.play(name, { fade: 0.1, once });
-        if (a && restart) { a.reset().play(); a.time = from; }
-        hero.mixer.timeScale = speed;
-    }
-    function setMode(mode) { fight.mode = mode; fight.modeT = 0; }
-    function line(text, seconds = 2.2) {
-        $('say').textContent = text;
-        clearTimeout(line.t);
-        line.t = setTimeout(() => { if ($('say').textContent === text) $('say').textContent = ''; }, seconds * 1000);
-    }
-    function flashHurt() { $('hurt').classList.remove('on'); void $('hurt').offsetWidth; $('hurt').classList.add('on'); }
-
-    // A blow reaching the visitor. Rolling through it avoids it; a guard raised just in time turns it aside (and, if it
-    // was the scythe, leaves the Watcher open); a guard already up takes most of it, at a cost in stamina.
-    function hitPlayer(dmg, fromX, fromZ, kind = 'blade') {
-        const P = fight.p, B = fight.b;
-        if (P.inv || P.state === 'dead' || fight.mode !== 'play') return false;
-        const facing = Math.abs(angDiff(Math.atan2(fromX - P.x, fromZ - P.z), P.yaw)) < 1.9;
-        if (P.state === 'guard' && facing && kind !== 'beam') {
-            if (fight.T - P.guardAt < 0.22) {
-                fight.parries++;
-                P.flick = 1;
-                fx.spark.material.opacity = 1;
-                fx.spark.position.set(P.x + Math.sin(P.yaw) * 0.6, 1.4, P.z + Math.cos(P.yaw) * 0.6);
-                sfx.tick(); sfx.thud();
-                timeWarp = 0.25;
-                fight.shake = 0.5;
-                if (kind === 'blade') { B.state = 'stagger'; B.t = 0; B.did = {}; fight.mark = null; line('PARRIED', 0.9); }
-                return true;
-            }
-            P.st -= dmg * 1.1;
-            P.stWait = 0.9;
-            sfx.thud();
-            fight.shake = 0.4;
-            if (P.st > 0) { P.hp -= dmg * 0.15; if (P.hp > 0) return true; }
-            P.st = 0;                           // guard broken: the rest of it gets through
-            dmg *= 0.7;
-        }
-        P.hp -= dmg;
-        fight.hits++;
-        fight.shake = 1;
-        sfx.thud();
-        flashHurt();
-        const d = Math.hypot(P.x - fromX, P.z - fromZ) || 1;
-        P.dx = (P.x - fromX) / d; P.dz = (P.z - fromZ) / d;
-        if (P.hp <= 0) {
-            P.hp = 0; P.state = 'dead'; P.t = 0;
-            fight.deaths++;
-            setMode('dead');
-            heroAnim('Death01', true, 1, true);
-            sfx.roar(2.4);
-        } else { P.state = 'hurt'; P.t = 0; heroAnim('Hit_Chest', true, 1, true); }
-        return true;
-    }
-    function hitBoss(dmg) {
-        const B = fight.b;
-        if (B.hidden > 0.3 || B.state === 'roar' || fight.mode !== 'play') return;
-        if (B.state === 'stagger') dmg *= 1.75;                 // an opening is worth more
-        B.hp = Math.max(0, B.hp - dmg);
-        B.flinch = 1;
-        fight.shake = Math.max(fight.shake, 0.35);
-        fx.spark.material.opacity = 1;
-        fx.spark.position.set(mix(fight.p.x, B.x, 0.75), 1.6, mix(fight.p.z, B.z, 0.75));
-        sfx.thud();
-        if (B.hp <= 0) { setMode('won'); B.state = 'down'; B.t = 0; fight.mark = null; sfx.roar(3.5); sfx.setDrone(false); document.body.classList.add('cine'); return; }
-        const next = B.hp <= 33 ? 3 : B.hp <= 66 ? 2 : 1;
-        if (next > B.phase) { B.phase = next; fight.checkpoint = next === 2 ? 66 : 33; B.state = 'roar'; B.t = 0; B.did = {}; fight.mark = null; }
-    }
-
-    // ── The visitor ──
-    let RUN = 4.2, JOG_RATE = 1.5, WALK = 1.4;      // corrected from the clips when the fight starts
-    function updatePlayer(dt) {
-        const P = fight.p, B = fight.b, T = fight.T;
-        // Movement is relative to the Watcher: forward is towards it, sideways circles it
-        let ix = 0, iy = 0;
-        if (keys.has('w') || keys.has('arrowup')) iy += 1;
-        if (keys.has('s') || keys.has('arrowdown')) iy -= 1;
-        if (keys.has('d') || keys.has('arrowright')) ix += 1;
-        if (keys.has('a') || keys.has('arrowleft')) ix -= 1;
-        ix += stick.x; iy -= stick.y;
-        if (fight.bot) [ix, iy] = botThink(ix, iy);
-        const il = Math.hypot(ix, iy);
-        if (il > 1) { ix /= il; iy /= il; }
-        let fxd = B.x - P.x, fzd = B.z - P.z;
-        const dist = Math.hypot(fxd, fzd) || 1;
-        fxd /= dist; fzd /= dist;
-        const mx = fxd * iy - fzd * ix, mz = fzd * iy + fxd * ix;
-        const moving = il > 0.15;
-        const fresh = what => T - fight.want[what] < 0.3;
-        const can = fight.mode === 'play';
-
-        P.t += dt;
-        P.inv = false;
-        P.stWait -= dt;
-        P.flick = toward(P.flick, 0, 5, dt);
-        if (P.state === 'idle' || P.state === 'run' || P.state === 'guard') {
-            if (can && fresh('roll') && P.st > 8) {
-                fight.want.roll = -9;
-                P.state = 'roll'; P.t = 0; P.st -= 22; P.stWait = 0.8;
-                // Rolls go where the stick points, or straight back if it is at rest
-                P.dx = moving ? mx / il : -fxd; P.dz = moving ? mz / il : -fzd;
-                P.yaw = Math.atan2(P.dx, P.dz);
-                heroAnim('Roll', true, 1.9, true, 0.12);
-                sfx.whoosh();
-            } else if (can && fresh('attack') && P.st > 6) {
-                fight.want.attack = -9;
-                P.state = 'attack'; P.t = 0; P.st -= 15; P.stWait = 0.8; P.struck = false;
-                P.yaw = Math.atan2(fxd, fzd);
-                // The clip winds up for a third of a second; skip some of that so the blow answers the button
-                heroAnim('Sword_Attack', true, 1.3, true, 0.1);
-            } else if (can && fresh('heal') && P.heals > 0 && P.hp < 100) {
-                fight.want.heal = -9;
-                P.state = 'heal'; P.t = 0; P.healed = false;
-                heroAnim('Interact', true, 1.9, true);
-            } else if (can && fight.guard && P.st > 0) {
-                if (P.state !== 'guard') { P.state = 'guard'; P.guardAt = Math.max(P.guardAt, T - 0.05); }
-                P.yaw += angDiff(Math.atan2(fxd, fzd), P.yaw) * Math.min(1, dt * 12);
-                P.stWait = 0.35;
-                heroAnim('Idle_Loop');
-            } else if (moving && fight.mode !== 'dead') {
-                P.state = 'run';
-                P.x += mx * RUN * dt; P.z += mz * RUN * dt;
-                P.yaw += angDiff(Math.atan2(mx, mz), P.yaw) * Math.min(1, dt * 14);
-                heroAnim('Jog_Fwd_Loop', false, JOG_RATE * Math.min(1, il + 0.2));
-                heroSteps();
-            } else {
-                P.state = 'idle';
-                P.yaw += angDiff(Math.atan2(fxd, fzd), P.yaw) * Math.min(1, dt * 8);
-                heroAnim('Sword_Idle');
-            }
-        } else if (P.state === 'roll') {
-            // The clip is a dive: up, over, and back to the feet. The middle of it is the part nothing can touch.
-            P.inv = P.t > 0.06 && P.t < 0.5;
-            const v = P.t < 0.52 ? 7.2 : 2.2;
-            P.x += P.dx * v * dt; P.z += P.dz * v * dt;
-            if (P.t >= 0.7) P.state = 'idle';
-        } else if (P.state === 'attack') {
-            // The blade comes down a quarter of a second in
-            if (!P.struck && P.t >= 0.25) {
-                P.struck = true;
-                if (dist < REACH) hitBoss(4); else sfx.tick();
-            }
-            if (P.t >= 0.6) P.state = 'idle';
-        } else if (P.state === 'heal') {
-            if (!P.healed && P.t >= 0.6) { P.healed = true; P.heals--; P.hp = Math.min(100, P.hp + 45); sfx.kindle(); }
-            if (P.t >= 1) P.state = 'idle';
-        } else if (P.state === 'hurt') {
-            const v = Math.max(0, 6 * (1 - P.t / 0.3));
-            P.x += P.dx * v * dt; P.z += P.dz * v * dt;
-            if (P.t >= 0.36) P.state = 'idle';
-        }
-        if (P.stWait <= 0) P.st = Math.min(100, P.st + 42 * dt);
-
-        // Stay on the roof, and out of the brazier and the Watcher itself
-        const r = Math.hypot(P.x, P.z);
-        if (r > ARENA) { P.x *= ARENA / r; P.z *= ARENA / r; }
-        if (r < 1.6) { const k = 1.6 / (r || 1); P.x = (P.x || 0.01) * k; P.z *= k; }
-        const d2 = Math.hypot(P.x - B.x, P.z - B.z);
-        if (d2 < 1.7 && B.hidden < 0.5) { P.x = B.x + (P.x - B.x) / d2 * 1.7; P.z = B.z + (P.z - B.z) / d2 * 1.7; }
-    }
-
-    // ── The Watcher ──
-    function pick(B, dist) {
-        const opts = [];
-        const add = (name, w) => { if (name !== B.last) opts.push([name, w]); };
-        if (dist < 3.2) add('burst', 4);                          // too close for the scythe: it throws them off
-        if (dist < 8) { add('sweep', 3); add('slam', 2); if (B.phase >= 2) add('scatter', 1.2); }
-        if (dist >= 5.5) { add('lunge', 3); add('slam', 1); if (B.phase >= 2) add('volley', 3); }
-        if (B.phase >= 3) add('beams', 2.2);
-        let roll = Math.random() * opts.reduce((s, o) => s + o[1], 0);
-        for (const [name, w] of opts) { roll -= w; if (roll <= 0) return name; }
-        return 'sweep';
-    }
-    const _mp = blank();
-    function updateBoss(dt) {
-        const B = fight.b, P = fight.p;
-        const sp = 1 + (B.phase - 1) * 0.14;                    // everything it does gets quicker each phase
-        const dx = P.x - B.x, dz = P.z - B.z, dist = Math.hypot(dx, dz) || 1, aim = Math.atan2(dx, dz);
-        const face = rate => { B.yaw += angDiff(aim, B.yaw) * Math.min(1, dt * rate); };
-        const first = key => { if (B.did[key]) return false; B.did[key] = true; return true; };
-        const begin = (state, move) => { B.state = state; B.move = move || null; B.t = 0; B.did = {}; B.last = state; B.n = 0; };
-        const settle = () => { B.state = 'idle'; B.move = null; B.t = 0; B.cool = (0.45 + Math.random() * 0.7) / sp; fight.mark = null; };
-        const hold = (name, rate = 9) => { readPose(POSE[name], fight.poseTo); fight.poseRate = rate; };
-        B.t += dt;
-        B.flinch = toward(B.flinch, 0, 5, dt);
-        fight.hot = 0;
-        let walking = 0, running = 0;
-
-        if (fight.mode !== 'play') {
-            if (B.state !== 'down' && fight.mode !== 'intro') { face(2); hold('rest', 4); }
-        } else if (B.state === 'idle') {
-            face(3.2);
-            hold('rest', 6);
-            if (dist > 6.2) { const v = WALK * fight.size * 0.62 * sp; B.x += dx / dist * v * dt; B.z += dz / dist * v * dt; walking = 1; }
-            B.cool -= dt;
-            if (B.cool <= 0) {
-                const next = pick(B, dist);
-                if (MOVE[next]) begin(next, next); else begin(next);
-            }
-        } else if (B.move) {
-            // A scythe move: the pose comes from its keys, the mark from its traced path, the hit from the blade itself
-            const move = MOVE[B.move], t = B.t * sp;
-            if (t < move.lock) face(5);
-            movePose(move, t, fight.poseTo);
-            fight.poseRate = 40;
-            fight.hot = clamp01(t / move.active[0]) * (t < move.active[1] ? 1 : 0);
-            fight.mark = t < move.active[1] + 0.1 ? { name: B.move, x: B.x, z: B.z, yaw: B.yaw, k: clamp01(t / move.active[0]) } : null;
-            fight.cut = t >= move.active[0] && t <= move.active[1] ? move.dmg : 0;
-            if (first('whoosh') ? false : t >= move.active[0] - 0.05 && first('cut')) sfx.whoosh();
-            if (B.move === 'slam' && t >= move.active[1] && first('land')) {
-                sfx.thud(); sfx.rumble(1.2); fight.shake = Math.max(fight.shake, 0.7);
-                fight.wave = { x: rig.tip.x, z: rig.tip.z, r: 0.6, max: 10, hit: false };
-            }
-            if (t >= move.total) {
-                // In later phases a sweep is sometimes followed straight back the other way
-                if (B.move === 'sweep' && B.phase >= 2 && Math.random() < 0.45) begin('sweepBack', 'sweepBack');
-                else settle();
-            } else if (B.move === 'sweep' && t >= 1.4 && B.phase >= 2 && first('chain') && Math.random() < 0.45) begin('sweepBack', 'sweepBack');
-        } else if (B.state === 'lunge') {
-            // Drops low, crosses the roof in a few strides, and arrives already cutting
-            const wind = 0.6 / sp;
-            hold('low', 9);
-            if (B.t < wind) {
-                face(6);
-                const go = Math.max(0, dist - 4.2);
-                B.tx = B.x + dx / dist * go; B.tz = B.z + dz / dist * go;
-                fight.mark = { name: 'sweepBack', x: B.tx, z: B.tz, yaw: B.yaw, k: B.t / wind * 0.6 };
-            } else if (B.t < wind + 0.42) {
-                if (first('go')) { sfx.whoosh(); B.vx = (B.tx - B.x) / 0.42; B.vz = (B.tz - B.z) / 0.42; }
-                B.x += B.vx * dt; B.z += B.vz * dt;
-                running = 1;
-                fight.mark = { name: 'sweepBack', x: B.tx, z: B.tz, yaw: B.yaw, k: 0.6 };
-            } else { begin('sweepBack', 'sweepBack'); B.last = 'lunge'; B.t = 0.3 / sp; }
-        } else if (B.state === 'burst') {
-            // Gathers itself in, then throws everything near it outwards
-            const wind = 0.75 / sp;
-            if (B.t < wind) { hold('gather', 8); fight.hot = B.t / wind; }
-            else {
-                hold('roar', 22);
-                if (first('out')) { sfx.thud(); sfx.rumble(1); fight.shake = Math.max(fight.shake, 0.6); fight.wave = { x: B.x, z: B.z, r: 1, max: 6, hit: false }; }
-                if (B.t > wind + 1.1 / sp) settle();
-            }
-        } else if (B.state === 'volley') {
-            // Some of its eyes leave its body and come looking
-            const wind = 0.75 / sp, count = B.phase >= 3 ? 7 : 5;
-            face(3); hold('cast', 8);
-            if (B.t >= wind) {
-                const n = Math.min(count, Math.floor((B.t - wind) / 0.22) + 1);
-                while (B.n < n) {
-                    B.n++;
-                    const o = fx.orbs.find(q => !q.live);
-                    if (!o) break;
-                    o.live = true; o.age = 0;
-                    o.p.set(B.x + (Math.random() - 0.5) * 2, 0.9 * fight.size + Math.random() * 1.5, B.z);
-                    o.v.set(P.x - o.p.x, 1.2 - o.p.y, P.z - o.p.z).normalize().multiplyScalar(11.5 * sp);
-                    sfx.eye(1, 0);
+    // Lives in assets/fight/: core.js runs it (forms in order, cut-scenes, hazards, checkpoints, the result), player.js is
+    // the visitor, forms/*.js are the boss's forms. The page hands over what it built and drives it from the frame loop.
+    let fight = null;
+    // Forms in order. The later two do not exist yet; the fight skips a form whose file is missing.
+    const FORMS = [
+        () => import('../assets/fight/forms/watcher.js'),
+        () => import('../assets/fight/forms/player2.js'),
+        () => import('../assets/fight/forms/author.js')
+    ];
+    function makeFight() {
+        fight = createFight({
+            THREE, arena: SETS.top, camera, camTo, look,
+            snap: () => { camSnap = true; },
+            baseFov: () => (camera.aspect < 0.8 ? 72 : 55),
+            fade: fadeTo,
+            sfx, hero, heroCls, heroName: who, heroSteps: () => heroSteps(), loadCharacter,
+            $, store, track, touch,
+            parts: {
+                watcher: {
+                    body: watcher, bones, scythe: top.scythe, edge: top.edge, eyes: top.void, gaze: top.gaze, crown: top.crown,
+                    aura: top.aura, glow: top.glow, clip: top.clip, lean: top.lean, grip: GRIP, home: WATCH, small: BODY, big: BEAST,
+                    reach(v) { if (v !== undefined) armReach = v; return armReach; }
                 }
-                if (B.t >= wind + count * 0.22 + 1 / sp) settle();
-            }
-        } else if (B.state === 'scatter') {
-            // Comes apart into the dark, and pulls itself together behind the visitor
-            hold('gather', 6);
-            if (B.t < 0.5) B.hidden = B.t / 0.5;
-            else if (B.t < 0.95) {
-                B.hidden = 1;
-                if (first('move')) {
-                    sfx.whoosh();
-                    // Behind them, as seen from where it was; pulled in if that would be off the roof
-                    let nx = P.x + dx / dist * 5.5, nz = P.z + dz / dist * 5.5;
-                    const r = Math.hypot(nx, nz);
-                    if (r > ARENA - 1.5) { nx *= (ARENA - 1.5) / r; nz *= (ARENA - 1.5) / r; }
-                    if (Math.hypot(nx, nz) < 3) { nx = P.x - dx / dist * 5.5; nz = P.z - dz / dist * 5.5; }
-                    B.x = nx; B.z = nz; B.yaw = Math.atan2(P.x - nx, P.z - nz);
-                }
-            } else if (B.t < 1.4) B.hidden = 1 - (B.t - 0.95) / 0.45;
-            else { B.hidden = 0; begin('sweep', 'sweep'); B.last = 'scatter'; B.t = 0.25 / sp; }
-        } else if (B.state === 'beams') {
-            // Calls on the eyes still out in the dark; where they look, the stone burns
-            const wind = 0.85 / sp, count = 6;
-            face(2); hold('cast', 8);
-            if (B.t >= wind) {
-                const n = Math.min(count, Math.floor((B.t - wind) / 0.42) + 1);
-                while (B.n < n) {
-                    B.n++;
-                    const b = fx.beams.find(q => q.t < 0);
-                    if (!b) break;
-                    // Mostly where the visitor is; sometimes where they are heading
-                    const lead = Math.random() < 0.4 ? 1.6 : 0;
-                    b.x = P.x + (P.state === 'run' ? Math.sin(P.yaw) * lead : 0); b.z = P.z + (P.state === 'run' ? Math.cos(P.yaw) * lead : 0);
-                    b.t = 0; b.hit = false;
-                    sfx.eye(1, 0);
-                }
-                if (B.t >= wind + count * 0.42 + 1.5 / sp) settle();
-            }
-        } else if (B.state === 'stagger') {
-            // Its blow was turned aside: thrown open for a moment, and worth hitting
-            hold('stagger', 16);
-            fight.cut = 0;
-            if (B.t > 1.9) settle();
-        } else if (B.state === 'roar') {
-            // Losing a third of itself: it throws the visitor back, and comes on harder
-            hold(B.t < 0.45 ? 'gather' : 'roar', 12);
-            B.hidden = 0; fight.cut = 0;
-            if (B.t >= 0.45 && first('roar')) {
-                sfx.roar(2.6); sfx.rumble(2.4); fight.shake = 1;
-                line(B.phase === 2 ? 'LOOK AT ME.' : 'DO NOT LOOK AWAY.', 2.4);
-                fight.crownTo = B.phase === 2 ? 1.35 : 1.7;
-                for (const o of fx.orbs) o.live = false;
-                for (const b of fx.beams) b.t = -1;
-                fight.wave = { x: B.x, z: B.z, r: 1, max: 9, hit: true };
-            }
-            if (B.t > 0.45 && B.t < 0.95 && dist < 8) { P.x += dx / dist * 16 * dt; P.z += dz / dist * 16 * dt; }
-            if (B.t > 2.6) settle();
-        }
-        if (!B.move) fight.cut = 0;
-        B.walk = toward(B.walk, walking, 6, dt);
-        B.run = toward(B.run, running, 14, dt);
-        // Keep it on the roof and off the brazier
-        const r = Math.hypot(B.x, B.z);
-        if (r > ARENA - 1) { B.x *= (ARENA - 1) / r; B.z *= (ARENA - 1) / r; }
-        if (r < 2.4) { const k = 2.4 / (r || 1); B.x = (B.x || 0.01) * k; B.z *= k; }
-    }
-
-    // ── Things in the air and on the ground ──
-    function updateHazards(dt) {
-        const P = fight.p;
-        if (fight.wave) {
-            const w = fight.wave;
-            w.r += 9.5 * dt;
-            fx.wave.visible = true;
-            fx.wave.position.set(w.x, 0.05, w.z);
-            fx.wave.scale.setScalar(w.r);
-            fx.wave.material.opacity = 0.75 * (1 - w.r / (w.max + 1));
-            if (!w.hit && Math.abs(Math.hypot(P.x - w.x, P.z - w.z) - w.r) < 0.75) w.hit = hitPlayer(16, w.x, w.z, 'wave') || P.inv;
-            if (w.r > w.max) { fight.wave = null; fx.wave.visible = false; }
-        }
-        for (const o of fx.orbs) {
-            o.sp.visible = o.live;
-            if (!o.live) continue;
-            o.age += dt;
-            // They bend towards the visitor for a moment, then fly straight
-            if (o.age < 0.9) {
-                tmp.set(P.x - o.p.x, 1.2 - o.p.y, P.z - o.p.z).normalize().multiplyScalar(o.v.length());
-                o.v.lerp(tmp, Math.min(1, dt * 2.2));
-            }
-            o.p.addScaledVector(o.v, dt);
-            o.sp.position.copy(o.p);
-            if (Math.hypot(o.p.x - P.x, o.p.z - P.z) < 0.85 && o.p.y < 2.6) { if (hitPlayer(11, o.p.x, o.p.z, 'orb') || !P.inv) o.live = false; }
-            if (o.age > 3 || o.p.y < 0.1) o.live = false;
-        }
-        for (const b of fx.beams) {
-            if (b.t < 0) { b.mark.visible = b.pillar.visible = false; continue; }
-            b.t += dt;
-            b.mark.visible = true;
-            b.mark.position.set(b.x, 0.045, b.z);
-            b.pillar.position.set(b.x, 10, b.z);
-            if (b.t < 0.85) { b.mark.material.opacity = 0.1 + 0.3 * b.t / 0.85; b.pillar.visible = false; }
-            else {
-                b.pillar.visible = true;
-                const k = 1 - (b.t - 0.85) / 0.4;
-                b.pillar.material.opacity = Math.max(0, k);
-                b.mark.material.opacity = Math.max(0, k) * 0.8;
-                if (!b.hit) { b.hit = true; sfx.thud(); if (Math.hypot(P.x - b.x, P.z - b.z) < 2.1) hitPlayer(22, b.x, b.z, 'beam'); }
-                if (k <= 0) b.t = -1;
-            }
-        }
-        fx.spark.material.opacity = Math.max(0, fx.spark.material.opacity - dt * 6);
-        // The mark for a scythe move: the traced path of the blade, laid where the Watcher stands
-        for (const [name, m] of Object.entries(fx.marks)) {
-            const on = fight.mark && fight.mark.name === name;
-            m.visible = !!on;
-            if (!on) continue;
-            m.position.set(fight.mark.x, 0.042, fight.mark.z);
-            m.rotation.z = fight.mark.yaw;
-            m.scale.setScalar(fight.size);
-            m.material.opacity = 0.08 + 0.3 * fight.mark.k;
-        }
-    }
-
-    // ── A stand-in player for testing: circles, strikes in the openings, rolls or parries what it can ──
-    function botThink() {
-        const P = fight.p, B = fight.b, dist = Math.hypot(P.x - B.x, P.z - B.z);
-        const blade = B.move && fight.hot > 0.86 && fight.mark && nearMark(P.x, P.z);
-        const danger = blade || (fight.wave && !fight.wave.hit && Math.abs(Math.hypot(P.x - fight.wave.x, P.z - fight.wave.z) - fight.wave.r) < 1.6)
-            || fx.orbs.some(o => o.live && Math.hypot(o.p.x - P.x, o.p.z - P.z) < 2.2) || fx.beams.some(b => b.t > 0.55 && b.t < 0.85 && Math.hypot(P.x - b.x, P.z - b.z) < 2.3);
-        if (blade && fight.botParry && fight.hot > 0.97) { guard(true); setTimeout(() => guard(false), 250); }
-        else if (danger && fight.botSkill > Math.random() * 0.999) press('roll');
-        else if (P.hp < 45 && P.heals > 0 && fight.hot < 0.2) press('heal');
-        else if (dist < REACH - 0.3 && (fight.hot < 0.3 || B.state === 'stagger') && P.st > 30) press('attack');
-        return [B.state === 'beams' ? 1 : 0.35, dist > REACH - 0.8 ? 1 : 0];
-    }
-    // Roughly whether a point is inside the reach of the move being wound up (the bot only; hits use the blade)
-    function nearMark(x, z) { const m = fight.mark, d = Math.hypot(x - m.x, z - m.z); return d > 1.5 && d < 8.5; }
-
-    // How fast a walking or jogging clip actually covers ground, from how far a foot travels in it
-    function clipSpeed(name) {
-        const a = hero.actions[name], d = a.getClip().duration;
-        let foot = null, lo = 9, hi = -9;
-        hero.root.traverse(o => { if (o.isBone && o.name === 'foot_r') foot = o; });
-        hero.stopAll();
-        a.reset().play();
-        const yaw = hero.root.rotation.y;
-        hero.root.rotation.set(0, 0, 0);
-        for (let i = 0; i < 16; i++) { a.time = d * i / 16; hero.mixer.update(0); hero.root.updateMatrixWorld(true); foot.getWorldPosition(tmp); lo = Math.min(lo, tmp.z); hi = Math.max(hi, tmp.z); }
-        hero.stopAll();
-        hero.root.rotation.y = yaw;
-        return (hi - lo) * 2 / d;
-    }
-
-    let rigged = false;
-    function startFight() {
-        resetFight();
-        if (!rigged) {
-            rigged = true;
-            // Match feet to ground speed: the visitor jogs a little faster than the clip, the Watcher walks slower
-            const jog = clipSpeed('Jog_Fwd_Loop');
-            WALK = clipSpeed('Walk_Loop');
-            RUN = jog * JOG_RATE;
-            armHero();
-        }
-        // From here its body is driven directly: three stances blended by weight, with the arms and scythe posed on top
-        watcher.stopAll();
-        for (const n of ['Idle_Loop', 'Crouch_Idle_Loop', 'Walk_Loop', 'Sprint_Loop', 'Fixing_Kneeling']) watcher.actions[n].reset().setEffectiveWeight(n === 'Idle_Loop' ? 1 : 0).play();
-        watcher.mixer.timeScale = 1;
-        if (!fx.marks.sweep) buildMarks();
-        hero.stopAll();
-        fight.on = true;
-        document.body.classList.add('fighting', 'cine');
-        $('me').hidden = false;
-        $('pad').hidden = !touch;
-        camSnap = true;
-    }
-    function abortFight() { fight.rank = '—'; fight.done = true; }
-
-    // The fight's rules, every frame (bodies are posed afterwards, in fightPose)
-    function fightFrame(dt) {
-        const C = SETS.top.position, P = fight.p, B = fight.b;
-        fight.T += dt;
-        fight.modeT += dt;
-        timeWarp = Math.min(1, timeWarp + dt * 4);
-        if (fight.mode === 'intro') {
-            // It shows itself before anything starts: gathers, roars, and drives the scythe's heel into the stone
-            const t = fight.modeT;
-            if (t < 1.3) { readPose(POSE.gather, fight.poseTo); fight.poseRate = 5; }
-            else if (t < 3.3) {
-                readPose(POSE.roar, fight.poseTo); fight.poseRate = 14;
-                if (!fight.roared) { fight.roared = true; sfx.roar(2.4); sfx.rumble(2); fight.shake = 1; fight.wave = { x: B.x, z: B.z, r: 1, max: 9, hit: true }; camSnap = true; }
-            } else { readPose(POSE.rest, fight.poseTo); fight.poseRate = 5; }
-            if (t > 3.6 && !fight.carded) {
-                fight.carded = true;
-                camSnap = true;
-                document.body.classList.remove('cine');
-                $('phaseTitle').textContent = 'THE WATCHER';
-                $('phaseHint').innerHTML = touch
-                    ? 'Left thumb to move. <b>HIT</b> to strike, <b>ROLL</b> through attacks,<br>hold <b>GUARD</b> to block (tap it late to parry), <b>✚</b> to heal.'
-                    : '<b>W A S D</b> move &nbsp; <b>J</b> or <b>CLICK</b> strike &nbsp; <b>SPACE</b> roll<br>hold <b>SHIFT</b> or <b>RIGHT CLICK</b> to guard, tap it late to parry &nbsp; <b>E</b> heal';
-                $('phase').hidden = false;
-                sfx.thud();
-            }
-            if (t > 7.5 || (t > 4.4 && (keys.size || stick.id !== null || fight.T - Math.max(fight.want.attack, fight.want.roll) < 0.3 || fight.bot))) { $('phase').hidden = true; setMode('play'); }
-        } else if (fight.mode === 'play') fight.time += dt;
-        else if (fight.mode === 'dead') {
-            if (fight.modeT > 1.3) $('fell').hidden = false;
-            if (fight.modeT > 3) fadeTo(true);
-            if (fight.modeT > 3.8) {
-                // Back to the start of this phase, with one more ember than last time
-                const keep = { deaths: fight.deaths, hits: fight.hits, parries: fight.parries, time: fight.time, checkpoint: fight.checkpoint, bot: fight.bot, botSkill: fight.botSkill, botParry: fight.botParry, roared: true, carded: true };
-                const phase = B.phase;
-                resetFight();
-                Object.assign(fight, keep, { on: true, crownTo: phase === 1 ? 1 : phase === 2 ? 1.35 : 1.7 });
-                fight.b.hp = fight.b.shown = keep.checkpoint; fight.b.phase = phase;
-                fight.p.heals = fight.p.maxHeals = Math.min(6, 3 + keep.deaths);
-                $('me').hidden = false; $('pad').hidden = !touch;
-                hero.stopAll();
-                setMode('play');
-                camSnap = true;
-                fadeTo(false);
-                return;
-            }
-        } else if (fight.mode === 'won') {
-            readPose(POSE.down, fight.poseTo); fight.poseRate = 2.2;
-            if (fight.modeT > 6 && !fight.done) {
-                const d = fight.deaths, hh = fight.hits;
-                fight.rank = d === 0 && hh <= 2 ? 'S' : d === 0 ? 'A' : d <= 1 ? 'B' : d <= 3 ? 'C' : 'D';
-                fight.done = true;
-            }
-        }
-
-        updatePlayer(dt);
-        updateBoss(dt);
-        updateHazards(dt);
-
-        // Its stance: standing, crouched, walking or running, mixed by weight; feet keep pace with the ground
-        const won = fight.mode === 'won';
-        blendPose(fight.pose, fight.poseTo, 1 - Math.exp(-fight.poseRate * dt), fight.pose);
-        const A = watcher.actions, kneel = won ? clamp01(fight.modeT / 1.5) : 0;
-        const move = Math.max(B.walk, B.run), crouch = fight.pose.crouch * (1 - move) * (1 - kneel);
-        A.Walk_Loop.setEffectiveWeight(B.walk * (1 - B.run) * (1 - kneel));
-        A.Sprint_Loop.setEffectiveWeight(B.run * (1 - kneel));
-        A.Crouch_Idle_Loop.setEffectiveWeight(crouch);
-        A.Fixing_Kneeling.setEffectiveWeight(kneel);
-        A.Idle_Loop.setEffectiveWeight(Math.max(0, 1 - move - crouch - kneel));
-        A.Walk_Loop.setEffectiveTimeScale(0.62 * (1 + (B.phase - 1) * 0.14));
-        A.Fixing_Kneeling.setEffectiveTimeScale(0.3);
-        fight.size = toward(fight.size, won ? BODY + 0.6 : BEAST + (B.phase - 1) * 0.2, 1.2, dt);
-        watcher.root.position.set(B.x, 0, B.z);
-        watcher.root.scale.setScalar(fight.size);
-        watcher.root.rotation.set(-B.flinch * 0.08, B.yaw, 0);
-        armReach = toward(armReach, won ? 1 : 1.32, 1.5, dt);
-        hero.root.position.set(C.x + P.x, 0, P.z);
-        hero.root.rotation.set(0, P.yaw, 0);
-
-        // The visitor's bars
-        $('meHp').style.width = P.hp + '%';
-        $('meSt').style.width = Math.max(0, P.st) + '%';
-        $('meHeals').textContent = '✚'.repeat(P.heals) + '·'.repeat(Math.max(0, P.maxHeals - P.heals));
-        $('btnHeal').style.opacity = P.heals ? 1 : 0.35;
-        B.shown = toward(B.shown, B.hp, 6, dt);
-        $('bossFill').style.width = B.shown + '%';
-
-        // ── Camera ──
-        fight.shake = toward(fight.shake, 0, 5, dt);
-        const jolt = fight.shake * 0.07, size = fight.size;
-        const fwX = Math.sin(B.yaw), fwZ = Math.cos(B.yaw);
-        if (fight.mode === 'intro' && fight.modeT < 3.6) {
-            // First low and close under its chin as it gathers; then wide, from behind the visitor, for the roar
-            if (fight.modeT < 1.3) { camTo.set(C.x + B.x + fwX * 4.2 + fwZ * 1.6, 0.7, B.z + fwZ * 4.2 - fwX * 1.6); look.set(C.x + B.x, 0.8 * size, B.z); }
-            else { camTo.set(C.x + P.x + 2.4 + Math.sin(clockT * 47) * jolt, 1.2 + Math.cos(clockT * 53) * jolt, P.z + 5.5); look.set(C.x + B.x, 0.7 * size, B.z); }
-        } else if (won) {
-            // Slowly round to its face as it goes down
-            const a = B.yaw + 0.5 + fight.modeT * 0.06;
-            camTo.set(C.x + B.x + Math.sin(a) * 6.5, 1.6, B.z + Math.cos(a) * 6.5);
-            look.set(C.x + B.x, 0.45 * size, B.z);
-        } else {
-            // Locked on: behind the visitor on the line from the Watcher, backing off when they are close
-            let bx = P.x - B.x, bz = P.z - B.z;
-            const d = Math.hypot(bx, bz) || 1;
-            bx /= d; bz /= d;
-            const back = 5.4 + Math.max(0, 7 - d) * 0.55;
-            camTo.set(C.x + P.x + bx * back + bz * 1.1 + Math.sin(clockT * 47) * jolt, 2.7 + Math.max(0, 7 - d) * 0.22 + Math.cos(clockT * 53) * jolt, P.z + bz * back - bx * 1.1);
-            look.set(C.x + mix(P.x, B.x, 0.72), mix(1.4, 0.62 * size, 0.72), mix(P.z, B.z, 0.72));
-        }
-        // A fixed viewpoint for checking poses (debug only)
-        if (fight.view) { camTo.set(C.x + fight.view[0], fight.view[1], fight.view[2]); look.set(C.x + fight.view[3], fight.view[4], fight.view[5]); camSnap = true; }
-    }
-
-    // Poses both bodies on top of their animation, places everything that hangs off them, and tests the blade
-    const _hq = new THREE.Quaternion(), _hd = V(), _ht = V();
-    function fightPose(dt) {
-        const C = SETS.top.position, P = fight.p, B = fight.b, size = fight.size, won = fight.mode === 'won';
-        // The Watcher: body, arms, scythe
-        fight.scythe = toward(fight.scythe, won ? 0 : 1 - B.hidden, 6, dt);
-        poseWatcher(fight.pose, B, size, fight.scythe);
-        top.scythe.visible = fight.scythe > 0.02;
-        const heat = Math.max(fight.hot, B.phase === 3 ? 0.35 : 0);
-        top.edge.material.color.setRGB(1, 0.16 + heat * 0.84, 0.1 + heat * 0.9);
-        // The blade, while it is cutting: does it pass over the visitor?
-        if (fight.cut && !B.did.hit) {
-            _s.copy(rig.hand).lerp(rig.top, 0.45);
-            if (Math.min(nearSeg(P.x, P.z, _s, rig.top), nearSeg(P.x, P.z, rig.top, rig.tip)) < BLADE) { B.did.hit = true; hitPlayer(fight.cut, B.x, B.z, 'blade'); }
-        }
-        // Coming apart: the body sinks out of sight and only the eyes are left, flung wide
-        top.clip.constant = B.hidden > 0 ? (1 - B.hidden) * size * 2 : 99;
-        fight.crown = toward(fight.crown, won ? 0 : fight.crownTo, 1.6, dt);
-        const tw = B.yaw + fight.pose.twist, sy = Math.sin(tw), cy = Math.cos(tw);
-        bones.spine_03.getWorldPosition(tmp).sub(C);
-        top.crown.position.set(tmp.x - sy * 0.12 * size, tmp.y, tmp.z - cy * 0.12 * size);
-        top.crown.rotation.set(fight.pose.bend, tw, 0);
-        top.crown.scale.setScalar(Math.max(0.001, fight.crown * size * (1 - B.hidden)));
-        // Its eyes are its health: they shut as it loses
-        top.void.forEach((e, i) => {
-            const u = e.userData;
-            bones[u.bone].getWorldPosition(tmp).sub(C);
-            const ox = u.on.x * size, oz = u.on.z * size, spread = B.hidden * (2 + (i % 5));
-            e.position.set(tmp.x + ox * cy + oz * sy + Math.cos(i * 2.4) * spread, tmp.y + u.on.y * size + B.hidden * (1.5 + Math.sin(i) * 2), tmp.z - ox * sy + oz * cy + Math.sin(i * 2.4) * spread);
-            e.scale.setScalar(0.2 * size);
-            e.quaternion.copy(camera.quaternion);
-            const want = i / top.void.length < B.hp / 100 - 0.02 ? 0.8 + 0.2 * Math.sin(clockT * 7 + u.goAt * 9) : 0;
-            setOpen(e, toward(u.open, want * (1 - B.flinch * 0.7), 8, dt));
+            },
+            forms: FORMS
         });
-        bones.Head.getWorldPosition(tmp).sub(C);
-        top.gaze.position.set(tmp.x + sy * 0.11 * size, tmp.y + 0.05 * size, tmp.z + cy * 0.11 * size);
-        top.gaze.scale.setScalar(0.87 * size);
-        top.gaze.quaternion.copy(camera.quaternion);
-        top.glow.position.set(tmp.x + sy * 1.4, tmp.y - 0.2, tmp.z + cy * 1.4);
-        fight.gaze = toward(fight.gaze, won ? 0.3 : 1 - B.hidden, 3, dt);
-        setOpen(top.gaze, fight.gaze * (0.92 + Math.sin(clockT * 9) * 0.08));
-        top.glow.intensity = (4 + B.phase * 2.5) * fight.gaze + B.flinch * 6 + fight.hot * 5;
-        top.aura.scale.set(4.4 * size, 4.2 * size, 1);
-        top.aura.position.set(B.x - Math.sin(B.yaw) * 0.8, 1.15 * size, B.z - Math.cos(B.yaw) * 0.8);
-        top.aura.material.opacity = (0.4 + B.phase * 0.17) * fight.gaze;
-
-        // The visitor's guard: the blade is brought up across the body, and flicked outwards on a parry
-        if (blade) {
-            if (P.state === 'guard' || P.flick > 0.05) {
-                hero.root.updateMatrixWorld(true);
-                const s = Math.sin(P.yaw), c = Math.cos(P.yaw), k = P.flick;
-                // In front of the face, a little to the off side
-                _ht.set(0.06, 1.24 + k * 0.1, 0.4);
-                _ht.set(_ht.x * c + _ht.z * s + C.x + P.x, _ht.y, -_ht.x * s + _ht.z * c + P.z);
-                reachFor(hb.upperarm_r, hb.lowerarm_r, hb.hand_r, _ht, _p.set(-c, -0.8, s).clone());
-                // The blade lies across, pointing up and to the left; on a parry it whips out to the right
-                _hd.set(mix(0.75, -0.7, k), mix(0.62, 0.5, k), mix(0.2, 0.5, k)).normalize();
-                _hd.set(_hd.x * c + _hd.z * s, _hd.y, -_hd.x * s + _hd.z * c);
-                hb.hand_r.getWorldQuaternion(_hq);
-                blade.quaternion.copy(_hq.invert()).multiply(_q.setFromUnitVectors(_t.set(0, 0, 1), _hd));
-            } else blade.quaternion.identity();
-        }
-    }
-
-    // The fight's last word: how it went
-    const RANKS = ['—', 'D', 'C', 'B', 'A', 'S'];
-    function showResult() {
-        const r = fight.rank || '—', s = Math.round(fight.time);
-        $('rank').textContent = r;
-        $('endTitle').textContent = r === '—' ? 'THE WATCHER WAITS' : 'THE WATCHER FALLS';
-        $('endLine').textContent = r === '—' ? 'You stepped past the fight.' : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} · fell ${fight.deaths} time${fight.deaths === 1 ? '' : 's'} · struck ${fight.hits} time${fight.hits === 1 ? '' : 's'} · ${fight.parries} parr${fight.parries === 1 ? 'y' : 'ies'}`;
-        for (const id of ['me', 'pad', 'fell', 'phase']) $(id).hidden = true;
-        document.body.classList.remove('cine');
-        if (RANKS.indexOf(r) > RANKS.indexOf(store.get('aumritash-rank') || '—')) store.set('aumritash-rank', r);
-        track('fight', `${r} · ${s}s · ${fight.deaths} deaths · ${fight.hits} hits · ${fight.parries} parries`);
     }
 
     // ── Running the shots ──
@@ -1828,9 +935,8 @@
     function finished() {
         // The fight is over (or was stepped past): show how it went
         playing = false;
-        fight.on = false;
         $('skip').hidden = true;
-        showResult();
+        fight.result();
         $('end').hidden = false;
     }
     function play() {
@@ -1838,11 +944,10 @@
         $('end').hidden = true;
         $('skip').hidden = false;
         sfx.setDrone(false);
-        resetFight();
+        fight.reset();
         hero.mixer.timeScale = 1;
         hero.root.rotation.set(0, Math.PI, 0);
         hero.stopAll();
-        if (blade) blade.quaternion.identity();
         caption('');
         playing = true;
         startShot(0);
@@ -1852,7 +957,8 @@
     $('skip').onclick = () => {
         if (!playing || cutting) return;
         const S = SHOTS[shot];
-        if (S.name === 'fight') { S.finish(); return; }
+        // In the fight, Skip skips the cut-scene that is playing; between them, it leaves the fight
+        if (S.name === 'fight') { if (!fight.skip()) S.finish(); return; }
         cut(() => {
             if (S.finish) { S.finish(); cutting = false; camSnap = true; fadeTo(false); }
             else startShot(shot + 1);
@@ -1864,7 +970,8 @@
         if (manual !== true) requestAnimationFrame(frame);
         // Debug: hold the scene still between hand-stepped frames, so a pose can be looked at
         if (window.__hold && manual !== true) { clock.getDelta(); return; }
-        const dt = Math.min(0.1, clock.getDelta()) * timeWarp;
+        // The fight can slow time down for a beat (a parry landing)
+        const dt = Math.min(0.1, clock.getDelta()) * (fight && fight.on ? fight.warp : 1);
         clockT += dt;
         if (playing && shot >= 0 && !cutting) {
             const done = SHOTS[shot].update(dt);
@@ -1881,7 +988,7 @@
             // Bone tweaks made by a shot have to be redone after the animation has had its say
             for (const n of ['upperarm_l', 'upperarm_r', 'lowerarm_l', 'lowerarm_r']) if (bones[n]) bones[n].scale.setScalar(armReach);
             // The fight poses both bodies on top of their animation, so it has to go after it
-            if (fight.on) fightPose(dt);
+            if (fight.on) fight.pose(dt);
             if (walking) heroSteps();
             heroLight.position.copy(hero.root.position).add(tmp.set(-0.8, 3, 1.6));
         }
@@ -1909,6 +1016,7 @@
     (async () => {
         try { await loadCast(); }
         catch (e) { $('loading').textContent = 'SOMETHING WENT WRONG · RELOAD'; console.error(e); return; }
+        makeFight();
         hero.root.position.set(0, 0, 11);
         camTo.set(1.3, 2.3, 16);
         look.set(0, 2, 0);
@@ -1926,9 +1034,21 @@
             state: () => ({ shot: shot >= 0 ? SHOTS[shot].name : null, phase: shot >= 0 ? SHOTS[shot].phase : null, t: shot >= 0 ? +(SHOTS[shot].t || 0).toFixed(2) : 0, playing, walking, sfx: sfx.state() }),
             goto(i) { playing = true; $('start').hidden = true; $('end').hidden = true; startShot(i); },
             hold: on => (on ? held.add('debug') : held.delete('debug')),
-            fight,
-            bot(on = true, skill = 0.9, parry = false) { fight.bot = on; fight.botSkill = skill; fight.botParry = parry; },
-            MOVE, POSE, rig, fx,
+            // The fight (assets/fight/core.js): fight.stats, fight.form (its .debug has moves and force(name)),
+            // fight.ctx, fight.player, and fight.view = [camX, camY, camZ, lookX, lookY, lookZ] to pin the camera
+            get fight() { return fight; },
+            bot(on = true, skill = 0.9, parry = false) { fight.bot(on, skill, parry); },
+            // Straight to form n (0 the Watcher, 1 the Player, 2 the Author), skipping the climb and what came before
+            toForm(n = 0) {
+                if (fight.on) fight.abort();
+                playing = true; $('start').hidden = true; $('end').hidden = true; $('skip').hidden = false;
+                startShot(2);
+                SHOTS[2].finish();
+                caption('');
+                sfx.setDrone(true);
+                shot = 3; fired = new Set();
+                SHOTS[3].enter(n);
+            },
             // Like step, but lets the fight's script run between frames
             async run(seconds, fps = 30) {
                 const real = clock.getDelta;
