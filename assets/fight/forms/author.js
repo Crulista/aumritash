@@ -604,7 +604,7 @@ void main() {
             const hd = Math.min(head, L.len), hx = L.x + L.dx * hd, hz = L.z + L.dz * hd;
             if (!L.hit) {
                 const ox = p.x - L.x, oz = p.z - L.z, along = ox * L.dx + oz * L.dz, side = Math.abs(ox * L.dz - oz * L.dx);
-                if (side < L.w / 2 + 0.25 && along < hd + 0.4 && along > hd - L.speed * dt - 0.6) { L.hit = true; hurt(26, hx, hz, { kind: 'beam', unblockable: true }); }
+                if (side < L.w / 2 + 0.25 && along < hd + 0.4 && along > hd - L.speed * dt - 0.6) { L.hit = true; hurt(22, hx, hz, { kind: 'beam', unblockable: true }); }
             }
             L.ink.visible = true; L.ink.material.opacity = 0.9;
             L.ink.scale.set(L.w * 0.75, 1, Math.max(0.01, hd));
@@ -642,9 +642,9 @@ void main() {
                 const r = m === A.beam ? 0.16 : 0.5;
                 m.scale.set(r, r, 12.5);
             }
-            if (go >= 0 && go < C.dur && d > 0.8 && ctx.time() - hits.beam > 0.9) {
+            if (go >= 0 && go < C.dur && d > 0.8 && ctx.time() - hits.beam > 1.2) {
                 const rel = angDiff(pa, a);
-                if (Math.abs(rel) < Math.PI / 2 && d * Math.abs(Math.sin(rel)) < 0.75) { hits.beam = ctx.time(); hurt(18, B.x, B.z, { kind: 'beam', unblockable: true }); }
+                if (Math.abs(rel) < Math.PI / 2 && d * Math.abs(Math.sin(rel)) < 0.75) { hits.beam = ctx.time(); hurt(14, B.x, B.z, { kind: 'beam', unblockable: true }); }
             }
         }
         if (go >= C.dur) { C.live = false; for (const A of C.arms) A.beam.visible = A.glow.visible = A.mark.visible = A.lead.visible = false; }
@@ -964,7 +964,7 @@ void main() {
             if ((T.state === 2 && T.t > 0.2) || T.state === 3) if (Math.abs(p.x - T.cx) < TILE / 2 && Math.abs(p.z - T.cz) < TILE / 2) inHole = true;
         }
         if (fell) { fx('tileFall'); sfx.thud(); ctx.shake(0.45); }
-        if (inHole && ctx.time() - hits.hole > 0.7) { hits.hole = ctx.time(); hurt(9, p.x, p.z, { kind: 'zone', unblockable: true, knock: 0.2 }); }
+        if (inHole && ctx.time() - hits.hole > 0.7) { hits.hole = ctx.time(); hurt(7, p.x, p.z, { kind: 'zone', unblockable: true, knock: 0.2 }); }
         tilesLive = live;
         slabs.instanceMatrix.needsUpdate = holes.instanceMatrix.needsUpdate = cracks.instanceMatrix.needsUpdate = true;
     }
@@ -1156,7 +1156,7 @@ void main() {
             if (B.plan) { const L = B.plan, h = Math.max(0, (L.t - L.wind) * L.speed); aimHand(L.x + L.dx * Math.min(h, L.len), 0, L.z + L.dz * Math.min(h, L.len)); }
             hot = clamp01(B.t / wind);
             if (B.n === 1 && B.t > 0.55 && first('second')) { B.plan = inkLine(p.x, p.z, aim + (rand() - 0.5) * 0.8, wind); }
-            if (B.t > wind + 1.6) { B.plan = null; settle(); }
+            if (B.t > wind + 1.6) { B.plan = null; begin('rest'); }
         } else if (B.state === 'cross') {
             const C = CROSS;
             if (first('go')) { B.spot = landing(4.6); C.live = true; C.t = 0; C.wind = 1.3 / sp; C.w = 0.5 * sp; C.dir = rand() < 0.5 ? 1 : -1; C.a0 = aim + Math.PI / 4; fx('inkBeam'); }
@@ -1194,7 +1194,7 @@ void main() {
                             if (m === gap) continue;
                             const x = cx + px * (m - 2) * 2.7, z = cz + pz * (m - 2) * 2.7, r = Math.hypot(x, z);
                             if (r > ARENA + 0.5 || r < 1.2) continue;
-                            spot(x, z, 1.3, land, 22);
+                            spot(x, z, 1.3, land, 20);
                         }
                         B.did.until = land + 0.8;
                     }
@@ -1203,17 +1203,17 @@ void main() {
                     for (let k = 0; k < 12; k++) {
                         const a = a0 + k * 0.75, rr = 5.2 * (1 - k / 12) + 0.4, x = p.x + Math.sin(a) * rr, z = p.z + Math.cos(a) * rr;
                         if (Math.hypot(x, z) > ARENA + 0.5) continue;
-                        spot(x, z, 1.25, wind + 0.5 + k * 0.13 / sp, 22);
+                        spot(x, z, 1.25, wind + 0.5 + k * 0.13 / sp, 20);
                     }
                     B.did.until = wind + 0.5 + 12 * 0.13 / sp + 0.8;
                 } else B.did.until = wind + 6 * 0.42 / sp + 1.2;
             }
             if (B.plan === 'chase' && B.t >= wind) {
                 const n = Math.min(6, Math.floor((B.t - wind) / (0.42 / sp)) + 1);
-                while (B.n < n) { B.n++; spot(p.x + p.vx * 0.3, p.z + p.vz * 0.3, 1.35, 0.8 / sp, 22); }
+                while (B.n < n) { B.n++; spot(p.x + p.vx * 0.3, p.z + p.vz * 0.3, 1.35, 0.8 / sp, 20); }
             }
             hot = clamp01(B.t / wind) * 0.5;
-            if (B.t > B.did.until) settle();
+            if (B.t > B.did.until) begin('rest');
         } else if (B.state === 'darts') {
             const wind = 0.65 / sp, count = B.act >= 3 ? 5 : 3, every = 0.42 / sp;
             face = 6;
@@ -1223,7 +1223,14 @@ void main() {
                 while (B.n < n) { B.n++; handAt(_a, 1); dart(_a); }
             }
             hot = B.t < wind ? B.t / wind : 0;
-            if (B.t > wind + count * every + 0.7 / sp) settle();
+            if (B.t > wind + count * every + 0.7 / sp) begin('rest');
+        } else if (B.state === 'rest') {
+            // After casting from on high it sinks, spent for a moment, close to the visitor: the time to strike it
+            if (first('go')) B.spot = landing(2.4);
+            tx = B.spot.x; tz = B.spot.z; maxV = 5;
+            B.altTo = LOW + 0.2;
+            hands('slump'); look.spreadTo = 0.6; look.cast = 0;
+            if (B.t > 2.6 / sp) settle(0.4);
         } else if (B.state === 'echo') {
             const wind = 0.9 / sp;
             if (first('plan')) {

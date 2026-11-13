@@ -125,7 +125,7 @@ const MOVE = {
         [2.7, POSE.rest, 'out']
     ] }
 };
-const HP = 130;                     // its health (a light hit does 4): about a minute and a half for most visitors
+const HP = 210;                     // its health (a light hit does 4): about a minute and a half for most visitors
 const BLADE = 0.95;                 // how near the blade (seen from above) has to pass to count
 const MARK_EXTENT = 3.6;            // half the width of a ground mark's picture, in body units
 const REACHED = 1.32;               // how far its arms are stretched once it has changed

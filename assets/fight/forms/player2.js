@@ -32,7 +32,8 @@ const STAB_R = 1.05;                // a stab hurts this far from where its poin
 const SWEEP_R = 0.72;               // how near the sweeping shin has to pass
 const STRIKE = 0.12;                // how long a stab takes to come down
 const LEG_HP = 16;                  // damage that breaks a leg
-const REVIVE_HP = 55;               // what it gets back up with
+const REVIVE_HP = 60;
+const HP = 115;                     // its health in each life (the bar is out of this)               // what it gets back up with
 const SUB = 'thousands of hours, and every retry';
 const traced = new WeakMap();       // the sweep's ground marks, traced once per arena
 
@@ -77,8 +78,8 @@ export function create(ctx) {
         if (fallback) fallback();
     }
     let stepSndAt = -9, clinkAt = -9, age = 0;
-    const stepSound = () => { if (age - stepSndAt > 0.2) { stepSndAt = age; snd('bossStep', () => sfx.thud()); } };
-    const clink = () => { if (age - clinkAt > 0.05) { clinkAt = age; snd('discRicochet', () => sfx.tick()); } };
+    const stepSound = () => { if (age - stepSndAt > 0.2) { stepSndAt = age; snd('stomp', () => sfx.thud(), 0.5); } };
+    const clink = () => { if (age - clinkAt > 0.05) { clinkAt = age; snd('ping', () => sfx.tick()); } };
 
     // ═════════════ Its body ═════════════
     const discGeo = new THREE.LatheGeometry([[1, -0.5], [1, 0.5], [0.2, 0.5], [0.2, -0.5], [1, -0.5]].map(([x, y]) => new THREE.Vector2(x, y)), 16);
@@ -284,7 +285,7 @@ export function create(ctx) {
     const sp = () => (B && B.life === 2 ? 1.22 : 1);
 
     function fresh() {
-        B = { x: 0, z: -6.4, yaw: 0, hp: 100, life: 1, state: 'idle', t: 0, cool: 1.4, last: '', n: 0, did: {}, speed: 0, turn: 0, vx: 0, vz: 0, lx: 0, lz: 0,
+        B = { x: 0, z: -6.4, yaw: 0, hp: HP, life: 1, state: 'idle', t: 0, cool: 1.4, last: '', n: 0, did: {}, speed: 0, turn: 0, vx: 0, vz: 0, lx: 0, lz: 0,
             posture: 0, calm: 0, behind: 0, since: 0, side: 1, air: false, tx: 0, tz: 0, sx: 0, sz: 0, dir: 0, went: 0, crashS: 0, again: false,
             rec: 1, reelLeg: 0, broke: 0, lowSaid: false, fellSaid: false, tidy: 0, from: V(), from2: V(), scrapeAt: 0 };
         Object.assign(body, { y: STAND, pitch: 0, roll: 0, twist: 0 });
@@ -497,13 +498,13 @@ export function create(ctx) {
                     d.v.x -= 2 * dot * nx; d.v.z -= 2 * dot * nz;
                     d.bounces++;
                     ctx.spark(d.p.x, 1, d.p.z, 1.8, '#ffe0c0');
-                    snd('discRicochet', () => sfx.tick());
+                    snd('ping', () => sfx.tick());
                 } else { shatter(d); continue; }
             }
             if (d.t > 7) { d.on = false; continue; }
             if (!d.back && d.t > 0.12 && Math.hypot(d.p.x - P.x, d.p.z - P.z) < 0.8) {
                 lastShot = d;
-                const res = ctx.hitPlayer(12, d.p.x - d.v.x * 0.05, d.p.z - d.v.z * 0.05, { kind: 'disc', parryable: true, knock: 0.6 });
+                const res = ctx.hitPlayer(10, d.p.x - d.v.x * 0.05, d.p.z - d.v.z * 0.05, { kind: 'disc', parryable: true, knock: 0.6 });
                 if (res === 'hit' || res === 'blocked') shatter(d);
             }
         }
@@ -552,7 +553,7 @@ export function create(ctx) {
     function begin(state) { B.state = state; B.t = 0; B.n = 0; B.did = {}; B.last = state; newSwing(); markOn = null; }
     function settle(cool) {
         B.state = 'idle'; B.t = 0;
-        B.cool = (cool ?? 0.5 + ctx.rand() * 0.7) / sp();
+        B.cool = (cool ?? 0.7 + ctx.rand() * 0.7) / sp();
         markOn = null; lane.on = false; landShadow.visible = false;
         for (let i = 0; i < 8; i++) if (legs[i].hand && !(B.state === 'down')) release(i);
         stabs.length = 0;
@@ -579,14 +580,14 @@ export function create(ctx) {
     function pick(dist, off, aimYaw) {
         const opts = [], facing = Math.abs(off) < 0.5;
         const add = (n, w) => { if (w > 0 && n !== B.last) opts.push([n, w]); };
-        if (B.behind > 0.7 || dist < 2.9) add('slam', 5);
-        if (facing && dist < 6.4 && dist >= 2.9) { add('stab', 3.2); add('sweep', 2.5); add('stamp', 1.2); }
+        if (B.behind > 0.7 || (dist < 2.9 && Math.abs(off) > 1.3)) add('slam', 4);
+        if (facing && dist < 6.4) { add('stab', 3.2); add('sweep', 2.5); add('stamp', 0.8); }
         if (dist >= 4.5) {
             if (facing) add('discs', 2.2);
             add('leap', dist > 6.5 ? 2 : 0.5);
             if (facing && laneOk(aimYaw, dist)) add('charge', dist > 6.5 ? 2.6 : 1.2);
         }
-        if (B.since > 9) add('volley', 1.5);
+        if (B.since > 13) add('volley', 1.1);
         if (!opts.length) return null;
         let roll = ctx.rand() * opts.reduce((s, o) => s + o[1], 0);
         for (const [n, w] of opts) { roll -= w; if (roll <= 0) return n; }
@@ -659,10 +660,10 @@ export function create(ctx) {
                         ctx.spark(sb.T.x, 0.3, sb.T.z, 1.6, '#e8d8c8');
                         ctx.shake(0.45);
                         bumpV -= 0.4;
-                        snd('legStab', () => { sfx.thud(); sfx.tick(); });
+                        snd('stab', () => { sfx.thud(); sfx.tick(); });
                         if (Math.hypot(P.x - sb.T.x, P.z - sb.T.z) < STAB_R) {
                             B.blow = 'stab'; B.blowLeg = sb.leg;
-                            hurt(26, B.x, B.z, { kind: 'blade', parryable: true, knock: 1.1 });
+                            hurt(22, B.x, B.z, { kind: 'blade', parryable: true, knock: 1.1 });
                         }
                         if (sb.k + 1 < B.n) addStab(sb.k + 1, angDiff(Math.atan2(P.x - B.x, P.z - B.z), B.yaw));
                     }
@@ -735,7 +736,7 @@ export function create(ctx) {
                 }
                 const ph = Math.floor(B.t / Wd * 2);
                 if (ph > B.scrapeAt - 1 && first('scrape' + ph)) {
-                    snd('chargeScrape', () => sfx.rumble(0.7));
+                    snd('scrape', () => sfx.rumble(0.7), 0.7);
                     for (const i of [0, 1]) ctx.dust(legs[i].foot.x, legs[i].foot.z, 5, '#7d716a');
                 }
             } else {
@@ -763,7 +764,7 @@ export function create(ctx) {
                         const fx = B.x + Math.sin(B.dir) * 2.6, fz = B.z + Math.cos(B.dir) * 2.6;
                         ctx.dust(fx, fz, 22, '#8a7d72');
                         ctx.spark(fx, 1.4, fz, 3.4, '#ffd0a0');
-                        snd('crash', () => { sfx.thud(); sfx.rumble(1.4); });
+                        snd('crash', () => { sfx.thud(); sfx.rumble(1.4); }, 1);
                         begin('stuck');
                         B.kick = 0.55;
                     }
@@ -825,7 +826,7 @@ export function create(ctx) {
                     landShadow.visible = false;
                     ctx.shake(1);
                     ctx.dust(B.x, B.z, 26, '#8a7d72');
-                    snd('landCrash', () => { sfx.thud(); sfx.rumble(1.2); });
+                    snd('crash', () => { sfx.thud(); sfx.rumble(1.2); }, 1);
                     ctx.haz.wave({ x: B.x, z: B.z, r0: 3.3, speed: 9, max: 11, dmg: 16 });
                 }
                 if (B.life === 2 && B.t > Wd + AIR + 0.42 && first('wave2')) ctx.haz.wave({ x: B.x, z: B.z, r0: 3.3, speed: 11, max: 11, dmg: 16 });
@@ -840,7 +841,7 @@ export function create(ctx) {
                 B.n = B.life === 1 ? (ctx.rand() < 0.5 ? 1 : 3) : (ctx.rand() < 0.45 ? 3 : 5);
                 let k = 0;
                 for (const d of SHOTS) { if (k >= B.n) break; if (d.on) continue; Object.assign(d, { on: true, held: true, back: false, t: 0, bounces: 0, max: B.life === 1 ? 1 : 2, spin: ctx.rand() * 6, slot: k - (B.n - 1) / 2 }); k++; }
-                snd('discWhirr', () => sfx.whoosh());
+                snd('whirr', () => sfx.whoosh(), 0.8);
             }
             if (B.t < Wd) {
                 face(2.4 * S);
@@ -857,7 +858,7 @@ export function create(ctx) {
                         d.held = false; d.t = 0;
                         d.v.set(Math.sin(a) * speed, 0, Math.cos(a) * speed);
                     }
-                    snd('discThrow', () => sfx.whoosh());
+                    snd('whirr', () => sfx.whoosh(), 0.5);
                 }
                 aim.pitch = 0.1; aim.y = 1.4; aim.rate = 8;
                 if (B.t > Wd + 0.45) lidTo = 1;
@@ -865,7 +866,7 @@ export function create(ctx) {
             }
         } else if (st === 'volley') {
             // Its eye opens wide and spits a spiral of embers; then three that come looking
-            const Wd = 0.7 / S, D = 1.8, arms = B.life === 1 ? 2 : 3, every = B.life === 1 ? 0.2 : 0.27;
+            const Wd = 0.7 / S, D = 1.8, arms = B.life === 1 ? 2 : 3, every = B.life === 1 ? 0.26 : 0.3;
             lidTo = 1; cast = 1;
             face(0.8);
             if (first('go')) { B.spin = ctx.rand() < 0.5 ? 1 : -1; sfx.eye(1, 0); }
@@ -878,9 +879,9 @@ export function create(ctx) {
                     const base = B.yaw + B.spin * B.n * every * 2.4;
                     for (let j = 0; j < arms; j++) {
                         const a = base + j * Math.PI * 2 / arms;
-                        ctx.haz.orb({ x: eyeW.x, y: 1.25, z: eyeW.z, tx: eyeW.x + Math.sin(a) * 20, ty: 1.2, tz: eyeW.z + Math.cos(a) * 20, speed: 8, homing: 0, dmg: 10, life: 1.35, size: 0.95 });
+                        ctx.haz.orb({ x: eyeW.x, y: 1.25, z: eyeW.z, tx: eyeW.x + Math.sin(a) * 20, ty: 1.2, tz: eyeW.z + Math.cos(a) * 20, speed: 8, homing: 0, dmg: 9, life: 1.35, size: 0.95 });
                     }
-                    if (B.n % 2) sfx.eye(0.6, 0);
+                    if (B.n % 2) snd('orb', () => sfx.eye(0.6, 0));
                 }
             } else if (B.t < Wd + D + 0.8) {
                 const n = Math.min(3, Math.floor((B.t - Wd - D) / 0.25) + 1);
@@ -898,7 +899,7 @@ export function create(ctx) {
                 grab(0); grab(1);
                 legs[0].from.copy(legs[0].foot); legs[1].from.copy(legs[1].foot);
                 B.tx = B.x + Math.sin(B.yaw) * 3.1; B.tz = B.z + Math.cos(B.yaw) * 3.1;
-                ctx.haz.zone({ shape: 'circle', x: B.tx, z: B.tz, r: 3.0, delay: Wd + SL, dmg: 30, onLand: () => {} });
+                ctx.haz.zone({ shape: 'circle', x: B.tx, z: B.tz, r: 3.0, delay: Wd + SL, dmg: 26, onLand: () => {} });
             }
             if (B.t < Wd) {
                 const k = ease(B.t / Wd);
@@ -915,10 +916,10 @@ export function create(ctx) {
                 if (first('slam')) {
                     ctx.shake(0.9); bumpV -= 0.8;
                     ctx.dust(B.tx, B.tz, 18, '#8a7d72');
-                    snd('landCrash', () => { sfx.thud(); sfx.rumble(1); });
-                    ctx.haz.wave({ x: B.tx, z: B.tz, r0: 3.2, speed: 8.5, max: 11, dmg: 18 });
+                    snd('crash', () => { sfx.thud(); sfx.rumble(1); }, 1);
+                    ctx.haz.wave({ x: B.tx, z: B.tz, r0: 3.2, speed: 8.5, max: 11, dmg: 14 });
                 }
-                if (B.life === 2 && B.t > Wd + SL + 0.45 && first('wave2')) { ctx.haz.wave({ x: B.tx, z: B.tz, r0: 3.2, speed: 10.5, max: 11, dmg: 18 }); ctx.shake(0.5); }
+                if (B.life === 2 && B.t > Wd + SL + 0.45 && first('wave2')) { ctx.haz.wave({ x: B.tx, z: B.tz, r0: 3.2, speed: 10.5, max: 11, dmg: 14 }); ctx.shake(0.5); }
                 aim.pitch = 0.05; aim.y = 1.3; aim.rate = 3;
                 lidTo = 1;
                 if (B.t > Wd + SL + 1.1 / S) { release(0); release(1); settle(); }
@@ -940,13 +941,13 @@ export function create(ctx) {
                 if (first('drop')) {
                     ctx.shake(0.9); bumpV -= 0.6;
                     ctx.dust(B.tx, B.tz, 20, '#8a7d72');
-                    snd('landCrash', () => { sfx.thud(); sfx.rumble(1); });
+                    snd('crash', () => { sfx.thud(); sfx.rumble(1); }, 1);
                     ctx.haz.wave({ x: B.tx, z: B.tz, r0: 3.7, speed: 8, max: 9, dmg: 16 });
                 }
                 if (B.life === 2 && B.t > Wd + 0.55 && first('wave2')) ctx.haz.wave({ x: B.tx, z: B.tz, r0: 3.7, speed: 10, max: 9, dmg: 16 });
                 aim.y = B.t < Wd + 0.5 ? 0.62 : STAND; aim.rate = 2.2;
                 lidTo = 1;
-                if (B.t > Wd + 0.1 + 1.25 / S) { B.behind = 0; settle(); }
+                if (B.t > Wd + 0.1 + 1.25 / S) { B.behind = 0; settle(1.2); }
             }
         } else if (st === 'reel') {
             // A blow turned aside: the leg is flung up and it rears back, wide open
@@ -973,7 +974,7 @@ export function create(ctx) {
             aim.y = 0.5; aim.pitch = 0.14; aim.roll = 0.12; aim.rate = 3;
             if (first('fall')) {
                 ctx.haz.clear(); clearHaz();
-                snd('crash', () => { sfx.thud(); sfx.rumble(1.5); });
+                snd('crash', () => { sfx.thud(); sfx.rumble(1.5); }, 1);
                 ctx.shake(0.7);
                 for (const L of legs) { grab(L.i); L.from.copy(L.foot); }
             }
@@ -1053,7 +1054,7 @@ export function create(ctx) {
         if (B.state === 'dying') return;
         think(dt);
         motion(dt);
-        if (B.life === 2 && B.hp < 28 && !B.lowSaid && fighting) { B.lowSaid = true; bark('low', true); ctx.score.intensity(1); }
+        if (B.life === 2 && B.hp < 20 && !B.lowSaid && fighting) { B.lowSaid = true; bark('low', true); ctx.score.intensity(1); }
     }
 
     // ── After the animation: put every piece where the state says, and test the sweeping leg ──
@@ -1130,7 +1131,7 @@ export function create(ctx) {
             const L = legs[B.side > 0 ? 0 : 1];
             BLOW.fromX = B.x; BLOW.fromZ = B.z;
             B.blow = 'sweep';
-            const r = ctx.haz.blade(swingId, L.knee, L.tip, SWEEP_R, 28, BLOW);
+            const r = ctx.haz.blade(swingId, L.knee, L.tip, SWEEP_R, 24, BLOW);
             if (r === 'hit') bark('heavy');
         }
     }
@@ -1260,7 +1261,7 @@ export function create(ctx) {
                         ctx.shake(i ? 0.8 : 0.95);
                         ctx.dust(path[2].x, path[2].z, 14, '#8a7d72');
                         ctx.spark(path[2].x, 0.4, path[2].z, 2.4, '#e8d8c8');
-                        snd('legStab', () => { sfx.thud(); sfx.tick(); });
+                        snd('stab', () => { sfx.thud(); sfx.tick(); });
                         sfx.rumble(1.2);
                     }
                     const k = Math.max(0, 1 - (T - t2) * 3);
@@ -1374,7 +1375,7 @@ export function create(ctx) {
         // It relights
         litTo = 1; lit = 1; lid = 1; lidTo = 0;
         aim.y = 0.75;
-        if (!shot.skipped) { ctx.flash('rgba(255,42,26,0.55)', 0.3); sfx.roar(2); ctx.shake(0.9); snd('revive', () => sfx.rumble(1.5)); ctx.score.stinger('revive'); }
+        if (!shot.skipped) { ctx.flash('rgba(255,42,26,0.55)', 0.3); sfx.roar(2); ctx.shake(0.9); ctx.score.stinger('revive'); }
         shot.say('YES.', 1.0);
         bigEl.style.opacity = 0;
         await shot.wait(0.55);
@@ -1423,7 +1424,7 @@ export function create(ctx) {
             if (T > 3.0 && !split) {
                 split = true;
                 ctx.shake(0.8); ctx.dust(cx, cz, 30, '#8a7d72');
-                snd('crash', () => { sfx.thud(); sfx.rumble(2); });
+                snd('crash', () => { sfx.thud(); sfx.rumble(2); }, 1);
                 bodyMatrix(bodyM, B.x, B.z, B.yaw + body.twist, body.y + bump, body.pitch, body.roll);
                 shellList.forEach((s, i) => {
                     _m.multiplyMatrices(bodyM, shellLocal[i]).decompose(_v, _dq, _ds);
@@ -1518,7 +1519,7 @@ export function create(ctx) {
         const st = B.state;
         if (st === 'down' || st === 'dying' || st === 'intro' || st === 'roar' || B.air) return NONE;
         const P = ctx.P;
-        let mult = 0.4, post = 3, where = 'shell', broke = false;
+        let mult = 0.8, post = 4, where = 'shell', broke = false;
         if (info.kind === 'reflect') { mult = 1; post = 26; where = 'eye'; }
         else {
             const ix = info.x ?? P.x, iz = info.z ?? P.z;
@@ -1533,15 +1534,15 @@ export function create(ctx) {
                 const d = Math.min(nearSeg(hx, hz, L.hip, L.knee), nearSeg(hx, hz, L.knee, L.tip));
                 if (d < best) { best = d; leg = L; }
             }
-            if (Math.abs(off) < 0.8 && open) { mult = 1; post = 6; where = 'eye'; }
-            else if (st === 'stuck') { mult = 0.85; post = 4; where = 'open'; }
+            if (Math.abs(off) < 0.8 && open) { mult = 1.4; post = 6; where = 'eye'; }
+            else if (st === 'stuck') { mult = 1.2; post = 4; where = 'open'; }
             else if (leg && Math.abs(off) >= 0.5) {
-                mult = 0.6; post = 4; where = 'leg';
+                mult = 0.9; post = 5; where = 'leg';
                 leg.hp -= amount;
                 if (leg.hp <= 0 && B.broke < 2 && !leg.broken) {
                     leg.broken = true; B.broke++; broke = true;
                     ctx.spark(leg.knee.x, leg.knee.y, leg.knee.z, 3, '#ffe0c0');
-                    snd('legBreak', () => { sfx.thud(); sfx.tick(); });
+                    snd('crash', () => { sfx.thud(); sfx.tick(); }, 0.6);
                     ctx.dust(leg.tip.x, leg.tip.z, 10);
                     B.posture += 40;
                     bark('leg');
@@ -1602,7 +1603,7 @@ export function create(ctx) {
 
     const form = {
         id: 'player2', name: 'THE PLAYER', sub: SUB,
-        hpMax: 100,
+        hpMax: HP,
         get hp() { return B.hp; },
         get x() { return B.x; }, get z() { return B.z; }, get yaw() { return B.yaw; },
         // Long and low: the visitor is kept further off behind it than at its sides; nothing while it is in the air
