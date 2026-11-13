@@ -371,7 +371,7 @@ export function createEnding(env) {
             $('endNote').textContent = `Kept alive by ${end.n} · ${day(end.d)}`;
         } else $('endNote').textContent = rank === '—' ? 'It is still up there.' : '';
         env.fade(false);
-        if (kept) board();
+        board();
     }
     // The best climbs, from the sheet (only names the owner has approved, plus the visitor's own)
     async function board() {

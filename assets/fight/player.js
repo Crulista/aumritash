@@ -1134,7 +1134,7 @@ export function createPlayer(ctx, env) {
     function testBlade(a, b, M) {
         const f = ctx.form;
         if (!f || f.targetable === false || !f.damage || ctx.mode !== 'play') return;
-        const reach = Math.max(0.6, f.radius || 0) + 0.25;
+        const reach = Math.max(0.6, f.radius || 0) + 0.1;
         // Seen from above, like every other blow in the fight, but it has to be low enough to meet a floating thing
         if (nearSeg(f.x, f.z, a, b) > reach) return;
         if ((f.aimY || 0) > 4 && Math.max(a.y, b.y) < (f.aimY || 0) - 2.5) return;

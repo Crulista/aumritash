@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Work - Aumritash Maitra</title>
+    <meta name="description" content="Aumritash Maitra's career so far: product and growth at dubdub (2026 to now), Partnerships &amp; Product Manager at Leagues ApS (2024 to 2026), and Co-Founder &amp; COO of CaptainSide.">
+    <link rel="canonical" href="https://aumritash.com/work/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Aumritash Maitra">
+    <meta property="og:title" content="The Work - Aumritash Maitra">
+    <meta property="og:description" content="Aumritash Maitra's career so far: product and growth at dubdub (2026 to now), Partnerships &amp; Product Manager at Leagues ApS (2024 to 2026), and Co-Founder &amp; COO of CaptainSide.">
+    <meta property="og:url" content="https://aumritash.com/work/">
+    <meta name="twitter:card" content="summary">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/chapter.css">
@@ -183,6 +191,52 @@
         .story-card:hover .toggle-hint { color: var(--red); }
         .toggle-hint .when-open, .story.open .toggle-hint .when-closed { display: none; }
         .story.open .toggle-hint .when-open { display: inline; }
+        /* Going in: the card grows to fill the screen, then the story opens as a reader, one act to a page */
+        .zoom { position: fixed; z-index: 60; overflow: hidden; border: 1px solid var(--red); background: #070606 center / cover no-repeat; transition: left 0.55s cubic-bezier(0.7, 0, 0.2, 1), top 0.55s cubic-bezier(0.7, 0, 0.2, 1), width 0.55s cubic-bezier(0.7, 0, 0.2, 1), height 0.55s cubic-bezier(0.7, 0, 0.2, 1), filter 0.55s ease; }
+        .zoom::after { content: ''; position: absolute; inset: 0; background: #070606; opacity: 0; transition: opacity 0.55s ease 0.1s; }
+        .zoom.in { filter: brightness(1.25); }
+        .zoom.in::after { opacity: 0.94; }
+        .zoom b { position: absolute; left: 2rem; bottom: 1.6rem; right: 2rem; font-family: var(--pixel); font-weight: normal; font-size: clamp(2rem, 6vw, 3.6rem); line-height: 1; letter-spacing: 0.04em; color: var(--text); z-index: 1; transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1), opacity 0.3s ease 0.3s; transform-origin: left bottom; }
+        .zoom.in b { transform: scale(1.25); opacity: 0; }
+
+        body.reading { overflow: hidden; }
+        .reader[hidden] { display: none; }
+        .reader { position: fixed; inset: 0; z-index: 61; display: grid; grid-template-rows: auto 1fr auto; background: #070606; animation: reader-in 0.35s steps(6) both; }
+        @keyframes reader-in { from { opacity: 0; } }
+        .reader.out { animation: reader-out 0.25s steps(5) both; }
+        @keyframes reader-out { to { opacity: 0; transform: scale(0.97); } }
+        .reader::before { content: ''; position: absolute; inset: 0; background: var(--bg) center / cover no-repeat; opacity: 0.1; filter: grayscale(0.6) blur(3px); pointer-events: none; }
+        .reader > * { position: relative; }
+        .reader-top { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1.5rem; border-bottom: 1px solid var(--line-2); }
+        .reader-title { flex: 1; min-width: 0; font-family: var(--pixel); font-size: 1.5rem; letter-spacing: 0.08em; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .reader-count { font-family: var(--pixel); font-size: 1.15rem; letter-spacing: 0.14em; color: var(--red); white-space: nowrap; }
+        .reader-stage { overflow-y: auto; overscroll-behavior: contain; padding: 0 1.5rem; }
+        .reader-stage .story-body-inner { overflow: visible; max-width: 1000px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; justify-content: center; }
+        .reader-stage .story-body-inner > * { display: none; }
+        .reader-stage .story-body-inner > .on { display: grid; border-bottom: none; padding: 2rem 0; animation: page-next 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+        .reader-stage .story-body-inner > .on.back { animation-name: page-prev; }
+        .reader-stage .story-body-inner > .credits.on { display: block; }
+        @keyframes page-next { from { opacity: 0; transform: translateX(48px); } }
+        @keyframes page-prev { from { opacity: 0; transform: translateX(-48px); } }
+        .reader-stage .act figure img { width: auto; max-width: 100%; max-height: 46vh; }
+        .reader-stage .act .pics figure img { width: 100%; max-height: none; }
+        .reader-nav { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.5rem; border-top: 1px solid var(--line-2); }
+        .reader-rail { flex: 1; display: flex; justify-content: center; flex-wrap: wrap; gap: 0.3rem; }
+        .reader-rail button { font-family: var(--pixel); font-size: 1.05rem; letter-spacing: 0.06em; min-width: 2.2rem; padding: 0.15rem 0.4rem 0.05rem; color: var(--dim); background: none; border: 1px solid var(--line-2); cursor: pointer; }
+        .reader-rail button:hover, .reader-rail button:focus-visible { color: var(--text); border-color: var(--text); outline: none; }
+        .reader-rail button.done { color: var(--text); }
+        .reader-rail button.here { color: #000; background: var(--red); border-color: var(--red); }
+        .reader-nav .btn[disabled] { opacity: 0.25; pointer-events: none; }
+        @media (max-width: 700px) {
+            .reader-top { padding: 0.6rem 1rem; gap: 0.6rem; }
+            .reader-title { font-size: 1.15rem; }
+            .reader-stage { padding: 0 1rem; }
+            .reader-stage .story-body-inner { justify-content: flex-start; }
+            .reader-nav { padding: 0.6rem 1rem; }
+            .reader-rail button { min-width: 1.7rem; font-size: 0.9rem; padding: 0.1rem 0.25rem 0; }
+        }
+        @media (prefers-reduced-motion: reduce) { .zoom { transition: none; } .reader, .reader.out, .reader-stage .story-body-inner > .on { animation: none; } }
+
         .story-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s ease; }
         .story.open .story-body { grid-template-rows: 1fr; }
         .story-body-inner { overflow: hidden; min-height: 0; }
@@ -266,7 +320,7 @@
                     <p class="kicker">STORY I · 2024 — 2026</p>
                     <h2>TILL THE LIGHTS WENT OUT</h2>
                     <p class="sub">Leagues ApS, Copenhagen. A small Danish team running a gaming platform, a media house and the UK &amp; Nordics League of Legends championship. I was there from the first week to the very last day.</p>
-                    <p class="toggle-hint"><span class="when-closed">▶ Open the story</span><span class="when-open">▼ Close the story</span></p>
+                    <p class="toggle-hint"><span class="when-closed">▶ Enter the story</span></p>
                 </div>
             </div>
             <div class="story-body" id="leagues-body">
@@ -409,7 +463,7 @@
                     <p class="kicker">STORY II · 2020 — 2026</p>
                     <h2>FROM A DISCORD SERVER TO A STARTUP</h2>
                     <p class="sub">CaptainSide, Bengaluru. Co-Founder &amp; COO. Two Iron-ranked friends, one Discord server, and six years later a company helping players find their next game.</p>
-                    <p class="toggle-hint"><span class="when-closed">▶ Open the story</span><span class="when-open">▼ Close the story</span></p>
+                    <p class="toggle-hint"><span class="when-closed">▶ Enter the story</span></p>
                 </div>
             </div>
             <div class="story-body" id="captainside-body">
@@ -522,7 +576,7 @@
                     <p class="kicker">STORY III · MAY 2026 — NOW</p>
                     <h2>FIND YOUR SMART</h2>
                     <p class="sub">dubdub, Bengaluru. A swipe-based trivia and puzzle app, and the next chapter.</p>
-                    <p class="toggle-hint"><span class="when-closed">▶ Open the story</span><span class="when-open">▼ Close the story</span></p>
+                    <p class="toggle-hint"><span class="when-closed">▶ Enter the story</span></p>
                 </div>
             </div>
             <div class="story-body" id="dubdub-body">
@@ -559,22 +613,171 @@
 
     <footer>© 2026 AUMRITASH MAITRA</footer>
 
+    <!-- The reader a story opens into: one act to a page (filled in by the script below) -->
+    <div class="reader" id="reader" role="dialog" aria-modal="true" aria-labelledby="rdTitle" hidden>
+        <div class="reader-top">
+            <button class="btn small" id="rdClose">&lt; All stories</button>
+            <p class="reader-title" id="rdTitle"></p>
+            <p class="reader-count" id="rdCount" aria-live="polite"></p>
+        </div>
+        <div class="reader-stage" id="rdStage"></div>
+        <div class="reader-nav">
+            <button class="btn small" id="rdPrev">&lt; Prev</button>
+            <div class="reader-rail" id="rdRail"></div>
+            <button class="btn small" id="rdNext">Next &gt;</button>
+        </div>
+    </div>
+
     <script>
-        // Click (or Enter/Space on) a story's title card to open or close it; #leagues etc. opens one directly
-        function setOpen(story, open) {
-            story.classList.toggle('open', open);
-            story.querySelector('.story-card').setAttribute('aria-expanded', open);
-        }
-        document.querySelectorAll('.story').forEach(story => {
-            const card = story.querySelector('.story-card');
-            const toggle = () => setOpen(story, !story.classList.contains('open'));
-            card.addEventListener('click', toggle);
-            card.addEventListener('keydown', e => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+        // Click (or Enter/Space on) a story's title card to go in: the card grows to fill the screen and the story
+        // opens as a reader, one act to a page. Arrow keys, the buttons, the numbered rail or a swipe turn the page;
+        // Esc or the browser's Back comes out again. #leagues etc. in the address opens one directly.
+        (() => {
+            const $ = id => document.getElementById(id);
+            const stories = [...document.querySelectorAll('.story')];
+            const reader = $('reader'), stage = $('rdStage'), rail = $('rdRail');
+            const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let cur = null, inner = null, pages = [], idx = 0, far = 0, busy = false;
+
+            // Each act is a page; what follows the acts (a recommendation, the sources) shares one last page
+            stories.forEach(story => {
+                const box = story.querySelector('.story-body-inner');
+                const rest = [...box.children].filter(el => !el.classList.contains('act'));
+                if (rest.length) {
+                    const credits = document.createElement('div');
+                    credits.className = 'credits';
+                    box.appendChild(credits);
+                    credits.append(...rest);
+                }
             });
-        });
-        const linked = location.hash && document.querySelector('.story' + location.hash);
-        if (linked) setOpen(linked, true);
+            const label = page => (page.classList.contains('act') ? page.querySelector('.act-num').firstChild.textContent.trim() : 'CREDITS');
+
+            function show(i, back) {
+                idx = Math.max(0, Math.min(pages.length - 1, i));
+                far = Math.max(far, idx);
+                pages.forEach((p, n) => { p.classList.toggle('on', n === idx); p.classList.toggle('back', !!back); });
+                stage.scrollTop = 0;
+                $('rdCount').textContent = `${label(pages[idx])} · ${idx + 1} / ${pages.length}`;
+                [...rail.children].forEach((b, n) => { b.classList.toggle('here', n === idx); b.classList.toggle('done', n <= far); b.setAttribute('aria-current', n === idx ? 'page' : 'false'); });
+                $('rdPrev').disabled = idx === 0;
+                const next = stories[stories.indexOf(cur) + 1];
+                $('rdNext').textContent = idx < pages.length - 1 ? 'Next >' : next ? 'Next story >' : 'Done >';
+            }
+            function fill(story) {
+                cur = story;
+                inner = story.querySelector('.story-body-inner');
+                pages = [...inner.children];
+                far = 0;
+                const img = story.querySelector('.story-card img');
+                reader.style.setProperty('--bg', img ? `url("${img.currentSrc || img.src}")` : 'none');
+                $('rdTitle').textContent = story.querySelector('h2').textContent;
+                rail.textContent = '';
+                pages.forEach((p, n) => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.textContent = label(p).replace(/^ACT\s+/, '').replace('CREDITS', '✦');
+                    b.setAttribute('aria-label', label(p));
+                    b.onclick = () => show(n, n < idx);
+                    rail.appendChild(b);
+                });
+                stage.appendChild(inner);
+                story.querySelector('.story-card').setAttribute('aria-expanded', 'true');
+                show(0);
+            }
+            function empty() {
+                if (!cur) return;
+                pages.forEach(p => p.classList.remove('on', 'back'));
+                cur.querySelector('.story-body').appendChild(inner);
+                cur.querySelector('.story-card').setAttribute('aria-expanded', 'false');
+            }
+            function open(story, animate = true, push = true) {
+                if (busy) return;
+                const card = story.querySelector('.story-card');
+                const land = () => {
+                    if (cur) empty();
+                    fill(story);
+                    reader.hidden = false;
+                    reader.classList.remove('out');
+                    document.body.classList.add('reading');
+                    if (push) history.pushState({ story: story.id }, '', '#' + story.id);
+                    $('rdClose').focus({ preventScroll: true });
+                    busy = false;
+                };
+                if (!animate || reduce) return land();
+                // The card itself grows from where it sits until it is the whole screen
+                busy = true;
+                const r = card.getBoundingClientRect(), img = card.querySelector('img'), z = document.createElement('div');
+                z.className = 'zoom';
+                z.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
+                if (img) z.style.backgroundImage = `url("${img.currentSrc || img.src}")`;
+                const b = document.createElement('b');
+                b.textContent = story.querySelector('h2').textContent;
+                z.appendChild(b);
+                document.body.appendChild(z);
+                z.getBoundingClientRect();
+                z.classList.add('in');
+                z.style.cssText += ';left:0;top:0;width:100vw;height:100vh';
+                setTimeout(() => { land(); setTimeout(() => z.remove(), 60); }, 620);
+            }
+            function close(pop = true) {
+                if (!cur || busy) return;
+                const story = cur, done = () => {
+                    reader.hidden = true;
+                    empty();
+                    cur = null;
+                    document.body.classList.remove('reading');
+                    busy = false;
+                    story.querySelector('.story-card').focus({ preventScroll: true });
+                    story.scrollIntoView({ block: 'center' });
+                };
+                // Coming out by the button also steps the browser back, so Back and the button agree
+                if (pop && history.state && history.state.story) { history.back(); return; }
+                if (reduce) return done();
+                busy = true;
+                reader.classList.add('out');
+                setTimeout(done, 240);
+            }
+            const turn = d => {
+                if (d > 0 && idx === pages.length - 1) {
+                    const next = stories[stories.indexOf(cur) + 1];
+                    if (!next) return close();
+                    empty(); fill(next);
+                    history.replaceState({ story: next.id }, '', '#' + next.id);
+                    return;
+                }
+                show(idx + d, d < 0);
+            };
+
+            stories.forEach(story => {
+                const card = story.querySelector('.story-card');
+                card.addEventListener('click', () => open(story));
+                card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(story); } });
+            });
+            $('rdClose').onclick = () => close();
+            $('rdPrev').onclick = () => turn(-1);
+            $('rdNext').onclick = () => turn(1);
+            addEventListener('keydown', e => {
+                if (!cur || (e.target.closest && e.target.closest('input, textarea'))) return;
+                if (e.key === 'Escape') close();
+                else if (e.key === 'ArrowRight') turn(1);
+                else if (e.key === 'ArrowLeft' && idx > 0) turn(-1);
+            });
+            addEventListener('popstate', () => {
+                const want = history.state && history.state.story && document.getElementById(history.state.story);
+                if (want && want !== cur) open(want, false, false);
+                else if (!want && cur) close(false);
+            });
+            // A sideways swipe turns the page
+            let sx = 0, sy = 0;
+            stage.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+            stage.addEventListener('touchend', e => {
+                const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+                if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6 && !(dx > 0 && idx === 0)) turn(dx < 0 ? 1 : -1);
+            }, { passive: true });
+
+            const linked = location.hash && document.querySelector('.story' + location.hash);
+            if (linked) { history.replaceState({ story: linked.id }, '', location.hash); open(linked, false, false); }
+        })();
 
         // Videos only load YouTube once you press play
         document.querySelectorAll('.yt').forEach(b => b.addEventListener('click', () => {

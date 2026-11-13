@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Know more - Aumritash Maitra</title>
+    <meta name="description" content="Walk to the flame and choose a path: the work, the games and the stories behind Aumritash Maitra, product and growth operator at dubdub.">
+    <link rel="canonical" href="https://aumritash.com/more/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Aumritash Maitra">
+    <meta property="og:title" content="Know more - Aumritash Maitra">
+    <meta property="og:description" content="Walk to the flame and choose a path: the work, the games and the stories behind Aumritash Maitra, product and growth operator at dubdub.">
+    <meta property="og:url" content="https://aumritash.com/more/">
+    <meta name="twitter:card" content="summary">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/chapter.css">
@@ -277,13 +285,19 @@
 
         .path .t { display: block; font-family: var(--pixel); font-size: 1.7rem; line-height: 1; letter-spacing: 0.1em; text-transform: uppercase; }
         .path .d { display: block; font-size: 0.8rem; color: var(--dim); margin-top: 0.2rem; }
-        .path::after { content: ''; position: absolute; left: 50%; top: 100%; width: 2px; height: 14px; background: var(--text); transform: translateX(-50%); }
+        /* A small arrow under the label, pointing at the place it names */
+        .path::after { content: ''; position: absolute; left: 50%; top: 100%; margin-top: 5px; border: 8px solid transparent; border-bottom-width: 0; border-top: 10px solid var(--text); transform: translateX(-50%); animation: nudge 1.6s steps(4) infinite; }
+        @keyframes nudge { 50% { margin-top: 9px; } }
+        @media (prefers-reduced-motion: reduce) { .path::after { animation: none; } }
 
         .path:hover, .path:focus-visible, .path.current { background: var(--text); color: #000; }
         .path:hover .d, .path:focus-visible .d, .path.current .d { color: #3a3330; }
 
         /* The tower's top: sealed, and restless once you've seen everything else */
         .path.sealed { border-style: dashed; color: var(--dim); }
+        .path.sealed::after { border-top-color: var(--dim); }
+        .path.sealed.stirring::after { border-top-color: #ff3a3a; }
+        .path.sealed.kept::after { border-top-color: #ffcf8a; }
         .path.sealed.stirring { border-color: #ff3a3a; color: #ff6a6a; }
         .path.sealed.kept { border-style: solid; border-color: #ffcf8a; color: #ffe2b8; }
         .path.sealed:hover, .path.sealed:focus-visible, .path.sealed.current { background: rgba(0, 0, 0, 0.8); color: var(--text); }

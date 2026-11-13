@@ -5,6 +5,7 @@
 // The way back, for the owner: open any page with ?restore on the end of the address.
 (() => {
     const KEY = 'aumritash-end';
+    const BOARD = 'https://script.google.com/macros/s/AKfycbzO85JyB4y2mDlm3FXzL-Nplj8EY-dTykMWBD2_YWcL_G5oOEC158U1qpDYsl9ZEoT8SQ/exec';   // the visitor sheet (same as assets/track.js)
     let end = null;
     try { end = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
     if (/[?&]restore\b/.test(location.search)) {
@@ -31,10 +32,14 @@
             '.in{position:fixed;right:1.2rem;bottom:1rem;font-family:VT323,monospace;font-size:1.1rem;letter-spacing:.1em;color:#3a3735;text-decoration:none;opacity:0;transition:opacity 4s,color .3s}' +
             '.in:hover,.in:focus{color:#8a8480}' +
             '.on{opacity:1}' +
+            '.board{list-style:none;margin:1.6rem 0 0;padding:0;font-size:1.05rem;letter-spacing:.12em;line-height:1.4;color:#4a4643;opacity:0;transition:opacity 4s}' +
+            '.board::before{content:"THOSE WHO CLIMBED";display:block;color:#5f5a56;letter-spacing:.2em;margin-bottom:.3rem}' +
+            '.board .you{color:#8a8480}' +
+            '.board.on{opacity:1}' +
             '</style>';
         document.body.className = '';
         document.body.removeAttribute('style');
-        document.body.innerHTML = '<canvas id="ash" aria-hidden="true"></canvas><main><p class="l1" id="l1"></p><p class="l2" id="l2"></p></main>' +
+        document.body.innerHTML = '<canvas id="ash" aria-hidden="true"></canvas><main><p class="l1" id="l1"></p><p class="l2" id="l2"></p><ol class="board" id="board" hidden></ol></main>' +
             '<a class="in" id="in" href="https://www.linkedin.com/in/aumritashmaitra/" target="_blank" rel="noopener" aria-label="LinkedIn">in</a>';
         const l1 = document.getElementById('l1'), l2 = document.getElementById('l2'), link = document.getElementById('in');
         const LINE = 'NOTHING BURNS HERE.';
@@ -51,6 +56,22 @@
             l1.textContent = LINE;
             requestAnimationFrame(() => { l2.classList.add('on'); link.classList.add('on'); });
         }
+
+        // The climbs are still counted, the visitor's own among them
+        let me = '';
+        try { me = localStorage.getItem('aumritash-id') || ''; } catch (err) {}
+        fetch(BOARD + '?board=1&id=' + encodeURIComponent(me)).then(r => r.json()).then(data => {
+            if (!data || !Array.isArray(data.top) || !data.top.length) return;
+            const el = document.getElementById('board');
+            data.top.slice(0, 8).forEach((row, i) => {
+                const li = document.createElement('li'), s = Math.round(+row.time || 0);
+                li.textContent = (i + 1) + '. ' + String(row.name || '???').slice(0, 16) + ' · ' + (row.rank || '—') + ' · ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+                if (row.id && row.id === me) li.className = 'you';
+                el.appendChild(li);
+            });
+            el.hidden = false;
+            setTimeout(() => el.classList.add('on'), slow ? 9000 : 400);
+        }).catch(() => {});
 
         // Ash, coming down slowly for as long as the page is open
         const c = document.getElementById('ash'), g = c.getContext('2d');

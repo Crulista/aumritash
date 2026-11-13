@@ -232,11 +232,24 @@ export function createFight(env) {
         return o.shape !== 'sector' || Math.abs(angDiff(Math.atan2(dx, dz), o.yaw)) <= o.arc / 2 + (d > 0 ? pad / d : 0);
     }
     const used = [];                    // melee swings that have already met the visitor (once each)
+    const swept = new Map();            // where each live swing's weapon was last frame
+    const _sa = { x: 0, z: 0 }, _sb = { x: 0, z: 0 };
+    // Whether a weapon lying from a to b passes within `radius` of the visitor. Seen from above, like the marks on
+    // the ground, but only the part of it low enough to reach someone standing counts: a blade held overhead,
+    // or a shaft passing above them, does not.
+    function bladeTouches(P, ax, ay, az, bx, by, bz, radius) {
+        const top = 1.7 + radius;
+        if (ay > top && by > top) return false;
+        if (ay > top) { const k = (ay - top) / (ay - by); ax = mix(ax, bx, k); az = mix(az, bz, k); }
+        else if (by > top) { const k = (by - top) / (by - ay); bx = mix(bx, ax, k); bz = mix(bz, az, k); }
+        _sa.x = ax; _sa.z = az; _sb.x = bx; _sb.z = bz;
+        return nearSeg(P.x, P.z, _sa, _sb) < radius;
+    }
     const MARKS = [];                   // every ground mark traced so far (see ctx.mark)
 
     const haz = ctx.haz = {
         // A ring spreading over the ground; it hurts where its edge passes the visitor. dmg 0 makes a harmless one.
-        wave({ x, z, r0 = 1, speed = 9.5, max = 9, dmg = 16, thick = 0.75 }) {
+        wave({ x, z, r0 = 1, speed = 9.5, max = 9, dmg = 16, thick = 0.55 }) {
             const w = WAVES.find(q => !q.live) || WAVES.reduce((a, b) => (a.r / a.max > b.r / b.max ? a : b));
             Object.assign(w, { live: true, x, z, r: r0, speed, max, dmg, thick, hit: dmg <= 0 });
             return w;
@@ -292,7 +305,16 @@ export function createFight(env) {
         blade(id, a, b, radius, dmg, opts = {}) {
             if (used.includes(id)) return null;
             const P = player.state;
-            if (nearSeg(P.x, P.z, a, b) >= radius) return null;
+            const was = swept.get(id);
+            let touch = bladeTouches(P, a.x, a.y || 0, a.z, b.x, b.y || 0, b.z, radius);
+            // Where it was between the last frame and this one
+            if (!touch && was && clk - was.t < 0.12) for (const k of [1 / 3, 2 / 3]) {
+                if (bladeTouches(P, mix(was.ax, a.x, k), mix(was.ay, a.y || 0, k), mix(was.az, a.z, k), mix(was.bx, b.x, k), mix(was.by, b.y || 0, k), mix(was.bz, b.z, k), radius)) { touch = true; break; }
+            }
+            if (!was && swept.size > 24) swept.clear();
+            swept.set(id, { ax: a.x, ay: a.y || 0, az: a.z, bx: b.x, by: b.y || 0, bz: b.z, t: clk });
+            if (!touch) return null;
+            swept.delete(id);
             used.push(id);
             if (used.length > 16) used.shift();
             return hitPlayer(dmg, opts.fromX ?? (form ? form.x : a.x), opts.fromZ ?? (form ? form.z : a.z), opts.kind ? opts : Object.assign({ kind: 'blade' }, opts));
@@ -305,6 +327,7 @@ export function createFight(env) {
             for (const o of ZONES) { o.live = false; o.area.visible = o.fill.visible = false; }
             for (const m of MARKS) m.mesh.visible = false;
             used.length = 0;
+            swept.clear();
         },
         // Whether something is about to land at this point (for the test bot)
         near(x, z) {
