@@ -25,5 +25,7 @@
             if (!(navigator.sendBeacon && navigator.sendBeacon(ENDPOINT, body))) fetch(ENDPOINT, { method: 'POST', mode: 'no-cors', keepalive: true, body });
         } catch (e) {}
     };
+    // Where the tower's result card reads the best climbs from
+    window.track.url = ENDPOINT;
     window.track('page');
 })();

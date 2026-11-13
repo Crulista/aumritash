@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="../assets/dead.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Stories - Aumritash Maitra</title>
@@ -332,6 +333,13 @@
         </nav>
     </main>
 
+    <!-- A hint at what waits in the tower (assets/hint.js fills in how far along the visitor is) -->
+    <aside class="missing" id="missing">
+        <p class="missing-title">THE LAST PAGE IS TORN OUT</p>
+        <p class="missing-line">Every book here ends one page early. Someone took them, and kept them.</p>
+        <p class="missing-count" id="missingCount"></p>
+    </aside>
+
     <footer>© 2026 AUMRITASH MAITRA · Cover art via AniList, TVmaze and Wikipedia, © its respective owners</footer>
 
     <div class="peek" id="peek" aria-hidden="true">
@@ -392,6 +400,7 @@
         document.addEventListener('click', e => { if (lastTap && !e.target.closest('.book')) hide(); });
         addEventListener('scroll', hide, { passive: true });
     </script>
+    <script src="../assets/hint.js"></script>
     <script src="../assets/ask.js"></script>
 </body>
 </html>

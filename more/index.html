@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="../assets/dead.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Know more - Aumritash Maitra</title>
@@ -284,6 +285,7 @@
         /* The tower's top: sealed, and restless once you've seen everything else */
         .path.sealed { border-style: dashed; color: var(--dim); }
         .path.sealed.stirring { border-color: #ff3a3a; color: #ff6a6a; }
+        .path.sealed.kept { border-style: solid; border-color: #ffcf8a; color: #ffe2b8; }
         .path.sealed:hover, .path.sealed:focus-visible, .path.sealed.current { background: rgba(0, 0, 0, 0.8); color: var(--text); }
 
         .change { position: fixed; right: 1.5rem; bottom: 1.2rem; z-index: 10; }
@@ -681,6 +683,50 @@
     slit.position.set(TOWER.x - 1.72, 9.5, TOWER.z + 1.72);
     slit.rotation.y = -Math.PI / 4;
     world.add(slit);
+    // What the tower gives away from down here. A red light in its slit, brighter for each path walked, and an eye
+    // in the sky over it that opens a third at a time. If the visitor has been up and kept the place alive, there
+    // is a fire on its top instead, and nothing watching.
+    const towerSign = (() => {
+        let n = 0;
+        try { const s = JSON.parse(localStorage.getItem('aumritash-seen') || '[]'); n = ['work', 'games', 'stories'].filter(p => s.includes(p)).length; } catch (e) {}
+        const kept = !!(window.aumEnd && window.aumEnd.c === 'keep');
+        const sprite = (color, blend = THREE.AdditiveBlending) => new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color, transparent: true, opacity: 0, depthWrite: false, blending: blend, fog: false }));
+        if (kept) {
+            const flame = sprite('#ff8a30'), core = sprite('#ffd9a0');
+            flame.position.set(TOWER.x, 15.5, TOWER.z);
+            core.position.set(TOWER.x, 15.3, TOWER.z);
+            const light = new THREE.PointLight('#ff9a48', 6, 14, 1.4);
+            light.position.set(TOWER.x, 15.6, TOWER.z);
+            world.add(flame, core, light);
+            return { n, kept, update(t) {
+                const w = 0.88 + 0.12 * Math.sin(t * 9) + 0.06 * Math.sin(t * 23);
+                flame.material.opacity = 0.9; flame.scale.set(2.6 * w, 3.4 * w, 1);
+                core.material.opacity = 0.9; core.scale.set(1.1 * w, 1.6 * w, 1);
+                light.intensity = 6 * w;
+            } };
+        }
+        const ember = sprite('#ff2018');
+        ember.position.set(TOWER.x - 1.8, 9.5, TOWER.z + 1.8);
+        const lid = sprite('#ff1a14'), pupil = sprite('#000000', THREE.NormalBlending);
+        lid.position.set(18, 12.5, -46);            // far out past the tower, low in the sky
+        pupil.position.copy(lid.position).add(new THREE.Vector3(-0.4, 0, 0.8));
+        pupil.renderOrder = 2;
+        world.add(ember, lid, pupil);
+        let blink = 0, nextBlink = 5;
+        return { n, kept, lid, update(t, dt) {
+            const k = n / 3;
+            ember.material.opacity = k * (0.7 + 0.3 * Math.sin(t * 3.1));
+            ember.scale.set(0.5 + k * 0.5, 1.5 + k * 0.6, 1);
+            // The eye: shut with nothing seen, a slit, half open, and wide once every path is walked
+            if ((nextBlink -= dt) < 0) { blink = 0.16; nextBlink = 3 + Math.random() * 6; }
+            blink = Math.max(0, blink - dt);
+            const open = k * (blink > 0 ? 0.08 : 1);
+            lid.material.opacity = k ? 0.55 + 0.35 * k : 0;
+            lid.scale.set(13 + k * 4, Math.max(0.2, 6.5 * open), 1);
+            pupil.material.opacity = k ? 0.95 : 0;
+            pupil.scale.set(2.6, Math.max(0.08, 4.6 * open), 1);
+        } };
+    })();
 
     // Far silhouettes so the fog has depth
     for (let i = 0; i < 10; i++) {
@@ -1003,6 +1049,15 @@
     try { seen = JSON.parse(localStorage.getItem('aumritash-seen') || '[]'); } catch (e) {}
     const allSeen = ['work', 'games', 'stories'].every(p => seen.includes(p));
     if (allSeen) { $('pathTower').classList.add('stirring'); $('pathTower').querySelector('.d').textContent = 'The way up is open'; $('pathTower').href = '../tower/'; }
+    else if (towerSign.n) $('pathTower').querySelector('.d').textContent = `Sealed · ${towerSign.n} of 3`;
+    if (towerSign.kept) {
+        // Been up, and kept it alive: the tower has a name now, and their best climb on it
+        const best = store.get('aumritash-rank');
+        $('pathTower').classList.remove('stirring');
+        $('pathTower').classList.add('kept');
+        $('pathTower').querySelector('.t').textContent = 'THE TOWER';
+        $('pathTower').querySelector('.d').textContent = 'The fire holds' + (best && best !== '—' ? ` · best climb ${best}` : '');
+    }
     let pathIdx = 0;
     function showPaths() {
         if (mode !== 'resting') return;
@@ -1306,6 +1361,7 @@
         ashGeo.attributes.position.needsUpdate = true;
 
         updateFire(dt, t);
+        towerSign.update(t, dt);
         renderer.render(world, camera);
 
         // Keep the path labels pinned over their exits
@@ -1369,6 +1425,7 @@
     if (location.search.includes('debug')) {
         window.__scene = {
             sfx: () => sfx.state(),
+            sign: towerSign, camera,
             music: () => ({ playing: !music.paused, volume: +music.volume.toFixed(2), ready: music.readyState, err: music.error && music.error.code, allowed: musicAllowed, on: musicOn }),
             state: () => ({ mode, lit, z: hero && +hero.root.position.z.toFixed(2), cls: heroCls?.id, eyes: lurkers.length }),
             hold: on => (on ? held.add('debug') : held.delete('debug')),

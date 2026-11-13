@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script src="../assets/dead.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
     <title>The Tower - Aumritash Maitra</title>
@@ -181,6 +182,23 @@
         .gate.end .gate-title { color: #ffd9a0; text-shadow: none; font-size: clamp(1.5rem, 5vw, 2.2rem); }
         .gate.end .btn { font-size: 1.3rem; padding: 0.4rem 1.2rem 0.3rem; }
 
+        /* The end: what is left of it speaks in a paler voice; two choices; the pieces of the page falling away */
+        .say.soft { color: #d8cfc2; text-shadow: 0 0 18px rgba(255, 200, 140, 0.25), 0 3px 0 #000; font-size: clamp(1.5rem, 4.6vw, 2.7rem) !important; top: auto !important; bottom: 24% !important; }
+        .choice { position: fixed; left: 0; right: 0; bottom: 15%; z-index: 12; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1.2rem 2.4rem; padding: 0 1rem; text-align: center; animation: rise 1.2s steps(8) both; }
+        @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+        .choice .btn { font-size: 1.6rem; padding: 0.5rem 1.6rem 0.4rem; background: rgba(0, 0, 0, 0.6); }
+        .choice .keep { border-color: #ffcf8a; color: #ffe2b8; }
+        .choice .keep:hover, .choice .keep:focus-visible { background: #ffcf8a; color: #000; box-shadow: 0 0 22px rgba(255, 170, 80, 0.6); }
+        .choice .kill { border-color: #8a8480; color: #b8b0a8; }
+        .choice .kill:hover, .choice .kill:focus-visible { background: #000; border-color: var(--red); color: var(--red); }
+        .choice p { flex-basis: 100%; font-family: var(--pixel); font-size: 1.3rem; letter-spacing: 0.12em; color: var(--text); text-shadow: 0 2px 0 #000; }
+        .dropped { animation: dropped 1.3s cubic-bezier(0.5, 0, 1, 0.6) forwards; transform-origin: 20% 50%; z-index: 41 !important; }
+        @keyframes dropped { to { transform: translateY(120vh) rotate(24deg); } }
+        .flash { position: fixed; inset: 0; z-index: 19; opacity: 0; pointer-events: none; }
+        .board { list-style: none; font-family: var(--pixel); font-size: 1.15rem; letter-spacing: 0.1em; color: var(--dim); line-height: 1.35; }
+        .board::before { content: 'BEST CLIMBS'; display: block; color: #ffd9a0; letter-spacing: 0.2em; margin-bottom: 0.2rem; }
+        .board .you { color: #ffe2b8; }
+
         .loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--pixel); font-size: 1.6rem; letter-spacing: 0.3em; color: var(--dim); z-index: 23; background: #000; }
 
         .sound { position: fixed; left: 1.5rem; bottom: 1.8rem; z-index: 10; }
@@ -262,10 +280,23 @@
         <p class="gate-title" id="endTitle">THE WATCHER FALLS</p>
         <p class="rank" id="rank"></p>
         <p class="gate-line" id="endLine"></p>
-        <p class="gate-line">What you do with it comes next.</p>
+        <p class="gate-line" id="endNote"></p>
+        <ol class="board" id="board" hidden></ol>
         <button class="btn" id="again">Play again</button>
         <a class="btn" href="../more/">&lt; Back to the flame</a>
     </section>
+
+    <!-- The end: keep the place alive, or end it (asked twice, since it cannot be taken back) -->
+    <section class="choice" id="choice" hidden>
+        <button class="btn keep" id="keepBtn">Keep it alive</button>
+        <button class="btn kill" id="endBtn">End it all</button>
+    </section>
+    <section class="choice" id="sure" hidden>
+        <p>This cannot be undone. Everything here will be gone for you.</p>
+        <button class="btn kill" id="sureYes">End it</button>
+        <button class="btn" id="sureNo">Go back</button>
+    </section>
+    <div class="flash" id="flash"></div>
 
     <button class="btn small sound" id="sound" hidden aria-pressed="true">♪ Sound on</button>
 
@@ -278,6 +309,7 @@
     import { createSfx } from '../assets/sfx.js';
     import { mix, clamp01, ease, ramp, eyePair, setOpen, glowTexture } from '../assets/fight/kit.js';
     import { createFight } from '../assets/fight/core.js';
+    import { createEnding } from '../assets/ending.js';
     const sfx = createSfx();
 
     const $ = id => document.getElementById(id);
@@ -501,6 +533,7 @@
         const floor = new THREE.Mesh(new THREE.CircleGeometry(13, 28), mat(stoneTex, 10, 10, '#9a8f86'));
         floor.rotation.x = -Math.PI / 2;
         S.add(floor);
+        top.floor = floor;
         for (let i = 0; i < 36; i++) {
             if ([6, 7, 20, 29].includes(i)) continue;                // the wall has teeth missing
             const a = (i / 36) * Math.PI * 2;
@@ -515,6 +548,7 @@
         const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.35, 0.5, 8), new THREE.MeshLambertMaterial({ color: '#2a2422' }));
         bowl.position.y = 0.55;
         S.add(bowl);
+        top.bowl = bowl;
         // Eyes out in the open dark past the wall, well above its top, shut until the visitor walks out
         for (let i = 0; i < 44; i++) {
             const ang = -Math.PI / 2 + (rand() - 0.5) * Math.PI * 1.5;
@@ -881,6 +915,11 @@
             enter(n = 0) { fight.start(n); },
             update(dt) { fight.frame(dt); if (fight.done) hero.mixer.timeScale = 1; return fight.done; },
             finish() { fight.abort(); }
+        },
+        {   // 5. The end (assets/ending.js): keep it alive, or end it all
+            name: 'ending', seamless: true,
+            enter() { $('skip').hidden = true; ending.enter(fight.rank); },
+            update(dt) { return ending.update(dt); }
         }
     ];
 
@@ -913,6 +952,25 @@
         });
     }
 
+    // ═════════════ The end ═════════════
+    let ending = null, halted = false, flashA = 0, shakeK = 0;
+    function makeEnding() {
+        ending = createEnding({
+            arena: SETS.top, world, camTo, look, hero, heroCls, who, sfx, $, store, track,
+            canvas, floor: top.floor, bowl: top.bowl,
+            snap: () => { camSnap = true; },
+            steps: () => heroSteps(),
+            fade: fadeTo,
+            flash(color, a) { $('flash').style.background = color; flashA = a; },
+            shake(k) { shakeK = Math.max(shakeK, k); },
+            result: () => fight.result(),
+            // The last form's sky and what it left sitting by the brazier go out like a light
+            night() { try { if (fight.form) fight.form.dispose(); } catch (e) { console.error(e); } },
+            snapshot() { renderer.render(world, camera); return canvas.toDataURL('image/png'); },
+            halt() { halted = true; ending.after(); }
+        });
+    }
+
     // ── Running the shots ──
     let shot = -1, playing = false, cutting = false;
     function startShot(i) {
@@ -933,10 +991,9 @@
         setTimeout(then, 650);
     }
     function finished() {
-        // The fight is over (or was stepped past): show how it went
+        // It is over (the end was chosen, or the fight was stepped past): show how it went
         playing = false;
         $('skip').hidden = true;
-        fight.result();
         $('end').hidden = false;
     }
     function play() {
@@ -944,6 +1001,7 @@
         $('end').hidden = true;
         $('skip').hidden = false;
         sfx.setDrone(false);
+        ending.reset();
         fight.reset();
         hero.mixer.timeScale = 1;
         hero.root.rotation.set(0, Math.PI, 0);
@@ -967,6 +1025,7 @@
 
     const clock = new THREE.Clock();
     function frame(manual) {
+        if (halted) return;
         if (manual !== true) requestAnimationFrame(frame);
         // Debug: hold the scene still between hand-stepped frames, so a pose can be looked at
         if (window.__hold && manual !== true) { clock.getDelta(); return; }
@@ -997,6 +1056,8 @@
         camera.position.lerp(camTo, k);
         lookNow.lerp(look, k);
         camera.lookAt(lookNow);
+        if (shakeK > 0.01) { camera.position.x += Math.sin(clockT * 47) * shakeK * 0.06; camera.position.y += Math.cos(clockT * 53) * shakeK * 0.06; shakeK *= Math.pow(0.02, dt); }
+        if (flashA > 0) { flashA = Math.max(0, flashA - dt * 1.6); $('flash').style.opacity = flashA; }
         camSnap = false;
         renderer.render(world, camera);
     }
@@ -1017,6 +1078,7 @@
         try { await loadCast(); }
         catch (e) { $('loading').textContent = 'SOMETHING WENT WRONG · RELOAD'; console.error(e); return; }
         makeFight();
+        makeEnding();
         hero.root.position.set(0, 0, 11);
         camTo.set(1.3, 2.3, 16);
         look.set(0, 2, 0);
@@ -1048,6 +1110,19 @@
                 sfx.setDrone(true);
                 shot = 3; fired = new Set();
                 SHOTS[3].enter(n);
+            },
+            get ending() { return ending; },
+            // Straight to the end, as if the fight had just been won with this rank
+            toEnd(rank = 'B') {
+                if (fight.on) fight.abort();
+                ending.reset();
+                playing = true; $('start').hidden = true; $('end').hidden = true;
+                startShot(2);
+                SHOTS[2].finish();
+                caption(''); $('boss').hidden = true; $('say').textContent = '';
+                hero.root.position.set(400 + 1.5, 0, 4);
+                shot = 4; fired = new Set();
+                $('skip').hidden = true; ending.enter(rank);
             },
             // Like step, but lets the fight's script run between frames
             async run(seconds, fps = 30) {

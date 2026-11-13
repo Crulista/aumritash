@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="../assets/dead.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Games - Aumritash Maitra</title>
@@ -192,6 +193,13 @@
         </nav>
     </main>
 
+    <!-- A hint at what waits in the tower (assets/hint.js fills in how far along the visitor is) -->
+    <aside class="missing" id="missing">
+        <p class="missing-title">ONE CASE IS EMPTY</p>
+        <p class="missing-line">The box is on the shelf. The disc is somewhere else, with whoever is still playing it.</p>
+        <p class="missing-count" id="missingCount"></p>
+    </aside>
+
     <footer>© 2026 AUMRITASH MAITRA · Game art © its respective publishers, via Steam and the Epic Games Store</footer>
 
     <div class="peek" id="peek" aria-hidden="true">
@@ -246,6 +254,7 @@
         document.addEventListener('click', e => { if (lastTap && !e.target.closest('.gcase')) hide(); });
         addEventListener('scroll', hide, { passive: true });
     </script>
+    <script src="../assets/hint.js"></script>
     <script src="../assets/ask.js"></script>
 </body>
 </html>

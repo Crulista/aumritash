@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="../assets/dead.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Work - Aumritash Maitra</title>
@@ -549,6 +550,13 @@
         </nav>
     </main>
 
+    <!-- A hint at what waits in the tower (assets/hint.js fills in how far along the visitor is) -->
+    <aside class="missing" id="missing">
+        <p class="missing-title">ONE ENTRY IS SEALED</p>
+        <p class="missing-line">There is a record here that will not open. Whatever keeps it is not on this road.</p>
+        <p class="missing-count" id="missingCount"></p>
+    </aside>
+
     <footer>© 2026 AUMRITASH MAITRA</footer>
 
     <script>
@@ -579,6 +587,7 @@
             b.style.cursor = 'default';
         }, { once: true }));
     </script>
+    <script src="../assets/hint.js"></script>
     <script src="../assets/ask.js"></script>
 </body>
 </html>

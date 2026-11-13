@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="assets/dead.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aumritash Maitra</title>
@@ -804,11 +805,14 @@
         }
 
         // ── Captions ──
+        // Someone who climbed the tower and kept the place alive is greeted differently
+        const KEPT = window.aumEnd && window.aumEnd.c === 'keep' ? String(window.aumEnd.n || '').toUpperCase().slice(0, 16) || 'TRAVELLER' : '';
         function captionFor(idleSec) {
             if (state === 'linkedin') return 'STRICTLY BUSINESS';
             if (state === 'dubdub') return "HI! I'M DUBBY";
             if (state === 'more') return 'WANT TO KNOW MORE?';
             if (state === 'tbd') return 'NOT YET';
+            if (KEPT) return idleSec > 14 ? 'STAY A WHILE' : idleSec > 6 ? `I REMEMBER YOU, ${KEPT}` : 'THE FIRE HOLDS';
             if (idleSec > 14) return 'CLOSER';
             if (idleSec > 6) return "DON'T MOVE";
             return 'I SEE YOU';

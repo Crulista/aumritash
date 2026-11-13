@@ -414,3 +414,12 @@ footer {
     .panel { padding: 1.3rem; }
     .btn { font-size: 1.2rem; }
 }
+
+/* The one thing each chapter is missing: a hint at the tower */
+.missing { position: relative; z-index: 1; max-width: 34rem; margin: 3rem auto 2rem; padding: 1.1rem 1.3rem 1rem; border: 1px dashed rgba(255, 58, 58, 0.45); text-align: center; }
+.missing-title { font-family: var(--pixel); font-size: 1.35rem; letter-spacing: 0.2em; color: #ff6a6a; }
+.missing-line { color: var(--dim); font-size: 0.92rem; margin-top: 0.35rem; }
+.missing-count { font-family: var(--pixel); font-size: 1.05rem; letter-spacing: 0.14em; color: var(--dim); margin-top: 0.6rem; }
+.missing-count a { color: #ff6a6a; }
+.missing.kept { border-color: rgba(255, 207, 138, 0.5); }
+.missing.kept .missing-title { color: #ffd9a0; }
