@@ -1643,6 +1643,8 @@ void main() {
         get x() { return B.x; }, get z() { return B.z; }, get yaw() { return B.yaw; },
         get radius() { return low() ? 1.25 : 0; },
         get aimY() { return low() ? 2.2 + B.alt : B.alt + 3.0; },
+        get headY() { return B.alt + 4.7; },       // the top of its hood: the camera keeps this in the frame
+        watch: true,                                // and keeps looking at it while it is too high to lock on to
         get targetable() { return low() && !down && B.state !== 'last' && !ctx.cine.active; },
         get staggered() { return B.state === 'stagger' || B.state === 'spent'; },
         get posture() { return B.posture; }, postureMax: 100,

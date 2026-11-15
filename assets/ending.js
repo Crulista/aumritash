@@ -398,6 +398,7 @@ export function createEnding(env) {
         $('choice').hidden = true; $('sure').hidden = true;
         if (rank === '—') { go('skip'); return; }
         document.body.classList.add('cine');
+        if (env.clear) env.clear();
         stage0();
         hero.stopAll();
         hero.root.rotation.x = 0;

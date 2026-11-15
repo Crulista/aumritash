@@ -209,6 +209,10 @@ export function create(ctx) {
     const eyeLight = new THREE.PointLight('#ff2a1a', 0, 11, 1.5);
     eyeLight.position.z = 1.3;
     eyeG.add(eyeLight);
+    // A pale light over the wall it climbs in by, so the entrance can be seen before its eye opens. It dims once the
+    // eye is lit, and is gone a few seconds into the fight.
+    const introLight = put(new THREE.PointLight('#b4c4ea', 0, 34, 1.1));
+    let introTo = 0;
 
     // Legs: discs stacked on a dark spindle, a steel point at the end
     const NLD = 13;
@@ -1081,6 +1085,7 @@ export function create(ctx) {
         eyeGlow.material.opacity = Math.min(1, glow * 0.85);
         eyeGlow.scale.setScalar(2.4 + glow * 1.6);
         eyeLight.intensity = glow * 7;
+        introLight.intensity += (introTo - introLight.intensity) * 0.05;
         eyeG.getWorldPosition(eyeW);
         ctx.toArena(eyeW);
         if (eyeG.parent === bodyG) {
@@ -1288,8 +1293,10 @@ export function create(ctx) {
             px = B.x; pz = B.z; pyaw = B.yaw;
             if (T >= 7.4) { B.vx = (B.x - px0) / Math.max(dt, 1e-3); B.vz = (B.z - pz0) / Math.max(dt, 1e-3); }
         }
+        at(8.6, 0, 6.5, introLight.position);
         shot.each(dt => {
             T += dt; age += dt; B.introT = T;
+            introTo = T < 0.4 ? 0 : T < 7.55 ? 100 : 40;
             climbAt(dt);
             // the body moves by script; the rest of motion still runs (gait, eye, lids, bump)
             const r = 1 - Math.exp(-aim.rate * dt);
@@ -1343,6 +1350,7 @@ export function create(ctx) {
         await shot.card('THE PLAYER', SUB, 2.1);
         // However it ended (played or skipped): standing on the roof, every foot down, eye half-lidded
         T = 99;
+        introTo = 0;
         climbAt(0.016);
         B.x = ux * END; B.z = uz * END;
         Object.assign(body, { y: STAND, pitch: 0, roll: 0, twist: 0 });
@@ -1662,7 +1670,7 @@ export function create(ctx) {
                 // The spilled discs stay as dressing until the next fight starts over from the first form
                 loosePl.count = 0;
                 loose.onBeforeRender = () => {
-                    if (ctx.mode === 'off' || (ctx.form && ctx.form.id === 'watcher')) {
+                    if (ctx.swept || ctx.mode === 'off' || (ctx.form && ctx.form.id === 'watcher')) {
                         loose.visible = false;
                         queueMicrotask(() => { arena.remove(loose); loose.dispose(); });
                     }

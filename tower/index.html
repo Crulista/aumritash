@@ -965,6 +965,8 @@
             flash(color, a) { $('flash').style.background = color; flashA = a; },
             shake(k) { shakeK = Math.max(shakeK, k); },
             result: () => fight.result(),
+            // What the fight left lying on the roof is taken away before the last scene
+            clear() { fight.sweep(); top.scythe.visible = false; },
             // The last form's sky and what it left sitting by the brazier go out like a light
             night() { try { if (fight.form) fight.form.dispose(); } catch (e) { console.error(e); } },
             snapshot() { renderer.render(world, camera); return canvas.toDataURL('image/png'); },

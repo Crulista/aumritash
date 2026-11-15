@@ -815,10 +815,32 @@ export function createPlayer(ctx, env) {
 
     // ═════════════ Camera ═════════════
     // Locked on: behind the visitor on the line from the boss, pulled back and up for big things, looking at a point
-    // between them weighted towards the boss's own height. Free: orbits the visitor; drifts back behind them while they
+    // between them weighted towards the boss's own height. Watching (a form with `watch` that cannot be locked on to
+    // just now, because it has flown up): further back still, tilted up to keep it in the frame. Free: orbits the visitor; drifts back behind them while they
     // run and nobody is turning it. Never outside the wall, never under the floor.
     const camSm = { x: 0, z: 0, y: 1.5, ready: false };
     const _ct = V(), _cl = V();
+    // For a form that is watched (it flies, and hangs near the wall): when the place behind the visitor would be
+    // outside the wall, the camera swings round them to the nearest side that is inside, instead of being pushed
+    // up the wall until it is looking at the floor. It keeps to the side it is already on where it can.
+    let camSwing = 0;
+    const _sw = [0, 0];
+    function swung(bx, bz, back, on, dt) {
+        const lim = ctx.ARENA - 1.0;
+        const fits = a => { const c = Math.cos(a), s = Math.sin(a); return Math.hypot(P.x + (bx * c - bz * s) * back, P.z + (bx * s + bz * c) * back) <= lim; };
+        let want = 0;
+        if (on && !fits(0)) {
+            const side = Math.sign(camSwing) || 1;
+            for (let a = 0.2; a < 3.3; a += 0.2) {
+                if (fits(side * a)) { want = side * a; break; }
+                if (a > 0.9 && fits(-side * (a - 0.8))) { want = -side * (a - 0.8); break; }      // the other side only when it is much nearer
+            }
+        }
+        camSwing = toward(camSwing, want, 3, dt);
+        const c = Math.cos(camSwing), s = Math.sin(camSwing);
+        _sw[0] = bx * c - bz * s; _sw[1] = bx * s + bz * c;
+        return _sw;
+    }
     function camera(dt) {
         const F = ctx.form || still, J = ctx.jolt;
         const locked = lockedOn();
@@ -837,15 +859,31 @@ export function createPlayer(ctx, env) {
             let bx = P.x - camSm.x, bz = P.z - camSm.z;
             const d = Math.hypot(bx, bz) || 1;
             bx /= d; bz /= d;
-            const size = Math.max(1, F.radius || 0, (F.aimY || 1.5) / 1.3);
+            const size = Math.max(1, F.radius || 0, (F.aimY || 1.5) / 1.3, (F.headY || 0) / 1.6);
             const close = Math.max(0, 6 + size - d);
             const back = 4.3 + size * 0.85 + close * 0.45;
-            const high = 1.9 + size * 0.4 + close * 0.2 + Math.max(0, camSm.y - 3) * 0.25;
+            let high = 1.9 + size * 0.4 + close * 0.2 + Math.max(0, camSm.y - 3) * 0.25;
+            if (F.watch) { high = Math.min(high, 3.3); [bx, bz] = swung(bx, bz, back, true, dt); }
             px = P.x + bx * back + bz * 1.1; py = high; pz = P.z + bz * back - bx * 1.1;
             const w = Math.min(0.7, 0.45 + 0.04 * size);
             lx = mix(P.x, camSm.x, w); lz = mix(P.z, camSm.z, w);
             ly = mix(1.3, camSm.y, 0.6);
+            if (F.headY) ly = Math.max(ly, mix(1.2, F.headY, 0.45));
             camYaw = Math.atan2(-bx, -bz);
+        } else if (P.lock && F.watch && ctx.form) {
+            // Something that has risen out of reach is still watched: from further behind the visitor, on the line
+            // from it, tilted up far enough to hold its head and the visitor's feet in one frame
+            let bx = P.x - camSm.x, bz = P.z - camSm.z;
+            const d = Math.hypot(bx, bz);
+            if (d > 1.2) { bx /= d; bz /= d; } else { bx = -Math.sin(camYaw); bz = -Math.cos(camYaw); }     // right underneath: hold the line it had
+            const head = F.headY || (F.aimY || 1.5) + 1.5;
+            const back = 7.5 + Math.max(0, 5 - d) * 0.6;
+            [bx, bz] = swung(bx, bz, back, true, dt);
+            px = P.x + bx * back + bz * 1.1; py = 2.0; pz = P.z + bz * back - bx * 1.1;
+            lx = mix(P.x, camSm.x, 0.5); lz = mix(P.z, camSm.z, 0.5);
+            ly = mix(1.2, head, 0.4);
+            camYaw = Math.atan2(-bx, -bz);
+            orbit.yaw = camYaw; orbit.idle = 0;
         } else {
             // Free: drift back behind the visitor when they run and the camera has been left alone
             orbit.idle += dt;

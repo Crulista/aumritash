@@ -2,6 +2,7 @@
 // and the shared animation clips (every part uses the same 65-bone humanoid rig).
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 const BASE = new URL('./models/', import.meta.url).href;
 
@@ -31,6 +32,7 @@ export const CLASSES = ORIGINS.flatMap(o => ['m', 'f'].map(sex => {
 }));
 
 const loader = new GLTFLoader();
+loader.setMeshoptDecoder(MeshoptDecoder);       // the models are stored compressed; the base bodies are only a head and neck
 const cache = new Map();
 const load = name => {
     if (!cache.has(name)) cache.set(name, loader.loadAsync(BASE + name + '.glb'));

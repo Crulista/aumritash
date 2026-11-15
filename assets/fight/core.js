@@ -76,6 +76,7 @@ export function createFight(env) {
         THREE, kit, arena, camera, sfx,
         hero: env.hero, heroName: env.heroName, heroCls: env.heroCls, loadCharacter: env.loadCharacter,
         parts: env.parts || {},
+        swept: false,           // set by sweep(): forms that left dressing on the roof take it away
         ARENA,
         get score() { return score; },
         get P() { return player.state; },
@@ -746,6 +747,7 @@ export function createFight(env) {
         dustGeo.attributes.position.needsUpdate = true;
         flashA = 0; flashEl.style.opacity = 0;
         mode = 'off'; modeT = 0; T = 0;
+        ctx.swept = false;
         done = false; rank = null; deaths = 0; hits = 0; parries = 0; time = 0;
         carded = false; droneOff = false;
         warp = 1; warpRate = 4; shakeK = 0;
@@ -789,6 +791,7 @@ export function createFight(env) {
     const api = {
         ctx, player,
         start, frame, pose, abort, reset, result,
+        sweep() { ctx.swept = true; },
         skip() { if (C.active && !C.skipped) { skipCine(); return true; } return false; },
         bot: (on = true, skill = 0.9, parry = false) => player.bot(on, skill, parry),
         view: null,
