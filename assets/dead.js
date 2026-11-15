@@ -21,7 +21,7 @@
         const root = document.documentElement;
         document.title = '—';
         if (!document.body) root.appendChild(document.createElement('body'));
-        document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex"><title>—</title>' +
+        document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex"><title>—</title><link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">' +
             '<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">' +
             '<style>' +
             'html,body{height:100%;margin:0;background:#000;overflow:hidden}' +
