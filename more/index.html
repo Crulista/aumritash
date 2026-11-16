@@ -28,6 +28,28 @@
             "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
         } }
     </script>
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js">
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js">
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js">
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js">
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js">
+    <link rel="modulepreload" href="../assets/characters.js">
+    <link rel="modulepreload" href="../assets/sfx.js">
+    <script>
+        // The visitor's own character (or the first one offered), fetched while the rest of the page is still loading
+        (function () {
+            try {
+                var o = localStorage.getItem('aumritash-origin') || 'wanderer_m', s = /_f$/.test(o) ? 'female' : 'male', files = ['anims', 'base_' + s];
+                if (!/^wretch/.test(o)) files.push(s + '_ranger');
+                if (/^(wretch|pilgrim)/.test(o)) files.push(s + '_peasant');
+                files.forEach(function (n) {
+                    var l = document.createElement('link');
+                    l.rel = 'preload'; l.as = 'fetch'; l.crossOrigin = 'anonymous'; l.href = '../assets/models/' + n + '.glb';
+                    document.head.appendChild(l);
+                });
+            } catch (e) {}
+        })();
+    </script>
     <style>
         html, body { height: 100%; overflow: hidden; }
         body::before { display: none; }
@@ -1080,13 +1102,16 @@
         $('pathTower').querySelector('.d').textContent = 'The fire holds' + (best && best !== '—' ? ` · best climb ${best}` : '');
     }
     let pathIdx = 0;
+    let pathsShown = false;
     function showPaths() {
         if (mode !== 'resting') return;
+        const quick = reduce || (kindled && !pathsShown);       // a return visit: no ceremony
+        pathsShown = true;
         const who = store.get(STORE_NAME);
         $('pathsTitle').textContent = who ? `CHOOSE A PATH, ${who.toUpperCase()}` : 'CHOOSE A PATH';
         $('pathsTitle').hidden = false;
         $('change').hidden = false;
-        PATHS.forEach((p, n) => { p.el.style.animationDelay = (reduce ? 0 : 0.7 + n * 0.45) + 's'; p.el.hidden = false; });
+        PATHS.forEach((p, n) => { p.el.style.animationDelay = (quick ? n * 0.08 : 0.7 + n * 0.45) + 's'; p.el.hidden = false; });
         selectPath(0);
     }
     function selectPath(i) {
@@ -1135,8 +1160,8 @@
             $('notice').style.opacity = 1;
             sfx.rumble(3);
             const wait = reduce ? 0 : 1;
-            setTimeout(() => { $('fade').classList.add('slow'); fadeTo(true); sfx.whoosh(); }, 2200 * wait);
-            setTimeout(() => { location.href = '../tower/'; }, 3600 * wait + 50);
+            setTimeout(() => { $('fade').classList.add('slow'); fadeTo(true); sfx.whoosh(); }, 1300 * wait);
+            setTimeout(() => { location.href = '../tower/'; }, 2650 * wait + 50);
             return;
         }
         mode = 'leaving';
@@ -1153,9 +1178,9 @@
         hero.root.rotation.y = Math.atan2(p.go.x - hero.root.position.x, p.go.z - hero.root.position.z);
         hero.play(heroCls.walk, { fade: 0.5 });
         try { sessionStorage.setItem('aumritash-arrive', place); } catch (e) {}
-        const wait = reduce ? 0 : 1;
-        setTimeout(() => { $('fade').classList.add('slow'); fadeTo(true); sfx.whoosh(); }, 2600 * wait);
-        setTimeout(() => { location.href = p.el.href; }, 4000 * wait + 50);
+        const wait = reduce ? 0 : 1, again = seen.includes(place);
+        setTimeout(() => { fadeTo(true); sfx.whoosh(); }, (again ? 500 : 1500) * wait);
+        setTimeout(() => { location.href = p.el.href; }, (again ? 1150 : 2200) * wait + 50);
     }
 
     $('change').onclick = () => {
@@ -1439,7 +1464,7 @@
         renderSound();
         fadeTo(false);
         requestAnimationFrame(frame);
-        if (kindled) { askToWake(); await askName(); setTimeout(showPaths, reduce ? 0 : 1600); }
+        if (kindled) { askToWake(); await askName(); setTimeout(showPaths, reduce ? 0 : 350); }
     })();
 
     // ?debug: drive the scene by hand when the tab can't animate (background testing)

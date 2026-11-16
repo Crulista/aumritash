@@ -8,8 +8,10 @@
         stories: ['THE EAST BRIDGE', 'You come to a library, with broken shelves.']
     };
     const here = (location.pathname.match(/\/(work|games|stories)\//) || [])[1];
+    let again = false;
     try {
         const seen = new Set(JSON.parse(localStorage.getItem('aumritash-seen') || '[]'));
+        again = seen.has(here);
         if (here) { seen.add(here); localStorage.setItem('aumritash-seen', JSON.stringify([...seen])); }
     } catch (e) {}
 
@@ -23,8 +25,19 @@
     let who = '';
     try { who = localStorage.getItem('aumritash-name') || ''; } catch (e) {}
     veil.querySelector('.arrive-line').textContent = who ? line.replace(/\.$/, `, ${who}.`) : line;
+    if (again) veil.classList.add('again');
     document.body.prepend(veil);
     const quick = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setTimeout(() => veil.classList.add('out'), quick ? 0 : 2400);
-    setTimeout(() => veil.remove(), quick ? 600 : 3900);
+    const hold = quick ? 0 : again ? 450 : 1500, fade = again ? 450 : 800;
+    veil.style.transitionDuration = fade + 'ms';
+    let gone = false;
+    const leave = () => {
+        if (gone) return;
+        gone = true;
+        veil.classList.add('out');
+        setTimeout(() => veil.remove(), fade + 100);
+        removeEventListener('pointerdown', leave, true); removeEventListener('keydown', leave, true);
+    };
+    setTimeout(leave, hold);
+    addEventListener('pointerdown', leave, true); addEventListener('keydown', leave, true);
 })();

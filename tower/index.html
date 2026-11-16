@@ -16,6 +16,32 @@
             "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
         } }
     </script>
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js">
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js">
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js">
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js">
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js">
+    <link rel="modulepreload" href="../assets/characters.js">
+    <link rel="modulepreload" href="../assets/sfx.js">
+    <link rel="modulepreload" href="../assets/fight/kit.js">
+    <link rel="modulepreload" href="../assets/fight/core.js">
+    <link rel="modulepreload" href="../assets/fight/player.js">
+    <link rel="modulepreload" href="../assets/ending.js">
+    <script>
+        // The visitor's own character (or the first one offered), fetched while the rest of the page is still loading
+        (function () {
+            try {
+                var o = localStorage.getItem('aumritash-origin') || 'wanderer_m', s = /_f$/.test(o) ? 'female' : 'male', files = ['anims', 'base_' + s];
+                if (!/^wretch/.test(o)) files.push(s + '_ranger');
+                if (/^(wretch|pilgrim)/.test(o)) files.push(s + '_peasant');
+                files.forEach(function (n) {
+                    var l = document.createElement('link');
+                    l.rel = 'preload'; l.as = 'fetch'; l.crossOrigin = 'anonymous'; l.href = '../assets/models/' + n + '.glb';
+                    document.head.appendChild(l);
+                });
+            } catch (e) {}
+        })();
+    </script>
     <style>
         html, body { height: 100%; overflow: hidden; }
         body::before { display: none; }
