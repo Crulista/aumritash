@@ -9,6 +9,7 @@
     const A = new URL('.', me.src).href;                                                        // the assets folder
     const SETS = {
         flame: [
+            A + '../more/', A + 'chapter.css',
             THREE + 'build/three.module.js',
             A + 'characters.js', A + 'sfx.js',
             THREE + 'examples/jsm/loaders/GLTFLoader.js', THREE + 'examples/jsm/utils/BufferGeometryUtils.js',
@@ -16,7 +17,10 @@
             A + 'models/anims.glb',
             ...['base_male', 'male_ranger', 'base_female', 'female_ranger', 'male_peasant', 'female_peasant'].map(n => A + 'models/' + n + '.glb')
         ],
-        tower: ['kit', 'core', 'player', 'score', 'forms/watcher', 'forms/player2', 'forms/author'].map(n => A + 'fight/' + n + '.js').concat(A + 'ending.js')
+        // At the flame: the three chapters (page, backdrop) so a door opens at once, then the tower's fight
+        tower: ['work', 'games', 'stories'].flatMap(p => [A + '../' + p + '/', A + 'bg/' + p + '.webp'])
+            .concat(A + 'arrive.js', A + 'hint.js', A + 'ask.js')
+            .concat(['kit', 'core', 'player', 'score', 'forms/watcher', 'forms/player2', 'forms/author'].map(n => A + 'fight/' + n + '.js'), A + 'ending.js')
     };
     const list = (SETS[me.dataset.for] || []).slice();
     let stopped = false;

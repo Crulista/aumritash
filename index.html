@@ -170,6 +170,11 @@
 
         .corner:active .btn { background: var(--red); border-color: var(--red); color: #000; }
 
+        /* After a first tap on a touch screen: the label under the button asks for the second one */
+        .corner.armed .sub { color: var(--red); font-size: 1.25rem; letter-spacing: 0.16em; animation: tap-again 0.9s steps(1) infinite; }
+        @keyframes tap-again { 0%, 60% { opacity: 1; } 61%, 100% { opacity: 0.35; } }
+        @media (prefers-reduced-motion: reduce) { .corner.armed .sub { animation: none; } }
+
         .tr.active .btn { border-style: dashed; background: transparent; color: var(--red); border-color: var(--red); }
 
         .brand { display: none; }
@@ -454,18 +459,34 @@
             body.classList.add('hit');
         }
 
+        // A finger has no hover. The first tap on a button shows what a mouse would see on hovering (the button and
+        // the whole screen change) and the label under it asks for a second tap; the second tap follows the link.
+        // Which it was is read from the press itself, since some phones claim to have a mouse.
+        let fingerAt = -1e9, armed = null;
+        const byFinger = () => touch || performance.now() - fingerAt < 1200;
+        addEventListener('pointerdown', e => { fingerAt = e.pointerType === 'mouse' ? -1e9 : performance.now(); }, true);
+        function arm(corner) {
+            if (armed === corner) return;
+            if (armed) { armed.classList.remove('armed'); armed.querySelector('.sub').textContent = armed.dataset.sub; }
+            armed = corner;
+            if (!corner) return;
+            const sub = corner.querySelector('.sub');
+            corner.dataset.sub = sub.textContent;
+            corner.classList.add('armed');
+            if (corner.getAttribute('href') !== '#') sub.textContent = '> TAP AGAIN TO OPEN';
+        }
         document.querySelectorAll('.corner').forEach(corner => {
-            if (!touch) {
-                corner.addEventListener('mouseenter', () => setState(corner.dataset.state, corner));
-                corner.addEventListener('mouseleave', () => setState('idle', null));
-                corner.addEventListener('focus', () => setState(corner.dataset.state, corner));
-                corner.addEventListener('blur', () => setState('idle', null));
-            }
+            corner.addEventListener('mouseenter', () => { if (!byFinger()) setState(corner.dataset.state, corner); });
+            corner.addEventListener('mouseleave', () => { if (!byFinger()) setState('idle', null); });
+            corner.addEventListener('focus', () => { if (!byFinger()) setState(corner.dataset.state, corner); });
+            corner.addEventListener('blur', () => { if (!byFinger()) setState('idle', null); });
             corner.addEventListener('click', e => {
-                // Phones have no hover: first tap shows the reaction, second tap follows the link
-                if (touch && !corner.classList.contains('active')) {
+                if (byFinger() && armed !== corner) {
                     e.preventDefault();
                     setState(corner.dataset.state, corner);
+                    arm(corner);
+                    if (corner.getAttribute('href') === '#') { glitch(300); hit(); }
+                    return;
                 }
                 if (corner.getAttribute('href') === '#') { e.preventDefault(); glitch(300); hit(); return; }
                 // Know more: glitch, cut to black, then go to the chapter select
@@ -478,7 +499,10 @@
                 }
             });
         });
-        if (touch) document.addEventListener('click', e => { if (!e.target.closest('.corner')) setState('idle', null); });
+        document.addEventListener('click', e => { if (armed && !e.target.closest('.corner')) { arm(null); setState('idle', null); } });
+        // Coming back to this page (from the other tab, or with Back): nothing is left half-pressed
+        addEventListener('pageshow', () => { if (armed) { arm(null); setState('idle', null); } });
+        document.addEventListener('visibilitychange', () => { if (!document.hidden && armed) { arm(null); setState('idle', null); } });
 
         // ── Glitch + flicker timers ──
         let glitchUntil = 0, flickerUntil = 0;

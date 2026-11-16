@@ -711,19 +711,21 @@
 
     // North-east, past the wall: a ruined tower. Its top is sealed until the visitor has seen all three paths.
     const TOWER = new THREE.Vector3(9.4, 0, -9.4);
-    const towerBody = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.4, 14, 10), STONE);
-    towerBody.position.set(TOWER.x, 7, TOWER.z);
+    const TOWER_STONE = STONE.clone();
+    TOWER_STONE.emissive = new THREE.Color('#171922');           // it stands out of the firelight: lit a little by the sky
+    const towerBody = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.4, 7.4, 10), TOWER_STONE);
+    towerBody.position.set(TOWER.x, 3.7, TOWER.z);
     world.add(towerBody);
     for (let i = 0; i < 10; i++) {
         if (i === 3 || i === 7) continue;                                   // a couple of teeth missing
         const a = (i / 10) * Math.PI * 2;
-        const merlon = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.9 + rand() * 0.5, 0.6), STONE);
-        merlon.position.set(TOWER.x + Math.cos(a) * 1.75, 14.4, TOWER.z + Math.sin(a) * 1.75);
+        const merlon = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.9 + rand() * 0.5, 0.6), TOWER_STONE);
+        merlon.position.set(TOWER.x + Math.cos(a) * 1.75, 7.8, TOWER.z + Math.sin(a) * 1.75);
         merlon.rotation.y = -a;
         world.add(merlon);
     }
     const slit = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 1.4), DARK);
-    slit.position.set(TOWER.x - 1.72, 9.5, TOWER.z + 1.72);
+    slit.position.set(TOWER.x - 1.9, 4.3, TOWER.z + 1.9);
     slit.rotation.y = -Math.PI / 4;
     world.add(slit);
     // What the tower gives away from down here. A red light in its slit, brighter for each path walked, and an eye
@@ -736,10 +738,10 @@
         const sprite = (color, blend = THREE.AdditiveBlending) => new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color, transparent: true, opacity: 0, depthWrite: false, blending: blend, fog: false }));
         if (kept) {
             const flame = sprite('#ff8a30'), core = sprite('#ffd9a0');
-            flame.position.set(TOWER.x, 15.5, TOWER.z);
-            core.position.set(TOWER.x, 15.3, TOWER.z);
+            flame.position.set(TOWER.x, 8.9, TOWER.z);
+            core.position.set(TOWER.x, 8.7, TOWER.z);
             const light = new THREE.PointLight('#ff9a48', 6, 14, 1.4);
-            light.position.set(TOWER.x, 15.6, TOWER.z);
+            light.position.set(TOWER.x, 9, TOWER.z);
             world.add(flame, core, light);
             return { n, kept, update(t) {
                 const w = 0.88 + 0.12 * Math.sin(t * 9) + 0.06 * Math.sin(t * 23);
@@ -749,7 +751,7 @@
             } };
         }
         const ember = sprite('#ff2018');
-        ember.position.set(TOWER.x - 1.8, 9.5, TOWER.z + 1.8);
+        ember.position.set(TOWER.x - 2.0, 4.3, TOWER.z + 2.0);
         const lid = sprite('#ff1a14'), pupil = sprite('#000000', THREE.NormalBlending);
         lid.position.set(18, 12.5, -46);            // far out past the tower, low in the sky
         pupil.position.copy(lid.position).add(new THREE.Vector3(-0.4, 0, 0.8));
@@ -758,7 +760,7 @@
         let blink = 0, nextBlink = 5;
         return { n, kept, lid, update(t, dt) {
             const k = n / 3;
-            ember.material.opacity = k * (0.7 + 0.3 * Math.sin(t * 3.1));
+            ember.material.opacity = (0.3 + 0.7 * k) * (0.7 + 0.3 * Math.sin(t * 3.1));
             ember.scale.set(0.5 + k * 0.5, 1.5 + k * 0.6, 1);
             // The eye: shut with nothing seen, a slit, half open, and wide once every path is walked
             if ((nextBlink -= dt) < 0) { blink = 0.16; nextBlink = 3 + Math.random() * 6; }
@@ -1085,7 +1087,7 @@
         { el: $('pathWork'), at: new THREE.Vector3(-R + 0.4, 3.9, 0), go: new THREE.Vector3(-R - 1, 0, 0), via: [new THREE.Vector3(0, 0, 3.3), new THREE.Vector3(-3.4, 0, 1.6)] },
         { el: $('pathGames'), at: new THREE.Vector3(0, 4.2, -R - 2), go: new THREE.Vector3(0, 0, -R - 1), via: [new THREE.Vector3(3.3, 0, 0), new THREE.Vector3(1.6, 0, -3.4)] },
         { el: $('pathStories'), at: new THREE.Vector3(R + 2.2, 2.4, 0), go: new THREE.Vector3(R + 2, 0, 0) },
-        { el: $('pathTower'), at: new THREE.Vector3(TOWER.x, 15.6, TOWER.z), sealed: true }
+        { el: $('pathTower'), at: new THREE.Vector3(TOWER.x - 1.9, 5.3, TOWER.z + 1.9), sealed: true }
     ];
     // Which paths this visitor has walked (set on each chapter page); all three wakes the tower
     let seen = [];
