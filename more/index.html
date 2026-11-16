@@ -773,6 +773,58 @@
         } };
     })();
 
+    // The way to the tower. Once every path has been walked the seal gives, and a stair of stone slabs comes up out
+    // of the dark one at a time: from the courtyard floor, over the broken wall, to the slit in the tower's side.
+    // The first time, the visitor watches it being made; after that it is simply there.
+    const towerBridge = (() => {
+        const open = towerSign.n === 3 || towerSign.kept;
+        const N = 15, ux = Math.SQRT1_2, uz = -Math.SQRT1_2, R0 = 3.9, R1 = 10.9, Y0 = 0.14, Y1 = 3.7;
+        const foot = new THREE.Vector3(ux * (R0 - 0.9), 0, uz * (R0 - 0.9));
+        if (!open) return { open, foot, update() {} };
+        let built = false;
+        try { built = localStorage.getItem('aumritash-bridge') === '1'; } catch (e) {}
+        if (towerSign.kept) built = true;
+        const slabs = [];
+        for (let i = 0; i < N; i++) {
+            const k = i / (N - 1), r = R0 + (R1 - R0) * k;
+            const m = STONE.clone();
+            m.emissive = new THREE.Color('#171922');
+            const s = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.2, 0.62), m);
+            s.rotation.y = Math.atan2(ux, uz);
+            s.userData = { x: ux * r, y: Y0 + (Y1 - Y0) * k, z: uz * r, at: 1.6 + i * 0.24, done: built, rung: false };
+            s.position.set(s.userData.x, s.userData.y, s.userData.z);
+            s.castShadow = true; s.receiveShadow = true;
+            s.visible = built;
+            world.add(s);
+            slabs.push(s);
+        }
+        let T = 0, finished = built;
+        return { open, foot, update(t, dt) {
+            if (finished) return;
+            T += dt;
+            let all = true;
+            for (const s of slabs) {
+                const u = s.userData;
+                if (u.done) continue;
+                all = false;
+                const k = (T - u.at) / 0.7;
+                if (k <= 0) continue;
+                // Up out of the dark, turning, and red-hot until it sets
+                const e = k >= 1 ? 1 : 1 - Math.pow(1 - k, 3);
+                s.visible = true;
+                s.position.y = u.y - (1 - e) * 4.5;
+                s.rotation.z = (1 - e) * 1.4;
+                s.material.emissive.setRGB(0.09 + (1 - e) * 0.9, 0.1 + (1 - e) * 0.08, 0.13);
+                if (k >= 0.85 && !u.rung) { u.rung = true; try { sfx.tick(); } catch (er) {} }
+                if (k >= 1.6) { u.done = true; s.position.y = u.y; s.rotation.z = 0; s.material.emissive.set('#171922'); }
+            }
+            if (all) {
+                finished = true;
+                try { localStorage.setItem('aumritash-bridge', '1'); sfx.thud(); } catch (e) {}
+            }
+        } };
+    })();
+
     // Far silhouettes so the fog has depth
     for (let i = 0; i < 10; i++) {
         const a = rand() * Math.PI * 2, d = 26 + rand() * 18, h = 6 + rand() * 14;
@@ -1161,6 +1213,10 @@
             $('notice').hidden = false;
             $('notice').style.opacity = 1;
             sfx.rumble(3);
+            route = [new THREE.Vector3(3.0, 0, 0.6), towerBridge.foot.clone()];
+            leaveTo = route.shift();
+            hero.root.rotation.y = Math.atan2(leaveTo.x - hero.root.position.x, leaveTo.z - hero.root.position.z);
+            hero.play(heroCls.walk, { fade: 0.5 });
             const wait = reduce ? 0 : 1;
             setTimeout(() => { $('fade').classList.add('slow'); fadeTo(true); sfx.whoosh(); }, 1300 * wait);
             setTimeout(() => { location.href = '../tower/'; }, 2650 * wait + 50);
@@ -1410,6 +1466,7 @@
 
         updateFire(dt, t);
         towerSign.update(t, dt);
+        towerBridge.update(t, dt);
         renderer.render(world, camera);
 
         // Keep the path labels pinned over their exits

@@ -428,21 +428,17 @@ footer {
 .missing.kept { border-color: rgba(255, 207, 138, 0.5); }
 .missing.kept .missing-title { color: #ffd9a0; }
 
-/* ── Something from the tower, far back behind each chapter ── */
+/* ── Something from the tower, far back behind each chapter ──
+   A plain still picture: its dimness and its fade into the page's black are in the image itself, and nothing about
+   it moves, so it costs nothing while the page scrolls. */
 .lurk {
     position: fixed;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: center / cover no-repeat;
-    image-rendering: pixelated;
-    opacity: 0.2;
-    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 35%, transparent 100%);
-    mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 35%, transparent 100%);
-    animation: lurk 14s ease-in-out infinite alternate;
+    background: #050505 center / cover no-repeat;
+    transform: translateZ(0);
 }
-.lurk-work { background-image: url(bg/work.webp); background-position: 40% 60%; opacity: 0.45; }
-.lurk-games { background-image: url(bg/games.webp); background-position: 35% 70%; opacity: 0.42; }
-.lurk-stories { background-image: url(bg/stories.webp); background-position: 60% 40%; opacity: 0.27; }
-@keyframes lurk { from { transform: scale(1.02); filter: brightness(0.85); } to { transform: scale(1.08) translateY(-1%); filter: brightness(1.1); } }
-@media (prefers-reduced-motion: reduce) { .lurk { animation: none; } }
+.lurk-work { background-image: url(bg/work.webp); background-position: 40% 60%; }
+.lurk-games { background-image: url(bg/games.webp); background-position: 35% 70%; }
+.lurk-stories { background-image: url(bg/stories.webp); background-position: 60% 40%; }
